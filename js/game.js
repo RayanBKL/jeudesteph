@@ -73,12 +73,22 @@ const GameState = {
 };
 
 // ============================================================
-// PERSISTENCE
+// PERSISTENCE (LocalStorage + Supabase Cloud Auto-sync)
 // ============================================================
+let cloudSaveTimeout = null;
+
 function saveGame() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(GameState));
   } catch(e) { console.warn('Save failed', e); }
+
+  // Debounced cloud sync to avoid spamming the DB
+  if (window.CloudSync && CloudSync.currentUser) {
+    if (cloudSaveTimeout) clearTimeout(cloudSaveTimeout);
+    cloudSaveTimeout = setTimeout(() => {
+      CloudSync.saveProfile(GameState);
+    }, 1500);
+  }
 }
 
 function loadGame() {
@@ -93,6 +103,39 @@ function loadGame() {
     return false;
   }
 }
+
+function syncFromCloudProfile(profile, inventoryList) {
+  if (!profile) return;
+  GameState.isLoggedIn = true;
+  GameState.pseudo = profile.pseudo || GameState.pseudo;
+  GameState.friendCode = profile.friend_code || GameState.friendCode;
+  GameState.money = profile.money !== undefined ? profile.money : GameState.money;
+  GameState.xp = profile.xp !== undefined ? profile.xp : GameState.xp;
+  GameState.level = profile.level !== undefined ? profile.level : GameState.level;
+  GameState.skillPoints = profile.skill_points !== undefined ? profile.skill_points : GameState.skillPoints;
+  if (profile.skills) Object.assign(GameState.skills, profile.skills);
+  if (profile.stats) Object.assign(GameState.stats, profile.stats);
+  if (profile.equipped_slots) GameState.equippedSlots = profile.equipped_slots;
+  if (profile.pity_counters) Object.assign(GameState.pityCounters, profile.pity_counters);
+  if (profile.free_packs !== undefined) GameState.freePacks = profile.free_packs;
+
+  if (inventoryList && Array.isArray(inventoryList)) {
+    inventoryList.forEach(item => {
+      const cigData = CIGARETTES.find(c => c.id === item.cig_id);
+      if (cigData) {
+        GameState.inventory[item.cig_id] = {
+          cig: cigData,
+          count: item.count,
+          equipped: item.equipped,
+          forSale: item.is_for_sale ? { price: item.sale_price } : null
+        };
+      }
+    });
+  }
+
+  saveGame();
+}
+
 
 // ============================================================
 // AUTH

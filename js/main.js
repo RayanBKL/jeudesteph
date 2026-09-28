@@ -2,16 +2,34 @@
 // STÉPHANE — Main Entry Point & Event Bindings
 // ============================================================
 
+let currentMfaFactorId = null;
+
 // ============================================================
 // INIT
 // ============================================================
-function init() {
+async function init() {
   // Clean URL
   if (window.location.pathname.endsWith('index.html')) {
     window.history.replaceState(null, '', window.location.pathname.replace(/index\.html$/, ''));
   }
 
-  // Load save
+  // Check cloud session first if Supabase is available
+  if (window.CloudSync) {
+    const session = await CloudSync.getSession();
+    if (session) {
+      const profile = await CloudSync.loadProfile();
+      const inventory = await CloudSync.loadInventory();
+      if (profile) {
+        syncFromCloudProfile(profile, inventory);
+        checkDailyReset();
+        updateFreePacks();
+        showGameUI();
+        return;
+      }
+    }
+  }
+
+  // Fallback to local save
   const loggedIn = loadGame();
   checkDailyReset();
   updateFreePacks();
@@ -56,35 +74,177 @@ function showAuthScreen() {
   document.getElementById('game-ui').classList.add('hidden');
 }
 
+function showAuthMsg(msg, type = 'info') {
+  const box = document.getElementById('auth-status-msg');
+  box.className = `auth-msg-box ${type}`;
+  box.textContent = msg;
+  box.classList.remove('hidden');
+}
+
+function clearAuthMsg() {
+  const box = document.getElementById('auth-status-msg');
+  box.textContent = '';
+  box.classList.add('hidden');
+}
+
 document.getElementById('link-to-login').addEventListener('click', (e) => {
   e.preventDefault();
+  clearAuthMsg();
   document.getElementById('auth-form').classList.add('hidden');
   document.getElementById('login-form').classList.remove('hidden');
+  document.getElementById('mfa-form')?.classList.add('hidden');
   document.getElementById('auth-title').textContent = 'Se connecter';
 });
 
 document.getElementById('link-to-register').addEventListener('click', (e) => {
   e.preventDefault();
+  clearAuthMsg();
   document.getElementById('auth-form').classList.remove('hidden');
   document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('mfa-form')?.classList.add('hidden');
   document.getElementById('auth-title').textContent = 'Créer un compte';
 });
 
-document.getElementById('btn-register').addEventListener('click', () => {
+// Inscription
+document.getElementById('btn-register').addEventListener('click', async () => {
+  clearAuthMsg();
   const pseudo = document.getElementById('auth-pseudo').value.trim();
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
-  const result = registerUser(pseudo, email, password);
-  if (!result.ok) { showToast(result.msg, 'error'); return; }
+
+  if (!pseudo || pseudo.length < 2) { showToast('Pseudo trop court (min 2 caractères)', 'error'); return; }
+  if (!email || !email.includes('@')) { showToast('Email invalide', 'error'); return; }
+  if (!password || password.length < 6) { showToast('Mot de passe de 6 caractères minimum requis', 'error'); return; }
+
+  const btn = document.getElementById('btn-register');
+  btn.disabled = true;
+  btn.textContent = 'Création en cours...';
+
+  try {
+    if (window.CloudSync && window.sb) {
+      const res = await CloudSync.signUp(email, password, pseudo);
+      if (!res.ok) {
+        showToast(res.msg, 'error');
+        btn.disabled = false;
+        btn.textContent = '🎮 Créer mon compte';
+        return;
+      }
+
+      if (res.requireEmailConfirm) {
+        showAuthMsg(res.msg, 'success');
+        btn.disabled = false;
+        btn.textContent = '🎮 Créer mon compte';
+        return;
+      }
+    }
+
+    // Local fallback / direct login
+    registerUser(pseudo, email, password);
+    showGameUI();
+  } catch (err) {
+    showToast(err.message || 'Erreur inattendue', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🎮 Créer mon compte';
+  }
+});
+
+// Connexion
+document.getElementById('btn-login').addEventListener('click', async () => {
+  clearAuthMsg();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!email || !password) { showToast('Remplissez tous les champs', 'error'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.textContent = 'Connexion...';
+
+  try {
+    if (window.CloudSync && window.sb) {
+      const res = await CloudSync.signIn(email, password);
+      if (!res.ok) {
+        showToast(res.msg, 'error');
+        btn.disabled = false;
+        btn.textContent = '🔑 Connexion';
+        return;
+      }
+
+      // Check if MFA is required
+      if (res.requireMFA) {
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('mfa-form').classList.remove('hidden');
+        document.getElementById('auth-title').textContent = 'Validation 2FA';
+        btn.disabled = false;
+        btn.textContent = '🔑 Connexion';
+        return;
+      }
+
+      // Sync Cloud profile
+      const profile = await CloudSync.loadProfile();
+      const inventory = await CloudSync.loadInventory();
+      if (profile) {
+        syncFromCloudProfile(profile, inventory);
+      } else {
+        loginUser(email, password);
+      }
+      showGameUI();
+      return;
+    }
+
+    // Local fallback
+    const result = loginUser(email, password);
+    if (!result.ok) { showToast(result.msg, 'error'); return; }
+    showGameUI();
+  } catch (err) {
+    showToast(err.message || 'Erreur', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔑 Connexion';
+  }
+});
+
+// MFA Verification submit
+document.getElementById('btn-verify-mfa')?.addEventListener('click', async () => {
+  const code = document.getElementById('mfa-code').value.trim();
+  if (code.length !== 6) { showToast('Entrez un code valide à 6 chiffres', 'error'); return; }
+
+  const factors = await sb.auth.mfa.listFactors();
+  const totpFactor = factors?.data?.totp?.[0];
+  if (!totpFactor) { showToast('Facteur 2FA introuvable', 'error'); return; }
+
+  const res = await CloudSync.verifyMFALogin(totpFactor.id, code);
+  if (!res.ok) {
+    showToast('Code 2FA invalide', 'error');
+    return;
+  }
+
+  const profile = await CloudSync.loadProfile();
+  const inventory = await CloudSync.loadInventory();
+  if (profile) syncFromCloudProfile(profile, inventory);
   showGameUI();
 });
 
-document.getElementById('btn-login').addEventListener('click', () => {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const result = loginUser(email, password);
-  if (!result.ok) { showToast(result.msg, 'error'); return; }
-  showGameUI();
+document.getElementById('btn-cancel-mfa')?.addEventListener('click', () => {
+  document.getElementById('mfa-form').classList.add('hidden');
+  document.getElementById('login-form').classList.remove('hidden');
+  document.getElementById('auth-title').textContent = 'Se connecter';
+});
+
+// Mot de passe oublié
+document.getElementById('link-forgot-pw')?.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const email = prompt('Entrez votre adresse email pour recevoir un lien de réinitialisation :');
+  if (!email || !email.includes('@')) return;
+
+  if (window.sb) {
+    const { error } = await sb.auth.resetPasswordForEmail(email);
+    if (error) showToast(error.message, 'error');
+    else showToast('Email de réinitialisation envoyé !', 'success');
+  } else {
+    showToast('Service disponible une fois connecté à Supabase', 'info');
+  }
 });
 
 // Enter key on inputs
@@ -97,6 +257,9 @@ document.getElementById('btn-login').addEventListener('click', () => {
   document.getElementById(id)?.addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btn-login').click();
   });
+});
+document.getElementById('mfa-code')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-verify-mfa').click();
 });
 
 // ============================================================
@@ -375,13 +538,70 @@ document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
 });
 
 // ============================================================
-// PROFILE
+// PROFILE & SECURITY (2FA)
 // ============================================================
-document.getElementById('btn-logout')?.addEventListener('click', () => {
+document.getElementById('btn-logout')?.addEventListener('click', async () => {
   if (confirm('Se déconnecter ?')) {
+    if (window.CloudSync) await CloudSync.signOut();
     logoutUser();
     showAuthScreen();
   }
+});
+
+document.getElementById('btn-toggle-2fa')?.addEventListener('click', async () => {
+  if (!window.CloudSync || !CloudSync.currentUser) {
+    showToast('Vous devez être connecté avec un compte réel pour activer la 2FA', 'info');
+    return;
+  }
+
+  const btn = document.getElementById('btn-toggle-2fa');
+  btn.disabled = true;
+  btn.textContent = 'Génération QR Code...';
+
+  const res = await CloudSync.enrollMFA();
+  btn.disabled = false;
+  btn.textContent = 'Activer 2FA';
+
+  if (!res.ok) {
+    showToast(res.msg || 'Erreur lors de l’activation 2FA', 'error');
+    return;
+  }
+
+  openModal(`
+    <h3 style="font-family:var(--font-title);font-size:1.4rem;color:var(--accent);margin-bottom:12px">🔐 Activer la Double Authentification</h3>
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">
+      1. Ouvrez <strong>Google Authenticator</strong> (ou toute appli TOTP) sur votre téléphone.<br>
+      2. Scannez le code QR ci-dessous, ou saisissez manuellement la clé secrète.<br>
+      3. Entrez le code à 6 chiffres affiché par l'application pour valider.
+    </p>
+    <div style="background:#fff;padding:12px;border-radius:var(--r-md);display:inline-block;margin:0 auto 16px auto;text-align:center">
+      ${res.qrCode ? `<img src="${res.qrCode}" alt="QR Code 2FA" style="width:180px;height:180px;display:block;margin:0 auto" />` : ''}
+    </div>
+    <div style="background:var(--bg-surface);padding:8px 12px;border-radius:var(--r-sm);font-family:monospace;font-size:0.8rem;word-break:break-all;margin-bottom:16px;text-align:center">
+      Clé secrète : <strong>${res.secret}</strong>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="modal-totp-verify-code" class="game-input text-center" placeholder="123456" maxlength="6" />
+      <button id="btn-submit-mfa-verify" class="btn-primary">Valider</button>
+    </div>
+  `);
+
+  document.getElementById('btn-submit-mfa-verify')?.addEventListener('click', async () => {
+    const code = document.getElementById('modal-totp-verify-code').value.trim();
+    if (code.length !== 6) { showToast('Entrez un code à 6 chiffres', 'error'); return; }
+
+    const verifyRes = await CloudSync.verifyMFAEnrollment(res.factorId, code);
+    if (verifyRes.ok) {
+      showToast('2FA activée avec succès ! Votre compte est ultra-sécurisé 🛡️', 'success');
+      closeModal();
+      btn.textContent = '2FA Activé ✅';
+      btn.disabled = true;
+      btn.classList.remove('btn-secondary');
+      btn.classList.add('btn-primary');
+    } else {
+      showToast('Code invalide, réessayez', 'error');
+    }
+  });
 });
 
 document.getElementById('btn-settings')?.addEventListener('click', () => {

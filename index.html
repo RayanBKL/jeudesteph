@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -30,20 +31,33 @@
   <div class="auth-box">
     <div class="auth-logo">🚬</div>
     <h2 id="auth-title">Créer un compte</h2>
+    
+    <div id="auth-status-msg" class="hidden auth-msg-box"></div>
+
     <div id="auth-form">
       <input type="text" id="auth-pseudo" class="game-input" placeholder="Pseudo (max 20 caractères)" maxlength="20" />
-      <input type="email" id="auth-email" class="game-input" placeholder="Email" />
-      <input type="password" id="auth-password" class="game-input" placeholder="Mot de passe" />
-      <button id="btn-register" class="btn-primary btn-full">🎮 C'est parti !</button>
+      <input type="email" id="auth-email" class="game-input" placeholder="Votre vraie adresse email" />
+      <input type="password" id="auth-password" class="game-input" placeholder="Mot de passe sécurisé (min 6 car.)" />
+      <button id="btn-register" class="btn-primary btn-full">🎮 Créer mon compte</button>
       <p class="auth-switch">Déjà un compte ? <a href="#" id="link-to-login">Se connecter</a></p>
     </div>
+
     <div id="login-form" class="hidden">
-      <input type="email" id="login-email" class="game-input" placeholder="Email" />
+      <input type="email" id="login-email" class="game-input" placeholder="Votre adresse email" />
       <input type="password" id="login-password" class="game-input" placeholder="Mot de passe" />
       <button id="btn-login" class="btn-primary btn-full">🔑 Connexion</button>
-      <p class="auth-switch">Pas encore inscrit ? <a href="#" id="link-to-register">Créer un compte</a></p>
+      <p class="auth-switch"><a href="#" id="link-forgot-pw">Mot de passe oublié ?</a></p>
+      <p class="auth-switch">Pas encore de compte ? <a href="#" id="link-to-register">Créer un compte</a></p>
     </div>
-    <p class="auth-legal">Argent virtuel uniquement. Jeu satirique réservé aux 18+.</p>
+
+    <div id="mfa-form" class="hidden">
+      <p class="mfa-desc">🔐 Double authentification activée. Entrez le code à 6 chiffres de votre application Google Authenticator :</p>
+      <input type="text" id="mfa-code" class="game-input text-center" placeholder="123456" maxlength="6" />
+      <button id="btn-verify-mfa" class="btn-primary btn-full">Valider le code</button>
+      <button id="btn-cancel-mfa" class="btn-secondary btn-full" style="margin-top:8px">Annuler</button>
+    </div>
+
+    <p class="auth-legal">Sécurisé via Supabase Cloud & RLS · Jeu 18+ · Argent virtuel uniquement.</p>
   </div>
 </div>
 
@@ -408,6 +422,16 @@
           <h3>⚡ Compétences <span class="skill-pts-badge" id="skill-pts">0 pts</span></h3>
           <div id="skills-grid"></div>
         </div>
+        <div class="security-section">
+          <h3>🔐 Sécurité du compte</h3>
+          <div class="security-card">
+            <div>
+              <strong>Double Authentification (2FA / MFA)</strong>
+              <p class="sec-desc">Protégez votre inventaire et vos gains avec Google Authenticator.</p>
+            </div>
+            <button id="btn-toggle-2fa" class="btn-secondary btn-sm">Activer 2FA</button>
+          </div>
+        </div>
         <div class="logout-section">
           <button id="btn-logout" class="btn-danger">Déconnexion</button>
         </div>
@@ -438,6 +462,7 @@
 </div>
 
 <script src="js/data.js"></script>
+<script src="js/supabase.js"></script>
 <script src="js/game.js"></script>
 <script src="js/race.js"></script>
 <script src="js/packs.js"></script>

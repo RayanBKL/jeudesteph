@@ -962,3 +962,54 @@ html, body {
 .warn-text { color: var(--red); font-size: 0.8rem; }
 .empty-state { text-align: center; padding: var(--sp-xl); color: var(--text-dim); }
 .empty-state .empty-icon { font-size: 3rem; margin-bottom: var(--sp-sm); }
+
+/* === AUTH & SECURITY ADDITIONS === */
+.auth-msg-box {
+  background: rgba(255, 140, 0, 0.15);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-md);
+  padding: 12px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-bright);
+  margin-bottom: var(--sp-md);
+  text-align: left;
+}
+.auth-msg-box.success {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+  color: #86efac;
+}
+.auth-msg-box.error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+.mfa-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-md);
+  line-height: 1.4;
+}
+.security-section {
+  margin-top: var(--sp-lg);
+  padding-top: var(--sp-md);
+  border-top: 1px solid var(--border);
+}
+.security-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--sp-md);
+  gap: var(--sp-md);
+  margin-top: var(--sp-sm);
+}
+.sec-desc {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.text-center { text-align: center; letter-spacing: 4px; font-size: 1.4rem; font-weight: 900; }
