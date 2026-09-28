@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Stéphane, le Roi du Cendrier — Le jeu de course et de collection de cigarettes virtuelles le plus absurde du web. 18+ uniquement." />
+  <meta name="theme-color" content="#1a0a00" />
+  <title>Stéphane, le Roi du Cendrier 🚬</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="age-gate" class="overlay-full">
+  <div class="age-gate-box">
+    <div class="age-gate-icon">🚬</div>
+    <h1>Stéphane<br><span class="subtitle-inline">le Roi du Cendrier</span></h1>
+    <p class="age-warning">Ce jeu contient des références au tabac et des mécaniques de pari (argent virtuel uniquement). Il est strictement réservé aux personnes majeures.</p>
+    <div class="age-buttons">
+      <button id="btn-age-ok" class="btn-primary btn-huge">J'ai 18 ans ou plus ✅</button>
+      <button id="btn-age-no" class="btn-secondary">J'ai moins de 18 ans</button>
+    </div>
+    <p class="age-legal">🏛 Le tabac est dangereux pour la santé. Ce jeu est satirique et ne fait pas l'apologie du tabac. Argent virtuel uniquement.</p>
+  </div>
+</div>
+
+<div id="auth-screen" class="overlay-full hidden">
+  <div class="auth-box">
+    <div class="auth-logo">🚬</div>
+    <h2 id="auth-title">Créer un compte</h2>
+    <div id="auth-form">
+      <input type="text" id="auth-pseudo" class="game-input" placeholder="Pseudo (max 20 caractères)" maxlength="20" />
+      <input type="email" id="auth-email" class="game-input" placeholder="Email" />
+      <input type="password" id="auth-password" class="game-input" placeholder="Mot de passe" />
+      <button id="btn-register" class="btn-primary btn-full">🎮 C'est parti !</button>
+      <p class="auth-switch">Déjà un compte ? <a href="#" id="link-to-login">Se connecter</a></p>
+    </div>
+    <div id="login-form" class="hidden">
+      <input type="email" id="login-email" class="game-input" placeholder="Email" />
+      <input type="password" id="login-password" class="game-input" placeholder="Mot de passe" />
+      <button id="btn-login" class="btn-primary btn-full">🔑 Connexion</button>
+      <p class="auth-switch">Pas encore inscrit ? <a href="#" id="link-to-register">Créer un compte</a></p>
+    </div>
+    <p class="auth-legal">Argent virtuel uniquement. Jeu satirique réservé aux 18+.</p>
+  </div>
+</div>
+
+<div id="game-ui" class="hidden">
+  <header id="top-bar">
+    <div class="top-left">
+      <button id="btn-profile-top" class="game-title-sm">🚬 Stéphane</button>
+    </div>
+    <div class="top-center">
+      <div class="resource-pill"><span class="res-icon">💶</span><span id="hud-money">0 €</span></div>
+      <div class="resource-pill"><span class="res-icon">📦</span><span id="hud-packs">0</span></div>
+      <div class="resource-pill"><span class="res-icon">⚡</span><span id="hud-level">Niv. 1</span></div>
+    </div>
+    <div class="top-right">
+      <button id="btn-settings" class="btn-icon" title="Paramètres">⚙️</button>
+    </div>
+  </header>
+
+  <main id="game-content">
+
+    <section class="page active" id="page-course">
+      <div class="page-inner">
+        <h2 class="page-title">🏃 La Course</h2>
+        <div class="track-selector" id="track-selector">
+          <div class="track-card active" data-track="trottoir">
+            <div class="track-icon">🚶</div>
+            <div class="track-name">Trottoir</div>
+            <div class="track-info">500 m · ~60 s</div>
+            <div class="track-reward">🥇 60 € | 🥈 35 € | 🥉 20 €</div>
+          </div>
+          <div class="track-card locked" data-track="boulevard" id="track-card-boulevard">
+            <div class="track-icon">🚗</div>
+            <div class="track-name">Boulevard</div>
+            <div class="track-info">800 m · ~90 s</div>
+            <div class="track-reward">🥇 150 € | 🥈 90 € | 🥉 50 €</div>
+            <div class="track-lock">🔒 Niv. 10</div>
+          </div>
+          <div class="track-card locked" data-track="autoroute" id="track-card-autoroute">
+            <div class="track-icon">🛣️</div>
+            <div class="track-name">Autoroute</div>
+            <div class="track-info">1 200 m · ~120 s</div>
+            <div class="track-reward">🥇 400 € | 🥈 240 € | 🥉 130 €</div>
+            <div class="track-lock">🔒 Niv. 25</div>
+          </div>
+        </div>
+
+        <div class="equipment-section">
+          <h3>🚬 Cigarettes équipées <span id="slot-info" class="slot-count">(0/3 équipées)</span></h3>
+          <div class="cigarette-slots" id="cigarette-slots"></div>
+        </div>
+
+        <div class="race-start-zone">
+          <button id="btn-start-solo" class="btn-primary btn-giant">🏁 Course Solo</button>
+          <button id="btn-start-duel" class="btn-secondary btn-big">⚔️ Défier un ami</button>
+        </div>
+
+        <div class="streak-display">
+          <span>🔥 Série Or :</span> <strong id="gold-streak">0</strong> consécutives
+          <span id="bonus-indicator" class="hidden bonus-badge">+50% prochain gain !</span>
+        </div>
+
+        <div class="daily-solo-info">
+          <span>Courses aujourd'hui : <strong id="daily-races">0</strong>/30</span>
+          <span id="half-gain-warn" class="hidden warn-text">⚠️ Gains divisés par 2 !</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RACE ARENA -->
+    <section class="page hidden" id="page-race">
+      <div class="race-arena">
+        <div class="race-track-container">
+          <div class="race-track" id="race-track">
+            <div class="track-scenery" id="track-scenery"></div>
+            <div class="track-road">
+              <div class="road-stripes" id="road-stripes"></div>
+            </div>
+            <div class="finish-flag" id="finish-flag">🏁</div>
+          </div>
+          <div class="stephane-runner" id="stephane-runner">
+            <div class="runner-anim" id="runner-anim">
+              <div class="runner-cig-smoke" id="runner-smoke"></div>
+              <div class="runner-body">
+                <div class="runner-head">
+                  <div class="runner-face">😤</div>
+                </div>
+                <div class="runner-torso"></div>
+                <div class="runner-legs">
+                  <div class="runner-leg l" id="rleg-l"></div>
+                  <div class="runner-leg r" id="rleg-r"></div>
+                </div>
+              </div>
+            </div>
+            <div class="cough-bubble hidden" id="cough-bubble">TOUSSE ! 😷</div>
+          </div>
+        </div>
+
+        <div class="race-hud">
+          <div class="gauges-row">
+            <div class="gauge-wrap">
+              <div class="gauge-label">⚡ Énergie</div>
+              <div class="gauge-bar"><div class="gauge-fill energy-fill" id="g-energy" style="width:30%"></div><div class="green-zone"></div></div>
+              <div class="gauge-val" id="gv-energy">30</div>
+            </div>
+            <div class="gauge-wrap">
+              <div class="gauge-label">😷 Toux</div>
+              <div class="gauge-bar cough-bar"><div class="gauge-fill cough-fill" id="g-cough" style="width:0%"></div></div>
+              <div class="gauge-val" id="gv-cough">0</div>
+            </div>
+          </div>
+          <div class="race-stats-row">
+            <div class="rs"><span class="rs-l">⏱</span><span class="rs-v" id="r-time">0.0s</span></div>
+            <div class="rs"><span class="rs-l">💨</span><span class="rs-v" id="r-speed">0 km/h</span></div>
+            <div class="rs"><span class="rs-l">📍</span><span class="rs-v" id="r-dist">0 m</span></div>
+          </div>
+          <div class="cig-queue-row" id="cig-queue"></div>
+        </div>
+
+        <div class="smoke-btn-container">
+          <button id="btn-fumer" class="btn-smoke">🚬 FUMER</button>
+          <div class="combo-zone" id="combo-zone"></div>
+        </div>
+        <button id="btn-abandon" class="btn-abandon">Abandonner</button>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="page hidden" id="page-resultat">
+      <div class="result-card">
+        <div class="result-medal-big" id="r-medal">🏅</div>
+        <div class="result-title" id="r-title">Course terminée !</div>
+        <div class="result-time-display" id="r-time">--</div>
+        <div class="result-rewards">
+          <div class="reward-item" id="r-money">+0 €</div>
+          <div class="reward-item xp-item" id="r-xp">+0 XP</div>
+        </div>
+        <div class="combos-recap" id="r-combos"></div>
+        <button id="btn-result-ok" class="btn-primary btn-huge">🚀 Continuer</button>
+      </div>
+    </section>
+
+    <!-- PAQUETS -->
+    <section class="page hidden" id="page-paquets">
+      <div class="page-inner">
+        <h2 class="page-title">📦 Paquets</h2>
+        <div class="free-pack-banner">
+          <div class="fpb-left">
+            <div class="fpb-icon">🎁</div>
+            <div>
+              <strong>Paquets gratuits</strong>
+              <div id="free-packs-count">0 / 5 disponibles</div>
+            </div>
+          </div>
+          <div class="fpb-right">
+            <div id="free-pack-timer" class="timer-text">Prochain dans 10:00</div>
+            <button id="btn-open-free" class="btn-primary" disabled>Ouvrir 📦</button>
+          </div>
+        </div>
+
+        <div class="pack-shop">
+          <div class="pack-card" id="pack-card-tabac">
+            <div class="pack-visual tabac-visual"></div>
+            <div class="pack-info">
+              <div class="pack-name">Tabac du Coin</div>
+              <div class="pack-price">100 €</div>
+              <div class="pack-odds-mini">Commune 70% · Rare 6,5% · Épique 1,4%</div>
+            </div>
+            <button class="btn-buy-pack btn-primary" data-pack="tabac">Acheter</button>
+          </div>
+          <div class="pack-card" id="pack-card-duty">
+            <div class="pack-visual duty-visual"></div>
+            <div class="pack-info">
+              <div class="pack-name">Duty Free</div>
+              <div class="pack-price">400 €</div>
+              <div class="pack-odds-mini">Commune 40% · Rare 20% · Épique 6,5% · Légendaire 1,4%</div>
+            </div>
+            <button class="btn-buy-pack btn-primary" data-pack="duty">Acheter</button>
+          </div>
+          <div class="pack-card" id="pack-card-contre">
+            <div class="pack-visual contre-visual"></div>
+            <div class="pack-info">
+              <div class="pack-name">Contrebande</div>
+              <div class="pack-price">1 100 €</div>
+              <div class="pack-odds-mini">Commune 20% · Rare 30% · Épique 15% · Légendaire 4,5% · Mythique 0,5%</div>
+            </div>
+            <button class="btn-buy-pack btn-primary" data-pack="contre">Acheter</button>
+          </div>
+        </div>
+
+        <div class="pity-tracker">
+          <h3>🍀 Garanties (Pity)</h3>
+          <div class="pity-bars">
+            <div class="pity-item"><span>Épique garantie :</span><div class="pity-bar-wrap"><div class="pity-bar-fill epic-pity" id="pbar-epic"></div></div><span id="ptext-epic">20 paquets Tabac</span></div>
+            <div class="pity-item"><span>Légendaire garantie :</span><div class="pity-bar-wrap"><div class="pity-bar-fill legendary-pity" id="pbar-legendary"></div></div><span id="ptext-legendary">15 paquets Duty Free</span></div>
+            <div class="pity-item"><span>Mythique garantie :</span><div class="pity-bar-wrap"><div class="pity-bar-fill mythic-pity" id="pbar-mythic"></div></div><span id="ptext-mythic">25 paquets Contrebande</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PACK OPENING OVERLAY -->
+    <div class="pack-opening-overlay hidden" id="pack-opening-overlay">
+      <div class="pack-stage" id="pack-stage">
+        <div class="pack-3d-wrap" id="pack-3d-wrap">
+          <div class="pack-3d" id="pack-3d">
+            <div class="pack-face pack-front" id="pack-front"></div>
+            <div class="pack-face pack-back"></div>
+            <div class="pack-face pack-top"></div>
+          </div>
+          <p class="tap-hint">Appuie pour ouvrir !</p>
+        </div>
+        <div class="cards-row hidden" id="cards-row"></div>
+        <button class="btn-primary hidden" id="btn-pack-done">Super ! 🚀</button>
+      </div>
+    </div>
+
+    <!-- INVENTAIRE -->
+    <section class="page hidden" id="page-inventaire">
+      <div class="page-inner">
+        <h2 class="page-title">🚬 Inventaire</h2>
+        <div class="inv-toolbar">
+          <select id="inv-sort" class="game-select">
+            <option value="rarity">Par rareté</option>
+            <option value="value">Par valeur</option>
+            <option value="name">Par nom</option>
+          </select>
+          <select id="inv-filter" class="game-select">
+            <option value="all">Toutes</option>
+            <option value="commune">Commune</option>
+            <option value="peu-commune">Peu commune</option>
+            <option value="rare">Rare</option>
+            <option value="epique">Épique</option>
+            <option value="legendaire">Légendaire</option>
+            <option value="mythique">Mythique</option>
+          </select>
+          <button id="btn-recycle" class="btn-secondary">♻️ Recycler</button>
+        </div>
+        <div class="inv-grid" id="inv-grid"></div>
+        <div class="recycle-panel hidden" id="recycle-panel">
+          <h3>♻️ Recyclage</h3>
+          <div class="recycle-info">5×Commune→Peu commune · 5×Peu commune→Rare · 4×Rare→Épique · 3×Épique→Légendaire</div>
+          <div id="recycle-options"></div>
+        </div>
+        <div class="series-section">
+          <h3>📚 Séries complétées</h3>
+          <div id="series-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARCHÉ -->
+    <section class="page hidden" id="page-marche">
+      <div class="page-inner">
+        <h2 class="page-title">🏪 Marché des Tabacs</h2>
+        <div class="market-tabs" id="market-tabs">
+          <button class="market-tab active" data-mtab="mon">Mon Tabac</button>
+          <button class="market-tab" data-mtab="jeu">Tabac du Jeu</button>
+          <button class="market-tab" data-mtab="alea">Tabac Aléatoire</button>
+          <button class="market-tab" data-mtab="amis">Tabac Ami</button>
+        </div>
+        <div id="market-content"></div>
+      </div>
+    </section>
+
+    <!-- BOURSE -->
+    <section class="page hidden" id="page-bourse">
+      <div class="page-inner">
+        <h2 class="page-title">📈 Bourse du Cendrier</h2>
+        <input type="text" id="bourse-search" class="game-input" placeholder="Rechercher une marque..." />
+        <div id="bourse-list"></div>
+        <div class="predictions-box">
+          <h3>🎯 Prédictions</h3>
+          <div id="active-predictions"></div>
+          <div class="new-prediction">
+            <h4>Nouvelle prédiction</h4>
+            <select id="pred-cig" class="game-select"></select>
+            <div class="pred-btns">
+              <button class="pred-dir active" data-dir="hausse" id="pd-hausse">📈 Hausse</button>
+              <button class="pred-dir" data-dir="baisse" id="pd-baisse">📉 Baisse</button>
+            </div>
+            <input type="number" id="pred-mise" class="game-input" placeholder="Mise : 10 à 1000 €" min="10" max="1000" />
+            <button id="btn-pred-add" class="btn-primary">Parier 🎯</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CASINO -->
+    <section class="page hidden" id="page-casino">
+      <div class="page-inner casino-inner">
+        <div class="casino-warn-banner">⚠️ Jeu de hasard virtuel — 18 ans et plus — Argent virtuel uniquement</div>
+        <h2 class="page-title">🎰 Casino de Stéphane</h2>
+        <div class="casino-tabs">
+          <button class="cas-tab active" data-ctab="pf">Pile ou Face</button>
+          <button class="cas-tab" data-ctab="roulette">Roulette</button>
+          <button class="cas-tab" data-ctab="cigs">Cigarettes</button>
+        </div>
+        <div id="casino-content"></div>
+        <div class="casino-daily-info">Mises aujourd'hui : <strong id="bets-today">0</strong> / 50</div>
+      </div>
+    </section>
+
+    <!-- AMIS -->
+    <section class="page hidden" id="page-amis">
+      <div class="page-inner">
+        <h2 class="page-title">👥 Amis & Défis</h2>
+        <div class="friend-code-section">
+          <span>Mon code : </span>
+          <strong class="friend-code" id="my-code">---</strong>
+          <button id="btn-copy-code" class="btn-secondary btn-sm">📋 Copier</button>
+        </div>
+        <div class="add-friend-row">
+          <input type="text" id="add-friend-input" class="game-input" placeholder="Code ou pseudo d'un ami" />
+          <button id="btn-add-friend" class="btn-primary">➕ Ajouter</button>
+        </div>
+        <div id="friends-list"></div>
+        <h3>⚔️ Défis actifs</h3>
+        <div id="active-challenges"></div>
+      </div>
+    </section>
+
+    <!-- CLASSEMENTS -->
+    <section class="page hidden" id="page-classements">
+      <div class="page-inner">
+        <h2 class="page-title">🏆 Classements</h2>
+        <div class="lb-tabs">
+          <button class="lb-tab active" data-lbtab="fortune">💰 Fortune</button>
+          <button class="lb-tab" data-lbtab="temps">⏱ Temps</button>
+          <button class="lb-tab" data-lbtab="victoires">⚔️ Victoires</button>
+          <button class="lb-tab" data-lbtab="vitrine">🌟 Vitrine</button>
+        </div>
+        <div class="lb-scope">
+          <button class="scope-btn active" data-scope="global">🌍 Mondial</button>
+          <button class="scope-btn" data-scope="amis">👥 Amis</button>
+        </div>
+        <div id="lb-list"></div>
+        <div class="lb-reward-info">🎁 Top 10 chaque semaine → Paquet Duty Free offert ! Classements remis à zéro chaque lundi.</div>
+      </div>
+    </section>
+
+    <!-- PROFIL -->
+    <section class="page hidden" id="page-profil">
+      <div class="page-inner">
+        <div class="profile-header">
+          <div class="profile-avatar">🚬</div>
+          <div class="profile-infos">
+            <div class="profile-pseudo" id="prof-pseudo">Joueur</div>
+            <div class="profile-rank" id="prof-rank">Fumeur du dimanche</div>
+            <div class="xp-bar-wrap">
+              <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
+              <span id="xp-text">0 XP · Niv. 1</span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-stats-grid">
+          <div class="pstat"><strong id="ps-money">0 €</strong><span>Fortune</span></div>
+          <div class="pstat"><strong id="ps-races">0</strong><span>Courses</span></div>
+          <div class="pstat"><strong id="ps-wins">0</strong><span>Victoires duel</span></div>
+          <div class="pstat"><strong id="ps-cigs">0</strong><span>Cigarettes</span></div>
+        </div>
+        <div class="skills-section">
+          <h3>⚡ Compétences <span class="skill-pts-badge" id="skill-pts">0 pts</span></h3>
+          <div id="skills-grid"></div>
+        </div>
+        <div class="logout-section">
+          <button id="btn-logout" class="btn-danger">Déconnexion</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-page="course">🏃<span>Course</span></button>
+    <button class="nav-btn" data-page="paquets">📦<span>Paquets</span></button>
+    <button class="nav-btn" data-page="inventaire">🚬<span>Inventaire</span></button>
+    <button class="nav-btn" data-page="marche">🏪<span>Marché</span></button>
+    <button class="nav-btn" data-page="bourse">📈<span>Bourse</span></button>
+    <button class="nav-btn" data-page="casino">🎰<span>Casino</span></button>
+    <button class="nav-btn" data-page="amis">👥<span>Amis</span></button>
+    <button class="nav-btn" data-page="classements">🏆<span>Top</span></button>
+  </nav>
+
+</div>
+
+<div id="toast-container"></div>
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal-box" id="modal-box">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<script src="js/race.js"></script>
+<script src="js/packs.js"></script>
+<script src="js/market.js"></script>
+<script src="js/casino.js"></script>
+<script src="js/friends.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
