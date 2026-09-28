@@ -121,25 +121,27 @@ document.getElementById('btn-register').addEventListener('click', async () => {
   btn.textContent = 'Création en cours...';
 
   try {
-    if (window.CloudSync && window.sb) {
-      const res = await CloudSync.signUp(email, password, pseudo);
-      if (!res.ok) {
-        showToast(res.msg, 'error');
-        btn.disabled = false;
-        btn.textContent = '🎮 Créer mon compte';
-        return;
-      }
-
-      if (res.requireEmailConfirm) {
-        showAuthMsg(res.msg, 'success');
-        btn.disabled = false;
-        btn.textContent = '🎮 Créer mon compte';
-        return;
-      }
+    const res = await CloudSync.signUp(email, password, pseudo);
+    if (!res.ok) {
+      showToast(res.msg, 'error');
+      showAuthMsg(res.msg, 'error');
+      btn.disabled = false;
+      btn.textContent = '🎮 Créer mon compte';
+      return;
     }
 
-    // Local fallback / direct login
-    registerUser(pseudo, email, password);
+    if (res.requireEmailConfirm) {
+      showAuthMsg(res.msg, 'success');
+      btn.disabled = false;
+      btn.textContent = '🎮 Créer mon compte';
+      return;
+    }
+
+    // Direct login succeeded (Confirm email disabled or session active)
+    const profile = await CloudSync.loadProfile();
+    const inventory = await CloudSync.loadInventory();
+    if (profile) syncFromCloudProfile(profile, inventory);
+    showToast(`Bienvenue ${pseudo} !`, 'success');
     showGameUI();
   } catch (err) {
     showToast(err.message || 'Erreur inattendue', 'error');
@@ -162,40 +164,47 @@ document.getElementById('btn-login').addEventListener('click', async () => {
   btn.textContent = 'Connexion...';
 
   try {
-    if (window.CloudSync && window.sb) {
-      const res = await CloudSync.signIn(email, password);
-      if (!res.ok) {
-        showToast(res.msg, 'error');
-        btn.disabled = false;
-        btn.textContent = '🔑 Connexion';
-        return;
-      }
-
-      // Check if MFA is required
-      if (res.requireMFA) {
-        document.getElementById('login-form').classList.add('hidden');
-        document.getElementById('mfa-form').classList.remove('hidden');
-        document.getElementById('auth-title').textContent = 'Validation 2FA';
-        btn.disabled = false;
-        btn.textContent = '🔑 Connexion';
-        return;
-      }
-
-      // Sync Cloud profile
-      const profile = await CloudSync.loadProfile();
-      const inventory = await CloudSync.loadInventory();
-      if (profile) {
-        syncFromCloudProfile(profile, inventory);
-      } else {
-        loginUser(email, password);
-      }
-      showGameUI();
+    const res = await CloudSync.signIn(email, password);
+    if (!res.ok) {
+      showToast(res.msg, 'error');
+      showAuthMsg(res.msg, 'error');
+      btn.disabled = false;
+      btn.textContent = '🔑 Connexion';
       return;
     }
 
-    // Local fallback
-    const result = loginUser(email, password);
-    if (!result.ok) { showToast(result.msg, 'error'); return; }
+    // Check if MFA is required
+    if (res.requireMFA) {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('mfa-form').classList.remove('hidden');
+      document.getElementById('auth-title').textContent = 'Validation 2FA';
+      btn.disabled = false;
+      btn.textContent = '🔑 Connexion';
+      return;
+    }
+
+    // Sync Cloud profile
+    let profile = await CloudSync.loadProfile();
+    const inventory = await CloudSync.loadInventory();
+    if (!profile && res.user) {
+      // Auto-create profile if trigger didn't run
+      const pseudo = res.user.user_metadata?.pseudo || email.split('@')[0];
+      const friendCode = (pseudo.substring(0, 4).toUpperCase()) + '-' + Math.floor(1000 + Math.random() * 9000);
+      const newProf = {
+        id: res.user.id,
+        pseudo: pseudo,
+        friend_code: friendCode,
+        money: 500,
+        xp: 0,
+        level: 1,
+        skill_points: 0
+      };
+      await window.sb?.from('profiles').upsert(newProf);
+      profile = newProf;
+    }
+
+    if (profile) syncFromCloudProfile(profile, inventory);
+    showToast('Connexion réussie ! ☁️', 'success');
     showGameUI();
   } catch (err) {
     showToast(err.message || 'Erreur', 'error');

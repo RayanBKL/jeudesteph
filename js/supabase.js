@@ -8,12 +8,20 @@ const SUPABASE_CONFIG = {
 };
 
 // Initialize Supabase client
-let sb = null;
-if (window.supabase) {
-  sb = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-} else {
-  console.warn('Supabase JS library not loaded. Falling back to local offline mode.');
+function getSupabase() {
+  if (window.sb) return window.sb;
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    window.sb = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    sb = window.sb;
+    return window.sb;
+  }
+  return null;
 }
+
+// Global initialization
+var sb = getSupabase();
+window.sb = sb;
+
 
 const CloudSync = {
   currentUser: null,
