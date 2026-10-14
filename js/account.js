@@ -133,6 +133,8 @@ const Account = (() => {
       if (error) throw error;
       if (data && data.conflict) {
         await resolveConflict();
+      } else if (data && data.rejected) {
+        await handleRejected();
       } else if (data && data.ok) {
         stamp = data.updated_at;
         ls.set(STAMP, stamp);
@@ -146,6 +148,19 @@ const Account = (() => {
     } finally {
       pushing = false;
     }
+  }
+
+  // Le serveur refuse une sauvegarde incohérente (progression impossible) : on revient à la dernière version valide
+  async function handleRejected() {
+    ls.del(DIRTY);
+    const n = +(sessionStorage.getItem('ak_rej') || 0) + 1;
+    sessionStorage.setItem('ak_rej', String(n));
+    await GameDialog.alert('Les données de cette partie ne sont pas cohérentes (progression impossible). On remet la dernière sauvegarde valide.', { title: 'Sauvegarde refusée' });
+    if (n > 2) return;
+    try {
+      const save = await pull();
+      if (save) { applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); location.reload(); }
+    } catch (e) {}
   }
 
   async function pull() {

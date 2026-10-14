@@ -209,9 +209,11 @@
 },
 "ref-ratio": {
 "done": true,
-"found": false,
-"title": "Angry Birds Ratio GIF",
-"q": "Ratio"
+"pass2": true,
+"found": true,
+"q": "ratio twitter",
+"loose": false,
+"title": "Kanye West GIF"
 },
 "ref-le-seum": {
 "done": true,
@@ -227,9 +229,11 @@
 },
 "ref-tchoin": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Tchoin"
+"pass2": true,
+"found": true,
+"q": "tchoin",
+"loose": true,
+"title": "Queen Rihanna GIF"
 },
 "ref-fanny": {
 "done": true,
@@ -239,57 +243,71 @@
 },
 "ref-c-est-pas-faux": {
 "done": true,
-"found": false,
-"title": null,
-"q": "C'est pas faux"
+"pass2": true,
+"found": true,
+"q": "kaamelott c'est pas faux",
+"loose": false,
+"title": "kaamelott GIF"
 },
 "ref-thierry-henry-main": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Thierry Henry Main"
+"pass2": true,
+"found": true,
+"q": "thierry henry handball",
+"loose": false,
+"title": "the king football GIF"
 },
 "ref-le-coup-de-boule": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Le Coup de Boule"
+"pass2": true,
+"found": true,
+"q": "zidane headbutt",
+"loose": false,
+"title": "mash up headbutt GIF"
 },
 "ref-le-chat-qui-joue-du-piano": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Le Chat Qui Joue du Piano"
+"pass2": true,
+"found": true,
+"q": "cat playing piano",
+"loose": false,
+"title": "play piano GIF by Internet Cat Video Festival"
 },
 "meme-t-es-surement-pas-francais": {
 "done": true,
-"found": false,
-"title": null,
-"q": "T'es sûrement pas français"
+"pass2": true,
+"found": true,
+"q": "pas français",
+"loose": false,
+"title": "David Tennant Francais GIF by France tv"
 },
 "meme-il-pleure-sur-le-poulet": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Il pleure sur le poulet"
+"pass2": true,
+"found": true,
+"q": "pleure poulet",
+"loose": true,
+"title": "Im Gonna Cry Jonas Brothers GIF by First We Feast"
 },
 "meme-non-mais-allo-quoi": {
 "done": true,
-"found": false,
-"title": null,
-"q": "non mais allo quoi"
+"pass2": true,
+"found": true,
+"q": "nabilla allo",
+"loose": false,
+"title": "jenna louise coleman les anges 5 GIF"
 },
 "meme-casse-toi-pauv-con": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "sarkozy casse toi"
+"q": "sarkozy casse toi pauv con"
 },
 "meme-je-traverse-la-rue": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "Je traverse la rue"
+"q": "je traverse la rue pour vous trouver un travail macron"
 },
 "meme-ca-m-en-touche-une": {
 "done": true,
@@ -299,51 +317,61 @@
 },
 "meme-abracadabrantesque": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Abracadabrantesque"
+"pass2": true,
+"found": true,
+"q": "chirac abracadabrantesque",
+"loose": false,
+"title": "jacques chirac archive GIF by franceinfo"
 },
 "meme-mangez-des-pommes": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Mangez des pommes"
+"pass2": true,
+"found": true,
+"q": "mangez des pommes",
+"loose": true,
+"title": "jacques chirac archive GIF by franceinfo"
 },
 "meme-c-est-de-la-merde": {
 "done": true,
-"found": false,
-"title": null,
-"q": "C'est de la merde"
+"pass2": true,
+"found": true,
+"q": "c'est de la merde",
+"loose": true,
+"title": "Kad Merad Fbi GIF by CANAL+"
 },
 "meme-comment-est-votre-blanquette": {
 "done": true,
-"found": false,
-"title": null,
-"q": "oss 117 blanquette"
+"pass2": true,
+"found": true,
+"q": "oss 117 blanquette",
+"loose": true,
+"title": "Animated GIF"
 },
 "meme-j-aime-me-beurrer-la-biscotte": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "J'aime me beurrer la biscotte"
+"q": "oss 117 beurrer la biscotte"
 },
 "meme-c-est-une-bonne-situation-ca-scribe": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "mission cleopatre scribe"
+"q": "mission cleopatre bonne situation scribe"
 },
 "meme-le-gras-c-est-la-vie": {
 "done": true,
-"found": false,
-"title": null,
-"q": "kaamelott le gras c'est la vie"
+"pass2": true,
+"found": true,
+"q": "kaamelott le gras c'est la vie",
+"loose": false,
+"title": "kaamelott GIF"
 },
 "meme-faut-pas-respirer-la-compote": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "Faut pas respirer la compote"
+"q": "faut pas respirer la compote"
 },
 "meme-on-en-a-gros": {
 "done": true,
@@ -353,63 +381,73 @@
 },
 "meme-okayyy": {
 "done": true,
-"found": false,
-"title": null,
-"q": "les visiteurs okay"
+"pass2": true,
+"found": true,
+"q": "okay les visiteurs",
+"loose": true,
+"title": "philippe poutou revolution GIF by franceinfo"
 },
 "meme-sur-un-malentendu": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "Sur un malentendu"
+"q": "sur un malentendu ça peut marcher"
 },
 "meme-il-s-appelle-juste-leblanc": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Il s'appelle Juste Leblanc"
+"pass2": true,
+"found": true,
+"q": "juste leblanc",
+"loose": true,
+"title": "reno visiteurs GIF"
 },
 "meme-jusqu-ici-tout-va-bien": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
 "q": "la haine jusqu'ici tout va bien"
 },
 "meme-casse": {
 "done": true,
-"found": false,
-"title": null,
-"q": "brice de nice casse"
+"pass2": true,
+"found": true,
+"q": "brice de nice cassé",
+"loose": false,
+"title": "Twitch GIF"
 },
 "meme-ils-sont-fous-ces-romains": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "Ils sont fous ces Romains"
+"q": "asterix ils sont fous ces romains"
 },
 "meme-c-est-l-histoire-d-un-mec": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
 "q": "C'est l'histoire d'un mec"
 },
 "meme-tu-veux-un-whisky": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "Tu veux un whisky ?"
+"q": "tu veux un whisky"
 },
 "meme-pays-de-galles-independant": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Pays de Galles indépendant"
+"pass2": true,
+"found": true,
+"q": "Pays de Galles indépendant",
+"loose": true,
+"title": "The Beautiful Game Futbol GIF by World Cup"
 },
 "meme-mais-qu-est-ce-que-c-est-que-ce-binz": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Mais qu'est-ce que c'est que ce binz ?"
+"pass2": true,
+"found": true,
+"q": "Mais qu'est-ce que c'est que ce binz ?",
+"loose": true,
+"title": "Peut Etre GIF by Lunik Co-op"
 },
 "meme-oui-oui-baguette": {
 "done": true,
