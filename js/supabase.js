@@ -83,7 +83,7 @@ const CloudSync = {
         return {
           ok: true,
           requireEmailConfirm: true,
-          msg: 'Compte créé ! Un email de confirmation a été envoyé à ' + email + '. Cliquez sur le lien pour valider votre compte.'
+          msg: 'Compte créé ! Un e-mail de confirmation est parti vers ' + email + '. Clique sur le lien pour valider ton compte. Il peut être dans tes spams, pense à les regarder.'
         };
       }
 

@@ -26,6 +26,7 @@ const Social = (() => {
     setInterval(() => { if (!document.hidden) pollInvites(); }, 5000);
     setInterval(() => { if (!document.hidden) refreshBadge(); }, 30000);
     refreshBadge();
+    document.getElementById('btn-friends-top')?.addEventListener('click', () => openTab('amis'));
     document.querySelectorAll('#prof-tabs [data-ptab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.ptab; renderTabs(); }));
   }
 
@@ -33,8 +34,10 @@ const Social = (() => {
     if (!online()) return;
     const { data } = await sb().rpc('friends_list');
     const n = (data || []).filter(f => f.rel === 'recue').length;
-    const el = document.getElementById('badge-friends');
-    if (el) { el.textContent = n; el.classList.toggle('hidden', !n); }
+    ['badge-friends', 'top-friends-badge'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = n; el.classList.toggle('hidden', !n); }
+    });
   }
 
   // ── Onglets du profil ──
@@ -84,7 +87,7 @@ const Social = (() => {
     host.querySelectorAll('[data-accept]').forEach(b => b.addEventListener('click', async () => { await sb().rpc('friend_respond', { p_other: b.dataset.accept, p_accept: true }); renderFriends(); refreshBadge(); }));
     host.querySelectorAll('[data-refuse]').forEach(b => b.addEventListener('click', async () => { await sb().rpc('friend_respond', { p_other: b.dataset.refuse, p_accept: false }); renderFriends(); refreshBadge(); }));
     host.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
-      if (!confirm('Retirer cette personne de tes amis ?')) return;
+      if (!(await GameDialog.confirm('Elle ne sera plus dans ta liste d\'amis.', { title: 'Retirer cet ami ?', ok: 'Retirer', danger: true }))) return;
       await sb().rpc('friend_remove', { p_other: b.dataset.del }); renderFriends();
     }));
     host.querySelectorAll('[data-duel]').forEach(b => b.addEventListener('click', () => chooseGame(b.dataset.duel, b.dataset.name)));
@@ -108,7 +111,7 @@ const Social = (() => {
     el.querySelector('[data-x]').addEventListener('click', closeModal);
     el.querySelectorAll('[data-g]').forEach(b => b.addEventListener('click', async () => {
       const { data, error } = await sb().rpc('invite_send', { p_friend: friendId, p_game: b.dataset.g });
-      if (error) { closeModal(); return alert(msg(error)); }
+      if (error) { closeModal(); return GameDialog.alert(msg(error), { title: 'Invitation impossible' }); }
       waitForAnswer(data, name, b.dataset.g);
     }));
   }
@@ -203,7 +206,7 @@ const Social = (() => {
   }
 
   function bindClan(host, mine) {
-    const note = (t) => { const m = host.querySelector('#soc-msg'); if (m) { m.textContent = t; m.className = 'soc-msg is-error'; } else alert(t); };
+    const note = (t) => { const m = host.querySelector('#soc-msg'); if (m) { m.textContent = t; m.className = 'soc-msg is-error'; } else GameDialog.alert(t); };
     host.querySelector('#clan-create')?.addEventListener('submit', async e => {
       e.preventDefault();
       const { error } = await sb().rpc('clan_create', { p_name: host.querySelector('#cl-name').value, p_tag: host.querySelector('#cl-tag').value, p_descr: '' });
@@ -222,11 +225,11 @@ const Social = (() => {
       renderClan();
     }));
     host.querySelector('#clan-leave')?.addEventListener('click', async () => {
-      if (!confirm('Quitter ce clan ?')) return;
+      if (!(await GameDialog.confirm('Tu pourras en rejoindre un autre quand tu veux.', { title: 'Quitter le clan ?', ok: 'Quitter', danger: true }))) return;
       await sb().rpc('clan_leave'); clanView = 'mon'; renderClan();
     });
     host.querySelectorAll('[data-kick]').forEach(b => b.addEventListener('click', async () => {
-      if (!confirm('Virer ce joueur du clan ?')) return;
+      if (!(await GameDialog.confirm('Il ne fera plus partie du clan.', { title: 'Virer ce joueur ?', ok: 'Virer', danger: true }))) return;
       await sb().rpc('clan_kick', { p_user: b.dataset.kick }); renderClan();
     }));
     host.querySelector('#clan-set')?.addEventListener('submit', async e => {
@@ -241,7 +244,10 @@ const Social = (() => {
   // Appelé à l'ouverture de la page Profil
   function onProfileOpen() { start(); renderTabs(); }
 
-  return { start, onProfileOpen, refreshBadge };
+  // Ouvre directement un onglet (amis, clan) depuis n'importe où
+  function openTab(t) { tab = t; showPage('profil'); }
+
+  return { start, onProfileOpen, openTab, refreshBadge };
 })();
 
 if (typeof window !== 'undefined') window.Social = Social;

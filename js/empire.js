@@ -401,7 +401,7 @@ const EmpireManager = (() => {
     }
     booster.style.setProperty('--tear', 1);
     booster.classList.add('is-torn');
-    flashScreen('rgba(255,236,190,0.55)');
+    flashScreen('rgba(255,226,160,0.30)');
 
     setTimeout(() => booster.closest('.po-booster-drop')?.classList.add('is-dropping'), 520);
     setTimeout(() => {
@@ -416,7 +416,7 @@ const EmpireManager = (() => {
   function flashScreen(color) {
     const flash = document.getElementById('po-flash');
     if (!flash) return;
-    flash.style.background = color;
+    flash.style.background = `radial-gradient(circle at 50% 46%, ${color} 0%, transparent 62%)`;
     flash.classList.remove('is-on');
     void flash.offsetWidth;
     flash.classList.add('is-on');
@@ -493,11 +493,7 @@ const EmpireManager = (() => {
 
     setTimeout(() => {
       if (rank >= 2) burstParticles(zone, item.rarity, rank >= 4 ? 34 : rank >= 3 ? 24 : 14);
-      if (rank >= 3) flashScreen(rank >= 5 ? 'rgba(255,80,60,0.6)' : rank >= 4 ? 'rgba(255,200,60,0.6)' : 'rgba(180,110,255,0.45)');
-      if (rank >= 4) {
-        document.getElementById('empire-pack-overlay')?.classList.add('po-shake');
-        setTimeout(() => document.getElementById('empire-pack-overlay')?.classList.remove('po-shake'), 600);
-      }
+      if (rank >= 3) flashScreen(rank >= 5 ? 'rgba(255,90,70,0.28)' : rank >= 4 ? 'rgba(255,200,60,0.28)' : 'rgba(180,110,255,0.22)');
       if (window.SoundFX) {
         if (rank >= 3 && SoundFX.win) SoundFX.win();
         else if (rank === 2 && SoundFX.upgrade) SoundFX.upgrade();
@@ -512,21 +508,25 @@ const EmpireManager = (() => {
     }, 380);
   }
 
+  // Révélation : une lueur douce derrière la carte, des rayons lents et quelques étincelles qui montent
   function burstParticles(zone, rarity, count) {
-    const burst = document.createElement('div');
-    burst.className = `po-burst rv-r-${rarity}`;
-    for (let i = 0; i < count; i++) {
-      const p = document.createElement('span');
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-      const dist = 140 + Math.random() * 140;
-      p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
-      p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
-      p.style.setProperty('--d', `${0.6 + Math.random() * 0.5}s`);
-      p.style.setProperty('--s', `${6 + Math.random() * 8}px`);
-      burst.appendChild(p);
+    const fx = document.createElement('div');
+    fx.className = `po-fx rv-r-${rarity}`;
+    fx.innerHTML = '<i class="po-aura"></i><i class="po-rays"></i>';
+    const n = Math.max(5, Math.round(count / 3));
+    for (let i = 0; i < n; i++) {
+      const sp = document.createElement('b');
+      sp.className = 'po-spark';
+      sp.style.setProperty('--x', `${(Math.random() - 0.5) * 260}px`);
+      sp.style.setProperty('--y0', `${40 + Math.random() * 120}px`);
+      sp.style.setProperty('--y1', `${-90 - Math.random() * 130}px`);
+      sp.style.setProperty('--d', `${1.5 + Math.random() * 1}s`);
+      sp.style.setProperty('--delay', `${Math.random() * 0.5}s`);
+      sp.style.setProperty('--s', `${8 + Math.random() * 10}px`);
+      fx.appendChild(sp);
     }
-    zone.appendChild(burst);
-    setTimeout(() => burst.remove(), 1300);
+    zone.appendChild(fx);
+    setTimeout(() => fx.remove(), 3000);
   }
 
   function showRecap() {
@@ -685,8 +685,8 @@ const EmpireManager = (() => {
 
     const resetBtn = document.getElementById('btn-reset-empire-game');
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        if (confirm('Voulez-vous réinitialiser votre collection et recommencer avec une partie propre ?')) {
+      resetBtn.addEventListener('click', async () => {
+        if (await GameDialog.confirm('Ta collection sera effacée et tu recommenceras à neuf.', { title: 'Réinitialiser la collection ?', ok: 'Tout effacer', danger: true })) {
           resetEntireGame(true);
         }
       });

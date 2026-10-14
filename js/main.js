@@ -249,7 +249,7 @@ document.getElementById('btn-cancel-mfa')?.addEventListener('click', () => {
 // Mot de passe oublié
 document.getElementById('link-forgot-pw')?.addEventListener('click', async (e) => {
   e.preventDefault();
-  const email = prompt('Entrez votre adresse email pour recevoir un lien de réinitialisation :');
+  const email = ((await GameDialog.prompt('Entre ton adresse e-mail : on t\'envoie un lien pour choisir un nouveau mot de passe.', { title: 'Mot de passe oublié', ok: 'Envoyer', input: { type: 'email', placeholder: 'Ton adresse e-mail' } })) || '').trim();
   if (!email || !email.includes('@')) return;
 
   if (window.sb) {
@@ -405,8 +405,8 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-document.getElementById('btn-abandon')?.addEventListener('click', () => {
-  if (confirm('Abandonner la course ?')) {
+document.getElementById('btn-abandon')?.addEventListener('click', async () => {
+  if (await GameDialog.confirm('Tu perds la course en cours.', { title: 'Abandonner ?', ok: 'Abandonner', danger: true })) {
     const ranked = !!RaceEngine.leagueMode;
     RaceEngine.stop();
     if (ranked && typeof CourseClandestine !== 'undefined') CourseClandestine.onAbandon();
@@ -582,7 +582,7 @@ document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
 // PROFILE & SECURITY (2FA)
 // ============================================================
 document.getElementById('btn-logout')?.addEventListener('click', async () => {
-  if (confirm('Se déconnecter ? Ta progression est sauvegardée en ligne : tu la retrouveras en te reconnectant.')) {
+  if (await GameDialog.confirm('Ta progression est sauvegardée en ligne : tu la retrouveras en te reconnectant.', { title: 'Se déconnecter ?', ok: 'Déconnexion' })) {
     await Account.signOut();
   }
 });
@@ -663,8 +663,8 @@ document.getElementById('set-audio')?.addEventListener('click', () => {
   document.getElementById('icon-audio').textContent = SoundFX.enabled ? '🔊' : '🔇';
   renderSettings();
 });
-document.getElementById('btn-reset-save-full')?.addEventListener('click', () => {
-  if (confirm('Effacer toute ta progression et recommencer à zéro ? C\'est définitif.')) window.resetEntireGame(true);
+document.getElementById('btn-reset-save-full')?.addEventListener('click', async () => {
+  if (await GameDialog.confirm('Toute ta progression sera effacée. C\'est définitif.', { title: 'Recommencer à zéro ?', ok: 'Tout effacer', danger: true })) window.resetEntireGame(true);
 });
 
 // ============================================================

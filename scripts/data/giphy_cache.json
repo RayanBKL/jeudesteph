@@ -1,9 +1,11 @@
 {
 "ref-6-7": {
 "done": true,
-"found": false,
-"title": null,
-"q": "6 7 meme"
+"pass2": true,
+"found": true,
+"q": "67 meme basketball",
+"loose": false,
+"title": "Cat Basketball GIF by sillynub"
 },
 "ref-skibidi-toilet": {
 "done": true,
@@ -19,9 +21,11 @@
 },
 "ref-nyan-cat": {
 "done": true,
+"pass2": true,
 "found": true,
-"title": "cat life GIF",
-"q": "nyan cat"
+"q": "nyan cat",
+"loose": false,
+"title": "cat life GIF"
 },
 "ref-doge": {
 "done": true,
@@ -109,9 +113,11 @@
 },
 "ref-trollface": {
 "done": true,
+"pass2": true,
 "found": true,
-"title": "Sus GIF",
-"q": "trollface"
+"q": "trollface",
+"loose": false,
+"title": "Sus GIF"
 },
 "ref-pepe-la-grenouille": {
 "done": true,
@@ -169,9 +175,9 @@
 },
 "ref-ca-va-etre-tout-noir": {
 "done": true,
+"pass2": true,
 "found": false,
-"title": null,
-"q": "Ça va être tout noir"
+"q": "tout noir aldo"
 },
 "ref-chien-de-la-casse": {
 "done": true,
@@ -181,9 +187,11 @@
 },
 "ref-wesh": {
 "done": true,
+"pass2": true,
 "found": true,
-"title": "Look Away Oh No GIF",
-"q": "Wesh"
+"q": "Wesh",
+"loose": false,
+"title": "Look Away Oh No GIF"
 },
 "ref-quoicoubeh": {
 "done": true,
@@ -193,9 +201,11 @@
 },
 "ref-apagnan": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Apagnan"
+"pass2": true,
+"found": true,
+"q": "apagnan",
+"loose": true,
+"title": "Sanjay Dutt No GIF"
 },
 "ref-ratio": {
 "done": true,

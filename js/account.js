@@ -28,6 +28,8 @@ const Account = (() => {
   let pushing = false;
   let live = false;          // true une fois connecté : les changements locaux déclenchent l'envoi
   let applying = false;      // true pendant le remplacement des données locales (aucun envoi)
+  let blocked = false;       // true si un autre onglet a pris la main : cet onglet n'envoie plus rien
+  const TAB_KEY = 'ak_tab_lock', TAB_ID = Math.random().toString(36).slice(2);
   const rawSet = Storage.prototype.setItem;
   const rawRemove = Storage.prototype.removeItem;
 
@@ -74,6 +76,47 @@ const Account = (() => {
     if (!timer) timer = setTimeout(() => { timer = null; push(); }, PUSH_DELAY);
   }
 
+  // ── Un seul onglet actif par navigateur (sinon deux onglets s'écrasent la sauvegarde) ──
+  function lockInfo() { try { return JSON.parse(ls.get(TAB_KEY) || 'null'); } catch (e) { return null; } }
+  function claimLock() { ls.set(TAB_KEY, JSON.stringify({ id: TAB_ID, t: Date.now() })); }
+  function otherTabAlive() { const l = lockInfo(); return !!(l && l.id !== TAB_ID && Date.now() - l.t < 6000); }
+
+  function blockScreen(title, text, button, onClick) {
+    document.getElementById('tab-block')?.remove();
+    const el = document.createElement('div');
+    el.id = 'tab-block';
+    el.className = 'soc-modal dlg-modal tab-block';
+    el.innerHTML = `<div class="soc-modal-card dlg-card"><h3>${title}</h3><p class="dlg-text">${text}</p><button class="btn-empire btn-empire-primary soc-wide">${button}</button></div>`;
+    document.body.appendChild(el);
+    el.querySelector('button').addEventListener('click', onClick);
+    return el;
+  }
+
+  // Au démarrage : si le jeu tourne déjà dans un autre onglet, on le dit et on laisse le choix
+  function waitForTabFree() {
+    if (!otherTabAlive()) return Promise.resolve();
+    return new Promise(resolve => {
+      const el = blockScreen('Le jeu est déjà ouvert', 'The Ashtray King tourne dans un autre onglet de ce navigateur. Un seul onglet à la fois : sinon ta sauvegarde se mélange.', 'Jouer ici', () => { el.remove(); clearInterval(t); resolve(); });
+      const t = setInterval(() => { if (!otherTabAlive()) { el.remove(); clearInterval(t); resolve(); } }, 1000);
+    });
+  }
+
+  let guardStarted = false;
+  function startTabGuardOnce() { if (!guardStarted) { guardStarted = true; startTabGuard(); } }
+
+  function startTabGuard() {
+    claimLock();
+    setInterval(() => {
+      if (blocked) return;
+      const l = lockInfo();
+      if (l && l.id !== TAB_ID) {
+        blocked = true; live = false; clearTimeout(timer); timer = null;
+        blockScreen('Jeu ouvert dans un autre onglet', 'Tu as repris la partie ailleurs. Cet onglet est en pause pour ne pas écraser ta sauvegarde.', 'Reprendre ici', () => location.reload());
+      } else claimLock();
+    }, 2000);
+    window.addEventListener('pagehide', () => { const l = lockInfo(); if (l && l.id === TAB_ID) ls.del(TAB_KEY); });
+  }
+
   function client() { return window.sb || null; }
   function deviceName() {
     const ua = navigator.userAgent;
@@ -83,7 +126,7 @@ const Account = (() => {
   // ── Envoi ──────────────────────────────────────────────────
   async function push(force = false) {
     const sb = client();
-    if (!sb || !user || pushing || applying) return;
+    if (!sb || !user || pushing || applying || blocked) return;
     pushing = true;
     try {
       const { data, error } = await sb.rpc('cloud_save_put', { p_data: snapshot(), p_base: stamp, p_device: deviceName(), p_force: force });
@@ -114,7 +157,7 @@ const Account = (() => {
 
   // Renvoie true si la page va se recharger avec la version en ligne
   async function resolveConflict() {
-    const loadOnline = confirm('Ta progression a été modifiée sur un autre appareil.\n\nOK : charger la version en ligne (les changements faits ici seront perdus).\nAnnuler : garder cet appareil et écraser la version en ligne.');
+    const loadOnline = await GameDialog.confirm('Les changements faits sur cet appareil seront perdus si tu charges la version en ligne. Si tu gardes cet appareil, c\'est la version en ligne qui sera écrasée.', { title: 'Ta progression a changé sur un autre appareil', ok: 'Charger la version en ligne', cancel: 'Garder cet appareil' });
     if (loadOnline) {
       const save = await pull();
       if (save) {
@@ -165,6 +208,8 @@ const Account = (() => {
   // Appelé après chaque connexion réussie (connexion, inscription, reprise de session)
   async function onSignedIn(u) {
     const sb = client();
+    await waitForTabFree();
+    startTabGuardOnce();
     user = u;
     if (window.CloudSync) { CloudSync.currentUser = u; CloudSync.isOnline = true; }
 

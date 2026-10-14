@@ -82,6 +82,7 @@ const GameHub = (() => {
 
         <div class="hub-footer">
           <button class="btn-empire btn-empire-secondary" data-view="classements">Classements</button>
+          <button class="btn-empire btn-empire-primary" data-friends>Jouer avec des amis</button>
           <button class="btn-empire btn-empire-secondary" data-view="rangs">Les 26 rangs</button>
           <button class="btn-empire btn-empire-secondary" data-legacy>Duels de cartes</button>
         </div>
@@ -98,6 +99,7 @@ const GameHub = (() => {
     }));
     c.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { view = b.dataset.view; render(); }));
     c.querySelector('[data-legacy]')?.addEventListener('click', openLegacy);
+    c.querySelector('[data-friends]')?.addEventListener('click', () => window.Social && Social.openTab('amis'));
     countdownTimer = setInterval(() => {
       const el = document.getElementById('hub-reset');
       if (!el) return clearInterval(countdownTimer);

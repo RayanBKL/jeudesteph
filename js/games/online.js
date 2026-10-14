@@ -173,7 +173,7 @@ const Online = (() => {
 
   async function leaveMatch() {
     const r = run; if (!r) return;
-    if (r.data && r.data.status === 'active' && !confirm('Quitter la partie = la perdre. Tu veux vraiment partir ?')) return;
+    if (r.data && r.data.status === 'active' && !(await GameDialog.confirm('Quitter la partie, c\'est la perdre.', { title: 'Abandonner ?', ok: 'Quitter', danger: true }))) return;
     const id = r.id; stopAll();
     if (r.data && r.data.status === 'active') await sb().rpc('match_forfeit', { p_match: id });
     GameHub.render();
