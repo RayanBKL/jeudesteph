@@ -1,0 +1,1318 @@
+[
+ {
+  "name": "6-7",
+  "rarity": "legendaire",
+  "q": "six seven hands meme",
+  "desc": "Deux chiffres, deux mains qui montent et descendent, et toute une génération qui hurle « SIX SEVEN » au moindre nombre qui passe. Les profs n'en peuvent plus.",
+  "cat": "refs"
+ },
+ {
+  "name": "Skibidi Toilet",
+  "rarity": "epique",
+  "q": "skibidi toilet",
+  "desc": "Une tête qui chante dans des toilettes. Personne n'a compris, tout le monde a regardé. Le symbole absolu du cerveau des moins de 12 ans.",
+  "cat": "refs"
+ },
+ {
+  "name": "Rickroll",
+  "rarity": "epique",
+  "wd": "Rickrolling",
+  "desc": "Tu cliques sur un lien sérieux et c'est Rick Astley qui danse. Never gonna give you up, depuis 2007, et ça marche encore.",
+  "cat": "refs"
+ },
+ {
+  "name": "Nyan Cat",
+  "rarity": "rare",
+  "wd": "Nyan Cat",
+  "desc": "Un chat-Pop-Tart qui vole en laissant un arc-en-ciel. La musique reste dans la tête trois jours minimum.",
+  "cat": "refs"
+ },
+ {
+  "name": "Doge",
+  "rarity": "rare",
+  "wd": "Doge",
+  "desc": "Le shiba inu au regard en coin. Such meme, very culte, wow. Il a même fini en cryptomonnaie.",
+  "cat": "refs"
+ },
+ {
+  "name": "This is Fine",
+  "rarity": "rare",
+  "q": "this is fine dog fire",
+  "desc": "Le chien qui boit son café dans une pièce en feu en disant que tout va bien. Le résumé de chaque lundi matin.",
+  "cat": "refs"
+ },
+ {
+  "name": "Gangnam Style",
+  "rarity": "epique",
+  "wd": "Gangnam Style",
+  "desc": "La danse du cheval invisible qui a cassé le compteur de vues de YouTube en 2012. Tous les mariages de France l'ont subie.",
+  "cat": "refs"
+ },
+ {
+  "name": "Harlem Shake",
+  "rarity": "peu-commune",
+  "wd": "Harlem Shake (meme)",
+  "desc": "Un type danse seul avec un casque, puis tout le monde devient fou. Chaque bureau de France en a tourné une version en 2013.",
+  "cat": "refs"
+ },
+ {
+  "name": "Sigma",
+  "rarity": "peu-commune",
+  "q": "sigma male meme",
+  "desc": "Le loup solitaire qui ne sourit jamais sur les photos. En vrai, c'est surtout un collégien qui écoute de la musique triste.",
+  "cat": "refs"
+ },
+ {
+  "name": "Rizz",
+  "rarity": "peu-commune",
+  "q": "rizz",
+  "desc": "Le talent de draguer sans rien faire. Élu mot de l'année par un dictionnaire anglais, à la surprise générale des parents.",
+  "cat": "refs"
+ },
+ {
+  "name": "Mewing",
+  "rarity": "commune",
+  "q": "jawline",
+  "desc": "Garder la langue collée au palais pour avoir une mâchoire de mannequin. Résultat garanti : avoir l'air de bouder en permanence.",
+  "cat": "refs"
+ },
+ {
+  "name": "Ohio",
+  "rarity": "commune",
+  "q": "ohio state flag",
+  "desc": "Un État américain devenu, on ne sait pas pourquoi, le synonyme de « endroit où il se passe des trucs bizarres ».",
+  "cat": "refs"
+ },
+ {
+  "name": "Grimace Shake",
+  "rarity": "peu-commune",
+  "q": "grimace mcdonalds purple",
+  "desc": "Le milkshake violet d'un fast-food américain, suivi de vidéos où les gens finissent étalés par terre. Une pub ratée devenue film d'horreur.",
+  "cat": "refs"
+ },
+ {
+  "name": "Chill Guy",
+  "rarity": "rare",
+  "q": "chill guy dog meme",
+  "desc": "Un chien en pull, les mains dans les poches, qui s'en fiche de tout. La philosophie de vie la plus enviée de 2024.",
+  "cat": "refs"
+ },
+ {
+  "name": "Pedro Pedro Pedro",
+  "rarity": "commune",
+  "q": "raccoon dancing",
+  "desc": "Un raton laveur qui tourne sur lui-même sur une musique italienne. On ne sait pas pourquoi, on ne veut pas savoir.",
+  "cat": "refs"
+ },
+ {
+  "name": "Distracted Boyfriend",
+  "rarity": "peu-commune",
+  "wd": "Distracted boyfriend",
+  "desc": "Le copain qui se retourne sur une autre fille devant la sienne, scandalisée. La photo de stock la plus détournée de la planète.",
+  "cat": "refs"
+ },
+ {
+  "name": "Stonks",
+  "rarity": "commune",
+  "q": "stonks meme",
+  "desc": "Le businessman en 3D devant une courbe qui monte. L'investissement le plus sûr de la Bourse du comptoir.",
+  "cat": "refs"
+ },
+ {
+  "name": "Shrek",
+  "rarity": "epique",
+  "wd": "Shrek",
+  "desc": "L'ogre vert qui a éduqué toute une génération. Les ognons ont des couches, les ogres aussi, et les collectionneurs ont des cartes.",
+  "cat": "culte"
+ },
+ {
+  "name": "Gigachad",
+  "rarity": "rare",
+  "q": "gigachad black and white",
+  "desc": "La mâchoire en noir et blanc la plus carrée d'Internet. Réponse officielle à toute critique : « Oui. »",
+  "cat": "refs"
+ },
+ {
+  "name": "Trollface",
+  "rarity": "commune",
+  "wd": "Trollface",
+  "desc": "Le sourire le plus agaçant du web des années 2010. Problem ?",
+  "cat": "refs"
+ },
+ {
+  "name": "Pepe la Grenouille",
+  "rarity": "peu-commune",
+  "wd": "Pepe the Frog",
+  "desc": "La grenouille aux yeux tristes, déclinée en mille émotions. Feels good man, comme disent les anciens d'Internet.",
+  "cat": "refs"
+ },
+ {
+  "name": "Keyboard Cat",
+  "rarity": "commune",
+  "wd": "Keyboard Cat",
+  "desc": "Un chat en t-shirt bleu qui joue du clavier. La musique de fin pour chaque vidéo de chute ratée.",
+  "cat": "refs"
+ },
+ {
+  "name": "Grumpy Cat",
+  "rarity": "rare",
+  "wd": "Grumpy Cat",
+  "desc": "La chatte la plus mal lunée d'Internet. Elle n'aimait rien, et le monde entier l'adorait.",
+  "cat": "refs"
+ },
+ {
+  "name": "Bongo Cat",
+  "rarity": "commune",
+  "q": "bongo cat",
+  "desc": "Le chat dessiné qui tape sur des bongos au rythme de n'importe quelle musique. Hypnotisant.",
+  "cat": "refs"
+ },
+ {
+  "name": "Among Us",
+  "rarity": "rare",
+  "wd": "Among Us",
+  "desc": "Le petit astronaute en combinaison. Quand c'est louche, c'est sus. Le jeu de 2020 qui a rendu tout le monde parano.",
+  "cat": "culte"
+ },
+ {
+  "name": "Fortnite Floss",
+  "rarity": "commune",
+  "q": "floss dance",
+  "desc": "La danse où on fait passer les bras devant et derrière les hanches. Interdite dans plusieurs cours de récré pour cause d'abus.",
+  "cat": "refs"
+ },
+ {
+  "name": "Baby Shark",
+  "rarity": "commune",
+  "wd": "Baby Shark",
+  "desc": "Doo doo doo doo doo doo. Rien ne l'arrête, ni les parents, ni la décence, ni la Convention de Genève.",
+  "cat": "refs"
+ },
+ {
+  "name": "Dancing Coffin",
+  "rarity": "rare",
+  "q": "ghana pallbearers dancing coffin",
+  "desc": "Les porteurs de cercueil ghanéens qui dansent en costume. La sortie la plus stylée possible, devenue meme mondial en 2020.",
+  "cat": "refs"
+ },
+ {
+  "name": "Hide the Pain Harold",
+  "rarity": "peu-commune",
+  "q": "hide the pain harold",
+  "desc": "Le monsieur au sourire crispé qui cache visiblement une immense souffrance. Tous les salariés s'y reconnaissent le lundi.",
+  "cat": "refs"
+ },
+ {
+  "name": "Bernie Mittens",
+  "rarity": "commune",
+  "q": "bernie sanders mittens",
+  "desc": "Un sénateur américain assis sur une chaise pliante, bras croisés, en moufles. Il a été photoshopé partout, jusque sur la Lune.",
+  "cat": "refs"
+ },
+ {
+  "name": "Ça va être tout noir",
+  "rarity": "peu-commune",
+  "q": "camera 90s french tv",
+  "desc": "La vidéo virale des années 2000 qui a fait le tour des collèges. Dite à voix haute, on ne peut pas la lire sans l'accent.",
+  "cat": "refs"
+ },
+ {
+  "name": "Chien de la casse",
+  "rarity": "commune",
+  "q": "angry dog junkyard",
+  "desc": "L'insulte la plus fleurie des cours de récré. À utiliser avec modération, ou pas du tout devant la daronne.",
+  "cat": "refs"
+ },
+ {
+  "name": "La Daronne",
+  "rarity": "rare",
+  "q": "french grandmother kitchen",
+  "desc": "Celle qui a toujours raison, qui retrouve tout ce qu'on a perdu et qui dit « on en reparlera » avec un seul regard.",
+  "cat": "culte"
+ },
+ {
+  "name": "Wesh",
+  "rarity": "commune",
+  "q": "street greeting",
+  "desc": "Le bonjour, le au revoir, le « ça va » et le « t'es sérieux » réunis en un seul mot. La langue française a de la ressource.",
+  "cat": "refs"
+ },
+ {
+  "name": "Quoicoubeh",
+  "rarity": "peu-commune",
+  "q": "teenagers laughing school",
+  "desc": "La blague de 2023 qui a rendu fous tous les profs de France : « Quoi ? » « Quoicoubeh ! » Un génocide de la conversation.",
+  "cat": "refs"
+ },
+ {
+  "name": "Apagnan",
+  "rarity": "commune",
+  "q": "teenager shrug",
+  "desc": "La réponse suprême de la cour de récré, à utiliser pile au bon moment pour ridiculiser l'adversaire.",
+  "cat": "refs"
+ },
+ {
+  "name": "Ratio",
+  "rarity": "commune",
+  "q": "smartphone social media likes",
+  "desc": "Quand ta réponse a plus de likes que le message d'origine. La plus grande humiliation possible sur les réseaux.",
+  "cat": "refs"
+ },
+ {
+  "name": "Le Seum",
+  "rarity": "commune",
+  "q": "frustrated man",
+  "desc": "Cette rage froide qu'on ressent quand le bus part sous ton nez. Entré dans le dictionnaire, preuve que la France avance.",
+  "cat": "refs"
+ },
+ {
+  "name": "Gênant",
+  "rarity": "commune",
+  "q": "awkward face",
+  "desc": "Le mot qui accompagne chaque photo de famille, chaque karaoké de mariage et chaque danse de tonton.",
+  "cat": "refs"
+ },
+ {
+  "name": "Tchoin",
+  "rarity": "commune",
+  "q": "selfie mirror",
+  "desc": "Le mot de Kaaris qui a fait le tour de la France en 2016. Les dictionnaires s'en souviennent encore.",
+  "cat": "refs"
+ },
+ {
+  "name": "Le Kebab de 3 h du mat'",
+  "rarity": "rare",
+  "q": "doner kebab shop night",
+  "desc": "Salade-tomate-oignon, sauce blanche, harissa, frites dedans. Le vrai repas national de la sortie de boîte.",
+  "cat": "culte"
+ },
+ {
+  "name": "Tacos Français",
+  "rarity": "rare",
+  "q": "french tacos",
+  "desc": "Une galette pliée remplie de frites et de sauce fromagère. Inventé à Lyon, mangé partout, détesté au Mexique.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Baguette sous le Bras",
+  "rarity": "peu-commune",
+  "q": "baguette under arm paris",
+  "desc": "Le cliché français ultime, à porter avec un béret et une marinière. Les touristes adorent, les boulangers aussi.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Béret",
+  "rarity": "commune",
+  "q": "french beret",
+  "desc": "Le chapeau que plus aucun Français ne porte, sauf dans les films américains sur la France.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Bise",
+  "rarity": "commune",
+  "q": "cheek kiss greeting",
+  "desc": "Une, deux, trois ou quatre ? Ça dépend de la région, et personne n'est jamais d'accord. Source de gênes infinies.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Ricard Sans Glaçons",
+  "rarity": "rare",
+  "q": "pastis glass water",
+  "desc": "L'apéro du Sud par excellence. Un trait de pastis, cinq volumes d'eau, et une partie de pétanque qui dure jusqu'au soir.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Pétanque",
+  "rarity": "peu-commune",
+  "wd": "pétanque",
+  "desc": "Tu tires ou tu pointes ? Le sport national des places de village, avec ses règles, ses mètres et ses disputes.",
+  "cat": "culte"
+ },
+ {
+  "name": "Fanny",
+  "rarity": "epique",
+  "q": "petanque fanny",
+  "desc": "Perdre 13 à 0 à la pétanque, c'est embrasser Fanny. Une tradition marseillaise aussi célèbre qu'humiliante.",
+  "cat": "refs"
+ },
+ {
+  "name": "Le Tour de France",
+  "rarity": "rare",
+  "wd": "Tour de France",
+  "desc": "Trois semaines de vélo, de caravane publicitaire et de casquettes gratuites. Juillet sans lui, ce n'est pas l'été.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Grève",
+  "rarity": "rare",
+  "q": "france strike protest",
+  "desc": "Le sport national qui ne prend jamais de vacances. Une banderole, un merguez-frites et c'est reparti.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le PMU du Coin",
+  "rarity": "epique",
+  "q": "pmu bar france",
+  "desc": "Le QG de Stéphane. Un café serré, un ticket de Quinté et les experts du monde entier réunis au comptoir.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Fête des Voisins",
+  "rarity": "commune",
+  "q": "street party neighbors",
+  "desc": "Une fois par an, on parle à ceux qu'on croise dans l'escalier toute l'année. Les chips et le rosé font le reste.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Camping des Flots Bleus",
+  "rarity": "rare",
+  "q": "camping france tent caravan",
+  "desc": "La caravane, la glacière, les tongs et le voisin qui fait des grillades à 8 h du matin. Les vacances, les vraies.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Barbecue de Tonton",
+  "rarity": "peu-commune",
+  "q": "barbecue sausages",
+  "desc": "Les saucisses carbonisées dehors, crues dedans, et tonton qui explique qu'il maîtrise la flamme.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Raclette",
+  "rarity": "rare",
+  "q": "raclette cheese melting",
+  "desc": "Fromage fondu, patates, charcuterie. Le seul repas où il fait 40 °C dans la salle à manger en plein hiver.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Galette des Rois",
+  "rarity": "peu-commune",
+  "q": "galette des rois",
+  "desc": "Le seul gâteau où il faut se cacher sous la table pour distribuer les parts. Et quelqu'un se casse toujours une dent sur la fève.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Muguet du 1er Mai",
+  "rarity": "commune",
+  "q": "muguet lily of the valley",
+  "desc": "Le brin qui porte bonheur, vendu à chaque coin de rue sans patente une fois par an.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Soldes",
+  "rarity": "commune",
+  "q": "soldes sale shop france",
+  "desc": "Deux fois par an, la cohue devant les magasins pour un pull à moins 30 %. Un sport de combat.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Bac de Philo",
+  "rarity": "peu-commune",
+  "q": "exam paper students france",
+  "desc": "Quatre heures pour répondre à « Peut-on être libre ? ». Tout le pays commente le sujet à la radio le midi.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Prof Absent",
+  "rarity": "commune",
+  "q": "empty classroom",
+  "desc": "La plus belle nouvelle d'une journée de collège. Une heure de perm qui vaut tous les trésors du monde.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Cantine",
+  "rarity": "commune",
+  "q": "school canteen tray france",
+  "desc": "Le hachis parmentier du jeudi, le poisson pané du vendredi et les petits suisses pour la négociation.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Carambar",
+  "rarity": "commune",
+  "wd": "Carambar",
+  "desc": "Le caramel qui colle aux dents, avec ses blagues pourries à l'intérieur de l'emballage. Un patrimoine national.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Kinder Surprise",
+  "rarity": "commune",
+  "wd": "Kinder Surprise",
+  "desc": "Un œuf en chocolat avec un jouet à monter dedans. On l'achète pour les enfants, on le mange pour soi.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Pogs",
+  "rarity": "peu-commune",
+  "q": "pogs game",
+  "desc": "Les petits disques de carton des années 90, joués dans les cours de récré avant d'être interdits par tous les directeurs.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Tamagotchi",
+  "rarity": "rare",
+  "wd": "Tamagotchi",
+  "desc": "L'animal virtuel qui mourait si on le laissait pendant le cours de maths. Le premier deuil de toute une génération.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Game Boy",
+  "rarity": "epique",
+  "wd": "Game Boy",
+  "desc": "La console grise qui mangeait des piles plus vite que Stéphane ne fume. Tetris dans le bus du collège, le bonheur.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Minitel",
+  "rarity": "epique",
+  "wd": "Minitel",
+  "desc": "L'Internet français avant Internet. 3615 et une facture de téléphone qui faisait trembler tous les pères de famille.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Club Dorothée",
+  "rarity": "legendaire",
+  "wd": "Club Dorothée",
+  "desc": "Les mercredis matin devant les dessins animés japonais. Une génération entière a été élevée par Dorothée.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Guignols de l'Info",
+  "rarity": "epique",
+  "wd": "Les Guignols de l'info",
+  "desc": "Les marionnettes en latex qui se moquaient des puissants tous les soirs sur Canal+. Plus drôles que les vrais, souvent.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Loft",
+  "rarity": "rare",
+  "q": "loft story tv",
+  "desc": "La première téléréalité française en 2001. Une piscine, une caméra dans la douche, et la France entière scotchée devant.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Anges de la Téléréalité",
+  "rarity": "peu-commune",
+  "q": "reality tv villa pool",
+  "desc": "Des candidats en maillot, des cris dans une villa et des disputes pour une histoire de vernis. Le chef-d'œuvre du câble.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Marseillais",
+  "rarity": "peu-commune",
+  "q": "marseille vieux port",
+  "desc": "Ils partent à l'autre bout du monde pour faire exactement la même chose qu'à la maison, mais au soleil.",
+  "cat": "culte"
+ },
+ {
+  "name": "Koh-Lanta",
+  "rarity": "rare",
+  "wd": "Koh-Lanta",
+  "desc": "Des aventuriers qui mangent des vers sur une île déserte. Et le conseil, et les flambeaux, et la phrase « la sentence est irrévocable ».",
+  "cat": "culte"
+ },
+ {
+  "name": "Qui veut gagner des millions ?",
+  "rarity": "rare",
+  "q": "game show tv studio",
+  "desc": "« C'est votre dernier mot ? » Le jeu où l'on appelle un ami qui ne sait jamais la réponse.",
+  "cat": "culte"
+ },
+ {
+  "name": "Questions pour un Champion",
+  "rarity": "peu-commune",
+  "wd": "Questions pour un champion",
+  "desc": "« Top ! Je suis… » Le jeu préféré des mamies et des étudiants qui ratent leurs cours de l'après-midi.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Juste Prix",
+  "rarity": "peu-commune",
+  "q": "tv game show prices",
+  "desc": "Plus ! Moins ! Plus ! Toute la France criait devant la télé pour une machine à laver.",
+  "cat": "culte"
+ },
+ {
+  "name": "Fort Boyard",
+  "rarity": "epique",
+  "wd": "Fort Boyard",
+  "desc": "Le Père Fouras, les clés, les tigres et Passe-Partout. L'été français, depuis 1990, dans un fort en mer.",
+  "cat": "culte"
+ },
+ {
+  "name": "Intervilles",
+  "rarity": "rare",
+  "q": "intervilles vachettes",
+  "desc": "Deux villes s'affrontent devant des vachettes qui renversent tout le monde. Le grand n'importe quoi des étés d'antan.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Journal de 13 h",
+  "rarity": "peu-commune",
+  "q": "french tv news studio",
+  "desc": "Les reportages sur le marché de Provence, les sabots des chevaux et le temps qu'il fait chez nous. Le rendez-vous des retraités.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Météo de Canal",
+  "rarity": "commune",
+  "q": "weather forecast tv",
+  "desc": "Le passage préféré de tous les ados des années 2000, pour des raisons qui n'avaient rien à voir avec l'anticyclone.",
+  "cat": "culte"
+ },
+ {
+  "name": "Kaamelott",
+  "rarity": "legendaire",
+  "wd": "Kaamelott",
+  "desc": "Les chevaliers de la Table ronde version boulets. « C'est pas faux », « Le gras c'est la vie », des répliques que tout le monde connaît par cœur.",
+  "cat": "culte"
+ },
+ {
+  "name": "C'est pas faux",
+  "rarity": "rare",
+  "q": "medieval knight confused",
+  "desc": "La réplique de Perceval quand il ne comprend rien. Elle sert pour toutes les réunions de travail depuis 2005.",
+  "cat": "refs"
+ },
+ {
+  "name": "OSS 117",
+  "rarity": "epique",
+  "wd": "OSS 117 : Le Caire, nid d'espions",
+  "desc": "L'espion le plus idiot et le plus sûr de lui de France. « Comment est votre blanquette ? » est devenue une question existentielle.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Bronzés",
+  "rarity": "legendaire",
+  "wd": "Les Bronzés",
+  "desc": "Le Club Med, les crêpes au sucre de Jean-Claude Dusse et « Sur un malentendu, ça peut marcher ». La comédie culte des Français.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Père Noël est une ordure",
+  "rarity": "legendaire",
+  "wd": "Le père Noël est une ordure",
+  "desc": "Le standard de SOS Détresse Amitié un soir de Noël. Les doubitchous de Sofia et « c'est c'la oui » ont tout gagné.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Visiteurs",
+  "rarity": "legendaire",
+  "wd": "Les Visiteurs",
+  "desc": "Jacquouille et Godefroy de Montmirail débarquent au XXe siècle. « Okayyy ! », « Mais qu'est-ce que c'est que ce binz ? » Un monument.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Cité de la Peur",
+  "rarity": "legendaire",
+  "wd": "La Cité de la peur",
+  "desc": "La Carioca, « Barbapapa » et un tueur en série au festival de Cannes. Le film le plus cité de toutes les soirées étudiantes.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Dîner de Cons",
+  "rarity": "epique",
+  "wd": "Le Dîner de cons",
+  "desc": "François Pignon et ses maquettes en allumettes. « Il s'appelle Juste Leblanc. » Un chef-d'œuvre de la comédie.",
+  "cat": "culte"
+ },
+ {
+  "name": "Bienvenue chez les Ch'tis",
+  "rarity": "epique",
+  "wd": "Bienvenue chez les Ch'tis",
+  "desc": "Le film qui a fait découvrir le maroilles et le « hein » à 20 millions de Français. Et la frite, et la baraque à frites.",
+  "cat": "culte"
+ },
+ {
+  "name": "Astérix et Obélix : Mission Cléopâtre",
+  "rarity": "legendaire",
+  "wd": "Astérix et Obélix : Mission Cléopâtre",
+  "desc": "« C'est une bonne situation ça, scribe ? » Le film qu'on peut citer en entier, de la première à la dernière minute.",
+  "cat": "culte"
+ },
+ {
+  "name": "Intouchables",
+  "rarity": "epique",
+  "wd": "Intouchables",
+  "desc": "Le film qui a fait pleurer et rire la France entière en même temps. Et danser sur Earth, Wind & Fire.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Haine",
+  "rarity": "epique",
+  "wd": "La Haine",
+  "desc": "« Jusqu'ici tout va bien. » Le film en noir et blanc sur la banlieue qui reste aussi actuel trente ans après.",
+  "cat": "culte"
+ },
+ {
+  "name": "Taxi",
+  "rarity": "rare",
+  "wd": "Taxi (film, 1998)",
+  "desc": "Une Peugeot 406 blanche qui roule à 300 dans les rues de Marseille. Le rêve de tous les tuneurs de France.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Fabuleux Destin d'Amélie Poulain",
+  "rarity": "rare",
+  "wd": "Le Fabuleux Destin d'Amélie Poulain",
+  "desc": "Montmartre, la crème brûlée qu'on casse à la cuillère et le nain de jardin qui voyage. Le Paris carte postale.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Tuche",
+  "rarity": "rare",
+  "q": "french family comedy",
+  "desc": "La famille de Bouzolles qui gagne au loto et débarque à Monaco. « Que Dieu bénisse le frites ! »",
+  "cat": "culte"
+ },
+ {
+  "name": "La Soupe aux Choux",
+  "rarity": "epique",
+  "wd": "La Soupe aux choux",
+  "desc": "De Funès, Carmet, un extraterrestre et une soupe qui fait des miracles. Le film des repas de famille.",
+  "cat": "culte"
+ },
+ {
+  "name": "Louis de Funès",
+  "rarity": "legendaire",
+  "wd": "Louis de Funès",
+  "desc": "Les grimaces les plus célèbres du cinéma français. Gendarme, Fantômas, Rabbi Jacob : un génie de la colère comique.",
+  "cat": "culte"
+ },
+ {
+  "name": "Jean-Paul Belmondo",
+  "rarity": "legendaire",
+  "wd": "Jean-Paul Belmondo",
+  "desc": "Le Magnifique, Bébel, les cascades sans doublure et la clope au bec. La classe à la française.",
+  "cat": "culte"
+ },
+ {
+  "name": "Jean Gabin",
+  "rarity": "epique",
+  "wd": "Jean Gabin",
+  "desc": "La gueule, la voix, la cigarette éternelle aux lèvres. Le patron du cinéma français d'après-guerre.",
+  "cat": "culte"
+ },
+ {
+  "name": "Coluche",
+  "rarity": "legendaire",
+  "wd": "Coluche",
+  "desc": "La salopette, le nez rouge et les Restos du Cœur. Il a fait rire la France entière et nourri des millions de gens.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Inconnus",
+  "rarity": "legendaire",
+  "wd": "Les Inconnus",
+  "desc": "Les Rap-Tout, Auto-Moto, les Envahisseurs et « Rien à branler ». Le trio qui a fait les meilleures parodies de la télé.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Nuls",
+  "rarity": "epique",
+  "wd": "Les Nuls",
+  "desc": "Chabat, Farrugia et Lauby. Les fausses pubs et les fausses émissions qui ont inventé l'humour absurde à la française.",
+  "cat": "culte"
+ },
+ {
+  "name": "Kad et Olivier",
+  "rarity": "rare",
+  "wd": "Kad et Olivier",
+  "desc": "Le duo de la Grosse Émission et de Mais qui a tué Pamela Rose ? Un humour à la frontière du n'importe quoi.",
+  "cat": "culte"
+ },
+ {
+  "name": "Omar et Fred",
+  "rarity": "epique",
+  "wd": "Omar et Fred",
+  "desc": "Le SAV des émissions sur Canal+, avec Omar en pantalon de survêt. Des sketchs plus courts que l'attention d'un ado.",
+  "cat": "culte"
+ },
+ {
+  "name": "Jamel Debbouze",
+  "rarity": "epique",
+  "wd": "Jamel Debbouze",
+  "desc": "La main dans la poche, la vanne qui fuse et le Jamel Comedy Club. Le roi du stand-up à la française.",
+  "cat": "culte"
+ },
+ {
+  "name": "Gad Elmaleh",
+  "rarity": "rare",
+  "wd": "Gad Elmaleh",
+  "desc": "Chouchou, le blond et les spectacles qui remplissaient les plus grandes salles de France.",
+  "cat": "culte"
+ },
+ {
+  "name": "Florence Foresti",
+  "rarity": "rare",
+  "wd": "Florence Foresti",
+  "desc": "Les imitations, la Boulette de Vidéo Gag et des spectacles qui font hurler de rire toutes les copines.",
+  "cat": "culte"
+ },
+ {
+  "name": "Kev Adams",
+  "rarity": "peu-commune",
+  "wd": "Kev Adams",
+  "desc": "Soda, les ados, et le roi des box-offices des moins de 20 ans. Il a l'air d'avoir 16 ans depuis 15 ans.",
+  "cat": "culte"
+ },
+ {
+  "name": "Élie Semoun",
+  "rarity": "peu-commune",
+  "wd": "Élie Semoun",
+  "desc": "Les Petites Annonces et Kevina. Des personnages qui ont marqué les cassettes VHS de toute une génération.",
+  "cat": "culte"
+ },
+ {
+  "name": "Jean-Marie Bigard",
+  "rarity": "rare",
+  "wd": "Jean-Marie Bigard",
+  "desc": "Le Stade de France rempli pour des blagues de chauve-souris. L'humour du comptoir, sans filtre et sans pause.",
+  "cat": "culte"
+ },
+ {
+  "name": "Franck Dubosc",
+  "rarity": "peu-commune",
+  "wd": "Franck Dubosc",
+  "desc": "Le dragueur en moule-bite du camping et des spectacles. « Je suis beau, mais je suis drôle aussi. »",
+  "cat": "culte"
+ },
+ {
+  "name": "Michel Blanc",
+  "rarity": "epique",
+  "wd": "Michel Blanc",
+  "desc": "Jean-Claude Dusse pour toujours. « Je sens que je vais conclure. » La vedette des Bronzés et un immense acteur.",
+  "cat": "culte"
+ },
+ {
+  "name": "Christian Clavier",
+  "rarity": "epique",
+  "wd": "Christian Clavier",
+  "desc": "Jacquouille, Monsieur Preskovic, Napoléon et tous les rôles de râleur. Une star des comédies familiales.",
+  "cat": "culte"
+ },
+ {
+  "name": "Johnny Hallyday",
+  "rarity": "mythique",
+  "wd": "Johnny Hallyday",
+  "desc": "Allumer le feu, Que je t'aime, et la fête nationale à chaque concert. L'idole des jeunes, des parents et des grands-parents.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Michel Sardou",
+  "rarity": "epique",
+  "wd": "Michel Sardou",
+  "desc": "Les Lacs du Connemara, la chanson qui fait danser toutes les fins de mariage en farandole. Personne ne connaît les couplets.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Claude François",
+  "rarity": "epique",
+  "wd": "Claude François",
+  "desc": "Alexandrie Alexandra, les Claudettes et des pas de danse que tonton refait à chaque fête.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Serge Gainsbourg",
+  "rarity": "legendaire",
+  "wd": "Serge Gainsbourg",
+  "desc": "La Gitane au bec, la barbe de trois jours et des chansons qui ont fait scandale. Le plus grand fumeur de la chanson française.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Jacques Brel",
+  "rarity": "epique",
+  "wd": "Jacques Brel",
+  "desc": "Ne me quitte pas, Amsterdam et une énergie folle sur scène. Le Belge le plus aimé des Français.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Édith Piaf",
+  "rarity": "legendaire",
+  "wd": "Édith Piaf",
+  "desc": "La Vie en rose et Non, je ne regrette rien. La voix française la plus connue du monde entier.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Charles Aznavour",
+  "rarity": "epique",
+  "wd": "Charles Aznavour",
+  "desc": "La Bohème, Emmenez-moi, et soixante-dix ans de carrière. Une légende de la chanson.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Daft Punk",
+  "rarity": "legendaire",
+  "wd": "Daft Punk",
+  "desc": "Les deux robots casqués qui ont fait danser la planète. One More Time, Get Lucky, et jamais un visage montré.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "David Guetta",
+  "rarity": "epique",
+  "wd": "David Guetta",
+  "desc": "Le DJ français qui fait lever les bras dans toutes les boîtes du monde. Les mains en l'air, toujours.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Stromae",
+  "rarity": "epique",
+  "wd": "Stromae",
+  "desc": "Alors on danse, Papaoutai et des clips ultra-léchés. Le Belge qui fait danser sur des paroles tristes.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Aya Nakamura",
+  "rarity": "epique",
+  "wd": "Aya Nakamura",
+  "desc": "Djadja, Pookie et un vocabulaire que les dictionnaires cherchent encore à comprendre. La chanteuse francophone la plus écoutée du monde.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Jul",
+  "rarity": "legendaire",
+  "wd": "Jul",
+  "desc": "La main en J, Marseille dans le cœur et des albums qui sortent plus vite que les saisons. Le recordman des disques d'or en France.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Booba",
+  "rarity": "epique",
+  "wd": "Booba",
+  "desc": "Le Duc de Boulogne, la pieuvre et vingt ans de punchlines. Une institution du rap français.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "PNL",
+  "rarity": "legendaire",
+  "wd": "PNL",
+  "desc": "Deux frères des Tarterêts, un clip sur la tour Eiffel et un style planant qui a tout changé. QLF.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Ninho",
+  "rarity": "epique",
+  "wd": "Ninho",
+  "desc": "Le roi des certifications, avec des albums qui tournent en boucle dans toutes les voitures du pays.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Damso",
+  "rarity": "rare",
+  "wd": "Damso",
+  "desc": "Le rappeur belge aux textes sombres et aux refrains qui restent dans la tête. Vie.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Orelsan",
+  "rarity": "epique",
+  "wd": "Orelsan",
+  "desc": "Le Caennais qui raconte la vie de la province. Basique, simple. Des textes que tout le monde connaît.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Nekfeu",
+  "rarity": "rare",
+  "wd": "Nekfeu",
+  "desc": "Le rappeur de l'Entourage et du 1995, connu pour ses textes ciselés et ses albums sortis par surprise.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "SCH",
+  "rarity": "rare",
+  "wd": "SCH (rappeur)",
+  "desc": "Le S, Marseille, JVLIVS et l'univers des films de mafia. Une voix grave reconnaissable entre mille.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Gims",
+  "rarity": "epique",
+  "wd": "Gims",
+  "desc": "Les lunettes noires, Bella et Sapés comme jamais. Le chanteur que même les grands-mères connaissent.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Soprano",
+  "rarity": "rare",
+  "wd": "Soprano (rappeur)",
+  "desc": "Le Marseillais aux refrains positifs, star des stades et des voyages scolaires.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "IAM",
+  "rarity": "legendaire",
+  "wd": "IAM (groupe)",
+  "desc": "L'École du micro d'argent, Je danse le mia, Akhenaton et Shurik'n. Les pyramides du rap marseillais.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "NTM",
+  "rarity": "legendaire",
+  "wd": "Suprême NTM",
+  "desc": "JoeyStarr et Kool Shen, le 93 et Seine-Saint-Denis Style. Le rap français à l'état brut.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "MC Solaar",
+  "rarity": "epique",
+  "wd": "MC Solaar",
+  "desc": "Bouge de là, Caroline, et une plume de poète. Le rap français élégant des années 90.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Kaaris",
+  "rarity": "rare",
+  "wd": "Kaaris",
+  "desc": "Sevran, Zoo et des punchlines devenues cultes. Le rappeur dont les expressions ont envahi les cours de récré.",
+  "cat": "chanteur"
+ },
+ {
+  "name": "Squeezie",
+  "rarity": "legendaire",
+  "wd": "Squeezie",
+  "desc": "Le YouTubeur le plus suivi de France. Les vidéos de jeux, le GP Explorer et des millions d'abonnés.",
+  "cat": "culte"
+ },
+ {
+  "name": "Cyprien",
+  "rarity": "epique",
+  "wd": "Cyprien (vidéaste)",
+  "desc": "Les vidéos sur la vie quotidienne qui ont lancé le YouTube français. Les bébés, les vacances, le premier jour de cours.",
+  "cat": "culte"
+ },
+ {
+  "name": "Norman fait des vidéos",
+  "rarity": "epique",
+  "wd": "Norman Thavaud",
+  "desc": "Les sketchs filmés dans un appartement avec un pote. « Je suis super content ! » L'âge d'or du YouTube français.",
+  "cat": "culte"
+ },
+ {
+  "name": "Mister V",
+  "rarity": "rare",
+  "wd": "Mister V",
+  "desc": "Les sketchs, la pizza Delamama et les morceaux de rap à l'autodérision. Un enfant de YouTube.",
+  "cat": "culte"
+ },
+ {
+  "name": "Inoxtag",
+  "rarity": "epique",
+  "wd": "Inoxtag",
+  "desc": "Le YouTubeur qui a grimpé l'Everest et l'a raconté dans un film diffusé au cinéma. Kaizen.",
+  "cat": "culte"
+ },
+ {
+  "name": "Michou",
+  "rarity": "rare",
+  "wd": "Michou (vidéaste)",
+  "desc": "Le YouTubeur toujours de bonne humeur, roi des défis et des vidéos de gaming.",
+  "cat": "culte"
+ },
+ {
+  "name": "Amixem",
+  "rarity": "rare",
+  "wd": "Amixem",
+  "desc": "Les défis, les vidéos de voyages et les plus beaux pétages de câbles du YouTube français.",
+  "cat": "culte"
+ },
+ {
+  "name": "Kameto",
+  "rarity": "rare",
+  "wd": "Kameto",
+  "desc": "Le fondateur de la Karmine Corp et le Kamet0 des streams. La KCorp, c'est une famille.",
+  "cat": "culte"
+ },
+ {
+  "name": "ZeratoR",
+  "rarity": "rare",
+  "wd": "ZeratoR",
+  "desc": "Le streameur des ZEvent, qui récolte des millions pour les associations en jouant aux jeux vidéo.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le GP Explorer",
+  "rarity": "epique",
+  "q": "formula 4 race car circuit",
+  "desc": "La course de voitures entre YouTubeurs qui a rempli le circuit du Mans et fait exploser Twitch.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le ZEvent",
+  "rarity": "rare",
+  "q": "charity stream gaming event",
+  "desc": "Le marathon caritatif des streameurs français. Des millions d'euros récoltés en jouant aux jeux vidéo.",
+  "cat": "culte"
+ },
+ {
+  "name": "Cyril Hanouna",
+  "rarity": "rare",
+  "wd": "Cyril Hanouna",
+  "desc": "Le patron des débats qui partent en vrille à la télé. Des chroniqueurs qui crient et des canulars à la chaîne.",
+  "cat": "culte"
+ },
+ {
+  "name": "Jean-Pierre Pernaut",
+  "rarity": "epique",
+  "wd": "Jean-Pierre Pernaut",
+  "desc": "Trente ans de 13 h, de clochers de village et de recettes du terroir. Le grand-père télé de la France entière.",
+  "cat": "culte"
+ },
+ {
+  "name": "Michel Drucker",
+  "rarity": "epique",
+  "wd": "Michel Drucker",
+  "desc": "Le canapé rouge de Vivement Dimanche. Il présente depuis l'invention de la télévision, ou presque.",
+  "cat": "culte"
+ },
+ {
+  "name": "Nagui",
+  "rarity": "rare",
+  "wd": "Nagui",
+  "desc": "N'oubliez pas les paroles et Taratata. L'animateur au rire le plus reconnaissable de la télé.",
+  "cat": "culte"
+ },
+ {
+  "name": "Thierry Henry Main",
+  "rarity": "rare",
+  "q": "football handball referee",
+  "desc": "Le 18 novembre 2009, une main contre l'Irlande qui qualifie la France. Dublin en parle encore au pub.",
+  "cat": "refs"
+ },
+ {
+  "name": "Le Coup de Boule",
+  "rarity": "legendaire",
+  "q": "football world cup final 2006 berlin",
+  "desc": "Finale de la Coupe du monde 2006, Berlin, 110e minute. Un geste que le monde entier a revu en boucle et qui a fini en chanson.",
+  "cat": "refs"
+ },
+ {
+  "name": "Knysna",
+  "rarity": "rare",
+  "q": "football team bus",
+  "desc": "Coupe du monde 2010, l'équipe de France refuse de descendre du bus. Le plus grand fiasco de l'histoire du foot français.",
+  "cat": "culte"
+ },
+ {
+  "name": "Et 1, et 2, et 3-0",
+  "rarity": "legendaire",
+  "q": "stade de france 1998 crowd",
+  "desc": "Le 12 juillet 1998, la France championne du monde. Les Champs-Élysées noirs de monde et « On est les champions ! ».",
+  "cat": "culte"
+ },
+ {
+  "name": "Champions du Monde 2018",
+  "rarity": "legendaire",
+  "q": "france world cup 2018 celebration",
+  "desc": "Moscou, 4-2 contre la Croatie, une pluie battante et Mbappé à 19 ans. La deuxième étoile.",
+  "cat": "culte"
+ },
+ {
+  "name": "Allez l'OM",
+  "rarity": "epique",
+  "wd": "Olympique de Marseille",
+  "desc": "À jamais les premiers, le Vélodrome en fusion et la Ligue des champions de 1993. Le club qui fait vibrer le Sud.",
+  "cat": "culte"
+ },
+ {
+  "name": "Ici c'est Paris",
+  "rarity": "epique",
+  "wd": "Paris Saint-Germain Football Club",
+  "desc": "Le Parc des Princes, les stars du monde entier et une Ligue des champions enfin gagnée. Le club de la capitale.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Clasico OM-PSG",
+  "rarity": "legendaire",
+  "q": "marseille paris football derby",
+  "desc": "Le match que la France entière attend deux fois par an. Fumigènes, chants et une semaine de chambrages avant et après.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Champs-Élysées un Soir de Victoire",
+  "rarity": "epique",
+  "q": "champs elysees celebration night",
+  "desc": "Klaxons, drapeaux et gens perchés sur les abribus. Le seul embouteillage où tout le monde est heureux.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Tour Eiffel",
+  "rarity": "epique",
+  "wd": "Tour Eiffel",
+  "desc": "La dame de fer qui scintille toutes les heures. Le monument où l'on fait semblant de la tenir du bout des doigts en photo.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Pont d'Avignon",
+  "rarity": "peu-commune",
+  "wd": "Pont Saint-Bénézet",
+  "desc": "Le pont de la chanson, coupé en plein milieu du Rhône. On y danse, on y danse, mais on n'y traverse pas.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Mont-Saint-Michel",
+  "rarity": "rare",
+  "wd": "Mont-Saint-Michel",
+  "desc": "L'abbaye posée sur un rocher, la marée qui monte au galop et l'omelette de la Mère Poulard à prix d'or.",
+  "cat": "culte"
+ },
+ {
+  "name": "La Joconde",
+  "rarity": "legendaire",
+  "wd": "La Joconde",
+  "desc": "Le sourire le plus célèbre du monde, derrière une vitre blindée et une foule de téléphones levés.",
+  "cat": "culte"
+ },
+ {
+  "name": "Napoléon",
+  "rarity": "mythique",
+  "wd": "Napoléon Ier",
+  "desc": "La main dans le gilet, le bicorne et une liste de batailles plus longue que la file d'attente du Louvre.",
+  "cat": "culte"
+ },
+ {
+  "name": "Vercingétorix",
+  "rarity": "rare",
+  "wd": "Vercingétorix",
+  "desc": "Le chef gaulois d'Alésia, moustache au vent. Le premier héros national, avant même la baguette.",
+  "cat": "culte"
+ },
+ {
+  "name": "Astérix",
+  "rarity": "legendaire",
+  "wd": "Astérix (personnage)",
+  "desc": "Le petit Gaulois à moustache, la potion magique et « Ils sont fous ces Romains ! ». Un trésor de la BD française.",
+  "cat": "culte"
+ },
+ {
+  "name": "Tintin",
+  "rarity": "legendaire",
+  "wd": "Tintin",
+  "desc": "Le reporter à la houppe, son fox-terrier Milou et le capitaine Haddock qui jure en mille sabords.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Schtroumpfs",
+  "rarity": "rare",
+  "wd": "Les Schtroumpfs",
+  "desc": "Les petits lutins bleus qui schtroumpfent tout ce qui se schtroumpfe. Gargamel les cherche encore.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Petit Prince",
+  "rarity": "epique",
+  "wd": "Le Petit Prince",
+  "desc": "« Dessine-moi un mouton. » Le livre français le plus traduit au monde, après la Bible.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Lapins Crétins",
+  "rarity": "rare",
+  "wd": "Lapins crétins",
+  "desc": "« BWAAAAH ! » Des lapins qui hurlent, des ventouses et des toilettes. Un humour 100 % made in France.",
+  "cat": "culte"
+ },
+ {
+  "name": "Mr Bean",
+  "rarity": "epique",
+  "wd": "Mr. Bean",
+  "desc": "Le monsieur en veste marron et sa Mini verte. Il n'a presque jamais parlé et il a fait rire la planète.",
+  "cat": "culte"
+ },
+ {
+  "name": "Bob l'Éponge",
+  "rarity": "epique",
+  "wd": "Bob l'éponge",
+  "desc": "L'éponge qui vit dans un ananas sous la mer et fait des pâtés de crabe. Des milliers de memes à elle toute seule.",
+  "cat": "culte"
+ },
+ {
+  "name": "Les Simpson",
+  "rarity": "epique",
+  "wd": "Les Simpson",
+  "desc": "La famille jaune de Springfield. Ils ont prédit l'avenir tellement de fois que c'en est devenu inquiétant.",
+  "cat": "culte"
+ },
+ {
+  "name": "Pikachu",
+  "rarity": "legendaire",
+  "wd": "Pikachu",
+  "desc": "Le rongeur électrique jaune le plus connu du monde. Pika pika, et des millions de cartes Pokémon vendues.",
+  "cat": "culte"
+ },
+ {
+  "name": "Mario",
+  "rarity": "legendaire",
+  "wd": "Mario",
+  "desc": "Le plombier italien à moustache qui saute sur des champignons depuis 1985. Son jeu a sauvé le jeu vidéo.",
+  "cat": "culte"
+ },
+ {
+  "name": "Sonic",
+  "rarity": "rare",
+  "wd": "Sonic the Hedgehog (personnage)",
+  "desc": "Le hérisson bleu qui court plus vite que tout le monde. Gotta go fast, comme Stéphane à l'heure de l'apéro.",
+  "cat": "culte"
+ },
+ {
+  "name": "Minecraft",
+  "rarity": "epique",
+  "wd": "Minecraft",
+  "desc": "Des cubes, des creepers qui explosent et des maisons construites jusqu'à 3 h du matin. Le jeu le plus vendu de l'histoire.",
+  "cat": "culte"
+ },
+ {
+  "name": "GTA",
+  "rarity": "epique",
+  "wd": "Grand Theft Auto",
+  "desc": "La série de jeux où l'on fait tout ce qu'on n'a pas le droit de faire. Le prochain épisode est attendu comme le Messie.",
+  "cat": "culte"
+ },
+ {
+  "name": "FIFA",
+  "rarity": "rare",
+  "q": "football video game controller",
+  "desc": "Le jeu de foot qui a coûté des milliers de manettes cassées et d'amitiés brisées. Encore un match ?",
+  "cat": "culte"
+ },
+ {
+  "name": "Fortnite",
+  "rarity": "epique",
+  "wd": "Fortnite",
+  "desc": "Le battle royale aux danses ridicules et aux skins de toutes les licences. Les parents ont appris le mot « V-bucks » malgré eux.",
+  "cat": "culte"
+ },
+ {
+  "name": "TikTok",
+  "rarity": "rare",
+  "wd": "TikTok",
+  "desc": "L'appli qui fait passer trois heures en dix minutes. Danses, recettes, et un algorithme qui en sait plus sur toi que ta mère.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Chat Qui Joue du Piano",
+  "rarity": "commune",
+  "q": "cat piano",
+  "desc": "Le premier chat star d'Internet, en smoking. Avant les chats, Internet n'était qu'un tas de câbles.",
+  "cat": "refs"
+ },
+ {
+  "name": "Le Pigeon Parisien",
+  "rarity": "commune",
+  "q": "pigeon paris",
+  "desc": "Le vrai habitant de Paris. Il mange ton sandwich, il squatte ta terrasse et il ne paie pas de loyer.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Rat de Ratatouille",
+  "rarity": "rare",
+  "wd": "Ratatouille (film)",
+  "desc": "Le rat cuisinier qui fait rêver le monde entier de cuisine française. Les vrais rats de Paris restent moins doués.",
+  "cat": "culte"
+ },
+ {
+  "name": "Le Moustachu à Marinière",
+  "rarity": "commune",
+  "q": "striped shirt moustache",
+  "desc": "La caricature française préférée des Américains : marinière, moustache, béret et baguette. Il ne manque que la clope.",
+  "cat": "culte"
+ }
+]

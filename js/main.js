@@ -8,37 +8,48 @@ let currentMfaFactorId = null;
 // INIT
 // ============================================================
 async function init() {
-  // Clean URL
-  if (window.location.pathname.endsWith('index.html')) {
-    window.history.replaceState(null, '', window.location.pathname.replace(/index\.html$/, ''));
-  }
-
-  // Check cloud session first if Supabase is available
-  if (window.CloudSync) {
-    const session = await CloudSync.getSession();
-    if (session) {
-      const profile = await CloudSync.loadProfile();
-      const inventory = await CloudSync.loadInventory();
-      if (profile) {
-        syncFromCloudProfile(profile, inventory);
-        checkDailyReset();
-        updateFreePacks();
-        showGameUI();
-        return;
-      }
+  try {
+    // Clean URL
+    if (window.location.pathname.endsWith('index.html')) {
+      window.history.replaceState(null, '', window.location.pathname.replace(/index\.html$/, ''));
     }
+    await Account.boot();   // session → profil → sauvegarde en ligne → startGame()
+  } catch (err) {
+    console.error('Erreur init():', err);
+    showAuthScreen();
+    showAuthMsg('Impossible de joindre le serveur du jeu : ' + (err.message || 'erreur inconnue'), 'error');
+  }
+}
+
+// Lancé par Account une fois le joueur connecté et sa sauvegarde en place
+function startGame() {
+  loadGame();
+  GameState.isLoggedIn = true;
+  const prof = Account.profile;
+  if (prof) {
+    GameState.pseudo = prof.pseudo || GameState.pseudo;
+    GameState.friendCode = prof.friend_code || GameState.friendCode;
+  }
+  GameState.email = (Account.user && Account.user.email) || GameState.email || '';
+  if (!GameState.pseudo) GameState.pseudo = 'Joueur';
+  if (GameState.freePacks === undefined || GameState.freePacks === null) GameState.freePacks = 5;
+  GameState.freePacks = Math.min(10, Math.max(0, GameState.freePacks));
+
+  // Cartes de départ de l'ancien mode course si l'inventaire est vide
+  if (Object.keys(GameState.inventory).length === 0) {
+    const starters = ['marlboro-rouge', 'camel-filtre', 'gauloises-bleues', 'clope-bite-phallus', 'megot-86-tiède', 'gitanes-papier-mais'];
+    starters.forEach(id => {
+      const c = getCigaretteById(id);
+      if (c) addCigarette(c);
+    });
+    GameState.equippedSlots[0] = 'marlboro-rouge';
+    GameState.equippedSlots[1] = 'camel-filtre';
+    GameState.equippedSlots[2] = 'gauloises-bleues';
   }
 
-  // Fallback to local save
-  const loggedIn = loadGame();
   checkDailyReset();
   updateFreePacks();
-
-  if (loggedIn && GameState.isLoggedIn) {
-    showGameUI();
-  } else {
-    showAgeGate();
-  }
+  showGameUI();
 }
 
 // ============================================================
@@ -59,8 +70,7 @@ document.getElementById('btn-age-ok').addEventListener('click', () => {
 document.getElementById('btn-age-no').addEventListener('click', () => {
   document.getElementById('age-gate').innerHTML = `
     <div class="age-gate-box" style="text-align:center">
-      <div style="font-size:3rem">🚫</div>
-      <h2 style="font-family:var(--font-title);color:var(--red);margin:16px 0">Accès interdit</h2>
+      <h2 style="font-family:var(--font-title);color:var(--red);margin:16px 0;font-size:2rem">Accès Strictement Réservé 18+</h2>
       <p style="color:var(--text-muted)">Ce jeu est réservé aux personnes majeures.</p>
     </div>`;
 });
@@ -113,41 +123,47 @@ document.getElementById('btn-register').addEventListener('click', async () => {
   const password = document.getElementById('auth-password').value;
 
   if (!pseudo || pseudo.length < 2) { showToast('Pseudo trop court (min 2 caractères)', 'error'); return; }
+  if (pseudo.length > 20 || !/^[\p{L}\p{N} _.\-']+$/u.test(pseudo)) { showToast('Pseudo : 20 caractères max, lettres, chiffres, espaces et - _ . \' uniquement', 'error'); return; }
   if (!email || !email.includes('@')) { showToast('Email invalide', 'error'); return; }
-  if (!password || password.length < 6) { showToast('Mot de passe de 6 caractères minimum requis', 'error'); return; }
+  if (!password || password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) { showToast('Mot de passe : 8 caractères minimum avec une minuscule, une majuscule et un chiffre', 'error'); return; }
 
   const btn = document.getElementById('btn-register');
   btn.disabled = true;
   btn.textContent = 'Création en cours...';
 
   try {
+    // Pseudo déjà pris ?
+    const { data: free } = await window.sb.rpc('pseudo_available', { p_pseudo: pseudo });
+    if (free === false) {
+      const m = 'Ce pseudo est déjà pris, choisis-en un autre.';
+      showToast(m, 'error'); showAuthMsg(m, 'error');
+      btn.disabled = false; btn.textContent = 'Créer mon compte';
+      return;
+    }
     const res = await CloudSync.signUp(email, password, pseudo);
     if (!res.ok) {
       showToast(res.msg, 'error');
       showAuthMsg(res.msg, 'error');
       btn.disabled = false;
-      btn.textContent = '🎮 Créer mon compte';
+      btn.textContent = 'Créer mon compte';
       return;
     }
 
     if (res.requireEmailConfirm) {
       showAuthMsg(res.msg, 'success');
       btn.disabled = false;
-      btn.textContent = '🎮 Créer mon compte';
+      btn.textContent = 'Créer mon compte';
       return;
     }
 
-    // Direct login succeeded (Confirm email disabled or session active)
-    const profile = await CloudSync.loadProfile();
-    const inventory = await CloudSync.loadInventory();
-    if (profile) syncFromCloudProfile(profile, inventory);
+    // Compte créé et connecté
     showToast(`Bienvenue ${pseudo} !`, 'success');
-    showGameUI();
+    await Account.onSignedIn(res.user);
   } catch (err) {
     showToast(err.message || 'Erreur inattendue', 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = '🎮 Créer mon compte';
+    btn.textContent = 'Créer mon compte';
   }
 });
 
@@ -166,10 +182,21 @@ document.getElementById('btn-login').addEventListener('click', async () => {
   try {
     const res = await CloudSync.signIn(email, password);
     if (!res.ok) {
-      showToast(res.msg, 'error');
-      showAuthMsg(res.msg, 'error');
+      // Traduction des erreurs Supabase courantes
+      let msg = res.msg || 'Identifiants incorrects';
+      if (msg.toLowerCase().includes('email not confirmed')) {
+        msg = 'Email non confirmé. Vérifiez votre boîte mail et cliquez sur le lien de confirmation.';
+      } else if (msg.toLowerCase().includes('user already registered')) {
+        msg = 'Un compte existe déjà avec cet e-mail : connecte-toi.';
+      } else if (msg.toLowerCase().includes('invalid login')) {
+        msg = 'Email ou mot de passe incorrect.';
+      } else if (msg.toLowerCase().includes('too many requests')) {
+        msg = 'Trop de tentatives. Attendez quelques minutes.';
+      }
+      showToast(msg, 'error');
+      showAuthMsg(msg, 'error');
       btn.disabled = false;
-      btn.textContent = '🔑 Connexion';
+      btn.textContent = 'Connexion';
       return;
     }
 
@@ -179,38 +206,18 @@ document.getElementById('btn-login').addEventListener('click', async () => {
       document.getElementById('mfa-form').classList.remove('hidden');
       document.getElementById('auth-title').textContent = 'Validation 2FA';
       btn.disabled = false;
-      btn.textContent = '🔑 Connexion';
+      btn.textContent = 'Connexion';
       return;
     }
 
-    // Sync Cloud profile
-    let profile = await CloudSync.loadProfile();
-    const inventory = await CloudSync.loadInventory();
-    if (!profile && res.user) {
-      // Auto-create profile if trigger didn't run
-      const pseudo = res.user.user_metadata?.pseudo || email.split('@')[0];
-      const friendCode = (pseudo.substring(0, 4).toUpperCase()) + '-' + Math.floor(1000 + Math.random() * 9000);
-      const newProf = {
-        id: res.user.id,
-        pseudo: pseudo,
-        friend_code: friendCode,
-        money: 500,
-        xp: 0,
-        level: 1,
-        skill_points: 0
-      };
-      await window.sb?.from('profiles').upsert(newProf);
-      profile = newProf;
-    }
-
-    if (profile) syncFromCloudProfile(profile, inventory);
-    showToast('Connexion réussie ! ☁️', 'success');
-    showGameUI();
+    showToast('Connexion réussie !', 'success');
+    await Account.onSignedIn(res.user);
   } catch (err) {
-    showToast(err.message || 'Erreur', 'error');
+    console.error('Erreur login :', err);
+    showToast(err.message || 'Erreur inattendue', 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = '🔑 Connexion';
+    btn.textContent = 'Connexion';
   }
 });
 
@@ -229,10 +236,8 @@ document.getElementById('btn-verify-mfa')?.addEventListener('click', async () =>
     return;
   }
 
-  const profile = await CloudSync.loadProfile();
-  const inventory = await CloudSync.loadInventory();
-  if (profile) syncFromCloudProfile(profile, inventory);
-  showGameUI();
+  const { data: sess } = await sb.auth.getSession();
+  if (sess && sess.session) await Account.onSignedIn(sess.session.user);
 });
 
 document.getElementById('btn-cancel-mfa')?.addEventListener('click', () => {
@@ -279,9 +284,15 @@ function showGameUI() {
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('game-ui').classList.remove('hidden');
 
+  if (typeof PlayerProfile !== 'undefined') PlayerProfile.renderTopBar();
+  if (typeof initAllIcons === 'function') initAllIcons();
+  if (typeof initAudioButton === 'function') initAudioButton();
   updateHUD();
   startFreePackTimer();
-  showPage('course');
+  if (typeof TalentsEngine !== 'undefined' && TalentsEngine.init) TalentsEngine.init();
+  if (typeof MultiplayerEngine !== 'undefined' && MultiplayerEngine.init) MultiplayerEngine.init();
+  if (typeof Casino !== 'undefined' && Casino.init) Casino.init();
+  showPage('clicker');
 
   // Kick off background timers
   setInterval(() => {
@@ -290,13 +301,14 @@ function showGameUI() {
     if (currentPage === 'bourse') Bourse.renderPredictions();
   }, 10000);
 
-  showToast(`Bienvenue, ${GameState.pseudo} ! 🚬`, 'gold');
+  if (window.Social) Social.start();
+  showToast(`Bienvenue, ${GameState.pseudo} !`, 'gold');
 }
 
 // ============================================================
 // NAVIGATION
 // ============================================================
-document.querySelectorAll('.nav-btn').forEach(btn => {
+document.querySelectorAll('.nav-btn, .home-menu-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const page = btn.dataset.page;
     if (!page) return;
@@ -304,44 +316,52 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-document.getElementById('btn-profile-top')?.addEventListener('click', () => showPage('profil'));
+document.getElementById('btn-profile-top')?.addEventListener('click', () => {
+  // Le bouton du joueur (photo + pseudo) ouvre son profil
+  showPage('profil');
+});
 
 // ============================================================
-// COURSE PAGE
+// COURSE PAGE & HOME
 // ============================================================
 document.querySelectorAll('.track-card').forEach(card => {
   card.addEventListener('click', () => {
-    if (card.classList.contains('locked')) {
-      showToast('Piste verrouillée ! Montez de niveau pour la débloquer.', 'error');
-      return;
-    }
     document.querySelectorAll('.track-card').forEach(c => c.classList.remove('active'));
     card.classList.add('active');
     GameState.selectedTrack = card.dataset.track;
     saveGame();
+    
+    // Mettre à jour le texte du bouton de sélection
+    const trackName = card.querySelector('.track-name')?.textContent || 'Piste';
+    const btnSelect = document.getElementById('btn-track-select');
+    if (btnSelect) btnSelect.innerHTML = `📍 ${trackName}`;
+    
+    // Fermer le modal
+    document.getElementById('track-overlay')?.classList.add('hidden');
   });
+});
+
+document.getElementById('btn-track-select')?.addEventListener('click', () => {
+  document.getElementById('track-overlay')?.classList.remove('hidden');
+});
+document.getElementById('track-close')?.addEventListener('click', () => {
+  document.getElementById('track-overlay')?.classList.add('hidden');
 });
 
 document.getElementById('btn-start-solo')?.addEventListener('click', () => {
   const track = GameState.selectedTrack || 'trottoir';
   const trackData = TRACKS[track];
-
   if (!trackData) return;
-  if (GameState.level < trackData.unlockLevel) {
-    showToast('Piste verrouillée !', 'error');
-    return;
-  }
 
   // Check equipped cigs
   const equipped = getEquippedCigs();
   if (equipped.length === 0) {
     openModal(`
       <div style="text-align:center;padding:16px">
-        <div style="font-size:3rem;margin-bottom:16px">🚬</div>
         <h3 style="font-family:var(--font-title);font-size:1.4rem;color:var(--accent);margin-bottom:12px">Aucune cigarette équipée !</h3>
-        <p style="color:var(--text-muted);margin-bottom:16px">Stéphane court plus vite avec des cigarettes.<br>Mais vous pouvez quand même courir... sans boost.</p>
+        <p style="color:var(--text-muted);margin-bottom:16px">Stéphane court plus vite avec des cigarettes.<br>Vous pouvez quand même courir sans boost.</p>
         <div style="display:flex;gap:12px;justify-content:center">
-          <button id="modal-run-anyway" class="btn-primary">Courir quand même 😤</button>
+          <button id="modal-run-anyway" class="btn-primary">Courir sans boost</button>
           <button id="modal-equip-first" class="btn-secondary">Équiper d'abord</button>
         </div>
       </div>
@@ -375,10 +395,19 @@ document.getElementById('btn-fumer')?.addEventListener('touchstart', (e) => {
   RaceEngine.smoke();
 }, { passive: false });
 
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && RaceEngine.active) {
+    e.preventDefault();
+    RaceEngine.smoke();
+  }
+});
+
 document.getElementById('btn-abandon')?.addEventListener('click', () => {
   if (confirm('Abandonner la course ?')) {
+    const ranked = !!RaceEngine.leagueMode;
     RaceEngine.stop();
-    showPage('course');
+    if (ranked && typeof CourseClandestine !== 'undefined') CourseClandestine.onAbandon();
+    else showPage('course');
   }
 });
 
@@ -433,7 +462,7 @@ function renderRecyclePanel() {
     const canRecycle = available >= rule.cost;
     return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:10px;background:var(--bg-surface);border-radius:var(--r-sm)">
       <span style="flex:1;font-size:0.85rem"><strong style="color:${RARITIES[rule.from]?.color}">${RARITIES[rule.from]?.name}</strong> (${available}) → <strong style="color:${RARITIES[rule.to]?.color}">${RARITIES[rule.to]?.name}</strong> — Coût : ${rule.cost}</span>
-      <button class="btn-primary btn-sm" ${canRecycle ? '' : 'disabled'} data-from="${rule.from}">Recycler ♻️</button>
+      <button class="btn-primary btn-sm" ${canRecycle ? '' : 'disabled'} data-from="${rule.from}">Recycler</button>
     </div>`;
   }).join('');
 
@@ -500,7 +529,7 @@ document.querySelectorAll('.cas-tab').forEach(tab => {
 document.getElementById('btn-copy-code')?.addEventListener('click', () => {
   const code = GameState.friendCode;
   if (!code) return;
-  navigator.clipboard.writeText(code).then(() => showToast('Code copié ! 📋', 'success'));
+  navigator.clipboard.writeText(code).then(() => showToast('Code copié !', 'success'));
 });
 
 document.getElementById('btn-add-friend')?.addEventListener('click', () => {
@@ -508,7 +537,7 @@ document.getElementById('btn-add-friend')?.addEventListener('click', () => {
   if (!val) return;
   const result = addFriend(val);
   if (!result.ok) { showToast(result.msg, 'error'); return; }
-  showToast('Ami ajouté ! 👥', 'success');
+  showToast('Ami ajouté !', 'success');
   document.getElementById('add-friend-input').value = '';
   Friends.renderFriendsList();
 });
@@ -550,10 +579,8 @@ document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
 // PROFILE & SECURITY (2FA)
 // ============================================================
 document.getElementById('btn-logout')?.addEventListener('click', async () => {
-  if (confirm('Se déconnecter ?')) {
-    if (window.CloudSync) await CloudSync.signOut();
-    logoutUser();
-    showAuthScreen();
+  if (confirm('Se déconnecter ? Ta progression est sauvegardée en ligne : tu la retrouveras en te reconnectant.')) {
+    await Account.signOut();
   }
 });
 
@@ -577,7 +604,7 @@ document.getElementById('btn-toggle-2fa')?.addEventListener('click', async () =>
   }
 
   openModal(`
-    <h3 style="font-family:var(--font-title);font-size:1.4rem;color:var(--accent);margin-bottom:12px">🔐 Activer la Double Authentification</h3>
+    <h3 style="font-family:var(--font-title);font-size:1.4rem;color:var(--accent);margin-bottom:12px">Activer la Double Authentification</h3>
     <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:16px">
       1. Ouvrez <strong>Google Authenticator</strong> (ou toute appli TOTP) sur votre téléphone.<br>
       2. Scannez le code QR ci-dessous, ou saisissez manuellement la clé secrète.<br>
@@ -601,9 +628,9 @@ document.getElementById('btn-toggle-2fa')?.addEventListener('click', async () =>
 
     const verifyRes = await CloudSync.verifyMFAEnrollment(res.factorId, code);
     if (verifyRes.ok) {
-      showToast('2FA activée avec succès ! Votre compte est ultra-sécurisé 🛡️', 'success');
+      showToast('2FA activée avec succès ! Compte sécurisé.', 'success');
       closeModal();
-      btn.textContent = '2FA Activé ✅';
+      btn.textContent = '2FA Activé';
       btn.disabled = true;
       btn.classList.remove('btn-secondary');
       btn.classList.add('btn-primary');
@@ -613,27 +640,28 @@ document.getElementById('btn-toggle-2fa')?.addEventListener('click', async () =>
   });
 });
 
+// Réglages : une vraie page (le profil est un autre écran)
+let pageBeforeSettings = 'clicker';
 document.getElementById('btn-settings')?.addEventListener('click', () => {
-  openModal(`
-    <h3 style="font-family:var(--font-title);font-size:1.4rem;color:var(--accent);margin-bottom:16px">⚙️ Paramètres</h3>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div style="background:var(--bg-surface);border-radius:var(--r-sm);padding:12px;font-size:0.85rem;color:var(--text-muted)">
-        <strong style="color:var(--text)">Version</strong><br>Stéphane, le Roi du Cendrier v1.0<br>
-        <br><strong style="color:var(--text)">Données</strong><br>Toutes les données sont stockées localement dans votre navigateur.
-        <br>Argent virtuel uniquement — Aucun achat réel, aucun retrait.
-      </div>
-      <div style="background:rgba(224,48,48,0.1);border:1px solid var(--red);border-radius:var(--r-sm);padding:12px;font-size:0.85rem;color:var(--red)">
-        ⚠️ Le tabac est dangereux pour la santé. Ce jeu est satirique et humoristique, il ne fait pas l'apologie du tabac. Réservé aux 18 ans et plus.
-      </div>
-      <button id="btn-reset-game" class="btn-danger">🗑️ Réinitialiser la partie</button>
-    </div>
-  `);
-  document.getElementById('btn-reset-game')?.addEventListener('click', () => {
-    if (confirm('Êtes-vous sûr ? Toutes vos données seront perdues !')) {
-      localStorage.removeItem(SAVE_KEY);
-      location.reload();
-    }
-  });
+  const cur = (document.querySelector('.page.active')?.id || 'page-clicker').replace('page-', '');
+  if (cur !== 'reglages') pageBeforeSettings = cur;
+  showPage('reglages');
+});
+document.getElementById('set-back')?.addEventListener('click', () => showPage(pageBeforeSettings));
+function renderSettings() {
+  const mail = document.getElementById('set-email');
+  const u = window.Account && Account.user;
+  if (mail) mail.textContent = u && u.email ? 'Connecté avec ' + u.email : 'Connecté';
+  const a = document.getElementById('set-audio');
+  if (a) a.textContent = (window.SoundFX && SoundFX.enabled) ? 'Activé' : 'Coupé';
+}
+document.getElementById('set-audio')?.addEventListener('click', () => {
+  if (window.SoundFX) SoundFX.toggle();
+  document.getElementById('icon-audio').textContent = SoundFX.enabled ? '🔊' : '🔇';
+  renderSettings();
+});
+document.getElementById('btn-reset-save-full')?.addEventListener('click', () => {
+  if (confirm('Effacer toute ta progression et recommencer à zéro ? C\'est définitif.')) window.resetEntireGame(true);
 });
 
 // ============================================================
@@ -660,3 +688,16 @@ if (localStorage.getItem('stephane_age_ok') === '1') {
 // START
 // ============================================================
 init();
+
+// Écran de chargement : visible au moins 1,2 s, puis fondu
+(function hideSplash() {
+  const splash = document.getElementById('splash-screen');
+  if (!splash) return;
+  const started = performance.now();
+  const done = () => setTimeout(() => {
+    splash.classList.add('is-hidden');
+    setTimeout(() => splash.remove(), 600);
+  }, Math.max(0, 1200 - (performance.now() - started)));
+  if (document.readyState === 'complete') done();
+  else window.addEventListener('load', done, { once: true });
+})();

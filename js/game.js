@@ -34,6 +34,7 @@ const GameState = {
   pityCounters: { tabac_epic: 0, duty_legendary: 0, contre_mythic: 0 },
 
   // Race stats
+  stats: { totalRaces: 0, totalWins: 0, totalMoney: 0, goldStreak: 0, bestTimes: {} },
   totalRaces: 0,
   totalWins: 0,
   totalMoney: 0,  // All-time earned
@@ -71,6 +72,8 @@ const GameState = {
   // Achievements
   seriesCompleted: [],
 };
+
+if (typeof window !== 'undefined') window.GameState = GameState;
 
 // ============================================================
 // PERSISTENCE (LocalStorage + Supabase Cloud Auto-sync)
@@ -113,12 +116,36 @@ function syncFromCloudProfile(profile, inventoryList) {
   GameState.xp = profile.xp !== undefined ? profile.xp : GameState.xp;
   GameState.level = profile.level !== undefined ? profile.level : GameState.level;
   GameState.skillPoints = profile.skill_points !== undefined ? profile.skill_points : GameState.skillPoints;
-  if (profile.skills) Object.assign(GameState.skills, profile.skills);
-  if (profile.stats) Object.assign(GameState.stats, profile.stats);
-  if (profile.equipped_slots) GameState.equippedSlots = profile.equipped_slots;
-  if (profile.pity_counters) Object.assign(GameState.pityCounters, profile.pity_counters);
+
+  if (profile.skills && typeof profile.skills === 'object') {
+    GameState.skills = GameState.skills || { slots: 0, energy: 0, cough: 0, recovery: 0, market: 0 };
+    Object.assign(GameState.skills, profile.skills);
+  }
+
+  if (profile.stats && typeof profile.stats === 'object') {
+    GameState.stats = GameState.stats || {};
+    Object.assign(GameState.stats, profile.stats);
+    if (profile.stats.totalRaces !== undefined) GameState.totalRaces = profile.stats.totalRaces;
+    if (profile.stats.totalWins !== undefined) GameState.totalWins = profile.stats.totalWins;
+    if (profile.stats.totalMoney !== undefined) GameState.totalMoney = profile.stats.totalMoney;
+    if (profile.stats.goldStreak !== undefined) GameState.goldStreak = profile.stats.goldStreak;
+    if (profile.stats.bestTimes) {
+      GameState.bestTimes = { ...(GameState.bestTimes || {}), ...profile.stats.bestTimes };
+    }
+  }
+
+  if (profile.equipped_slots && Array.isArray(profile.equipped_slots)) {
+    GameState.equippedSlots = profile.equipped_slots;
+  }
+
+  if (profile.pity_counters && typeof profile.pity_counters === 'object') {
+    GameState.pityCounters = GameState.pityCounters || { tabac_epic: 0, duty_legendary: 0, contre_mythic: 0 };
+    Object.assign(GameState.pityCounters, profile.pity_counters);
+  }
+
   if (profile.free_packs !== undefined) GameState.freePacks = profile.free_packs;
 
+  GameState.inventory = GameState.inventory || {};
   if (inventoryList && Array.isArray(inventoryList)) {
     inventoryList.forEach(item => {
       const cigData = CIGARETTES.find(c => c.id === item.cig_id);
@@ -217,21 +244,39 @@ function getDefaultState() {
   };
 }
 
+// Safe global formatter
+if (typeof fmt === 'undefined') {
+  window.fmt = function(n) {
+    if (typeof n !== 'number' || isNaN(n)) n = 0;
+    return new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' €';
+  };
+}
+
 // ============================================================
 // ECONOMY
 // ============================================================
 function earnMoney(amount) {
-  GameState.money += amount;
-  GameState.totalMoney += Math.max(0, amount);
+  const num = Math.round(Number(amount)) || 0;
+  if (num <= 0) return;
+  GameState.money = (Number(GameState.money) || 0) + num;
+  GameState.totalMoney = (Number(GameState.totalMoney) || 0) + num;
   saveGame();
   updateHUD();
+  if (typeof ClickerEngine !== 'undefined' && ClickerEngine.setCash && ClickerEngine.getCash() !== GameState.money) {
+    ClickerEngine.setCash(GameState.money);
+  }
 }
 
 function spendMoney(amount) {
-  if (GameState.money < amount) return false;
-  GameState.money -= amount;
+  const num = Math.round(Number(amount)) || 0;
+  if (num <= 0) return false;
+  if ((Number(GameState.money) || 0) < num) return false;
+  GameState.money = (Number(GameState.money) || 0) - num;
   saveGame();
   updateHUD();
+  if (typeof ClickerEngine !== 'undefined' && ClickerEngine.setCash && ClickerEngine.getCash() !== GameState.money) {
+    ClickerEngine.setCash(GameState.money);
+  }
   return true;
 }
 
@@ -306,11 +351,11 @@ function earnXP(amount) {
       GameState.level++;
       GameState.skillPoints++;
       leveledUp = true;
-      showToast(`🎉 Niveau ${GameState.level} ! +1 point de compétence`, 'gold');
+      showToast(`Niveau ${GameState.level} atteint ! +1 point de compétence`, 'gold');
       // Unlock market slot every 5 levels
       if (GameState.level % 5 === 0) {
         GameState.marketSlots++;
-        showToast(`🏪 Nouvel emplacement tabac débloqué !`, 'success');
+        showToast(`Nouvel emplacement tabac débloqué !`, 'success');
       }
     } else break;
   }
@@ -402,7 +447,7 @@ function checkSeriesCompletion() {
     if (allOwned) {
       GameState.seriesCompleted.push(seriesId);
       GameState.skillPoints++;
-      showToast(`📚 Série "${series.name}" complétée ! +1 point de compétence`, 'gold');
+      showToast(`Série "${series.name}" complétée ! +1 point de compétence`, 'gold');
       saveGame();
     }
   }
@@ -427,30 +472,68 @@ function generateFakeLB() {
 }
 
 // ============================================================
-// SKILLS
+// SKILLS & TALENT TREE
 // ============================================================
 function upgradeSkill(skillId) {
   const def = SKILLS_DEF.find(s => s.id === skillId);
   if (!def) return;
   const currentLevel = GameState.skills[skillId] || 0;
-  if (currentLevel >= def.maxLevel) { showToast('Compétence au niveau max !', 'error'); return; }
-  if (GameState.skillPoints < def.cost) { showToast('Pas assez de points !', 'error'); return; }
+  if (currentLevel >= def.maxLevel) {
+    showToast('Compétence au niveau maximum !', 'error');
+    return;
+  }
+  if (GameState.skillPoints < def.cost) {
+    showToast('Pas assez de points de compétence !', 'error');
+    return;
+  }
   GameState.skillPoints -= def.cost;
   GameState.skills[skillId] = currentLevel + 1;
-  // Apply effect
+
+  if (window.SoundFX) SoundFX.upgrade();
+
+  // Apply instant effects
   if (skillId === 'slots') {
     const newMax = getMaxSlots();
     while (GameState.equippedSlots.length < newMax) GameState.equippedSlots.push(null);
   }
   if (skillId === 'market') GameState.marketSlots++;
-  showToast(`⚡ Compétence "${def.name}" améliorée !`, 'success');
+
+  showToast(`Talent "${def.name}" augmenté au Niv. ${GameState.skills[skillId]} !`, 'gold');
   saveGame();
+  if (typeof renderSkillTree === 'function') renderSkillTree();
+  if (typeof renderSkills === 'function') renderSkills();
+  updateHUD();
 }
 
-// Skill modifiers
-function getEnergyMod() { return 1 + (GameState.skills.energy || 0) * 0.10; }
-function getCoughMod()   { return 1 - (GameState.skills.cough || 0) * 0.10; }
+function resetSkills() {
+  let refund = 0;
+  for (const [sId, lvl] of Object.entries(GameState.skills || {})) {
+    const def = SKILLS_DEF.find(s => s.id === sId);
+    if (def && lvl > 0) {
+      refund += lvl * (def.cost || 1);
+    }
+  }
+  if (refund <= 0) {
+    showToast('Aucun point investi à réinitialiser.', 'info');
+    return;
+  }
+  GameState.skillPoints += refund;
+  GameState.skills = { slots: 0, energy: 0, cough: 0, recovery: 0, market: 0 };
+  
+  if (window.SoundFX) SoundFX.click();
+  showToast(`Arbre réinitialisé ! +${refund} points récupérés`, 'success');
+  saveGame();
+  if (typeof renderSkillTree === 'function') renderSkillTree();
+  if (typeof renderSkills === 'function') renderSkills();
+  updateHUD();
+}
+
+// Skill modifiers used across race, market and casino
+function getEnergyMod() { return 1 + (GameState.skills.energy || 0) * 0.12; }
+function getCoughMod()   { return Math.max(0.2, 1 - (GameState.skills.cough || 0) * 0.10); }
 function getRecoveryMod(){ return 1 + (GameState.skills.recovery || 0) * 0.20; }
+function getSpeedMod()   { return (GameState.skills.combustion || 0) * 2.5; }
+function getMaxSlots()   { return 3 + (GameState.skills.slots || 0); }
 
 // ============================================================
 // RECYCLING
@@ -492,7 +575,7 @@ function recycle(fromRarity) {
   const eligible = CIGARETTES.filter(c => c.rarity === rule.to && !c.seasonal);
   const result = eligible[Math.floor(Math.random() * eligible.length)];
   addCigarette(result);
-  showToast(`♻️ Recyclage : vous obtenez ${result.name} (${RARITIES[rule.to].name}) !`, 'gold');
+  showToast(`Recyclage réussi : vous obtenez ${result.name} (${RARITIES[rule.to].name}) !`, 'gold');
   saveGame();
 }
 
@@ -503,9 +586,23 @@ function updateHUD() {
   const moneyEl = document.getElementById('hud-money');
   const packsEl = document.getElementById('hud-packs');
   const levelEl = document.getElementById('hud-level');
-  if (moneyEl) moneyEl.textContent = fmt(GameState.money);
-  if (packsEl) packsEl.textContent = GameState.freePacks + (GameState.freePacks === 1 ? ' paquet' : ' paquets');
-  if (levelEl) levelEl.textContent = 'Niv. ' + GameState.level;
+  const psMoney = document.getElementById('ps-money');
+
+  // L'argent, le niveau et les paquets affichés sont ceux de l'Empire (clicker)
+  // L'argent est affiché par ClickerEngine (spendMoney/earnMoney lui transmettent le solde).
+  // Surtout pas ClickerEngine.render() ici : il recopierait l'ancien solde dans GameState.money.
+  if (typeof ClickerEngine !== 'undefined' && ClickerEngine.isReady && ClickerEngine.isReady()) {
+    if (levelEl) levelEl.textContent = 'Niv. ' + ClickerEngine.getState().empireLevel;
+  } else {
+    const formattedMoney = fmt(GameState.money);
+    if (moneyEl) moneyEl.textContent = formattedMoney;
+    if (levelEl) levelEl.textContent = 'Niv. ' + GameState.level;
+    if (psMoney) psMoney.textContent = formattedMoney;
+  }
+  if (packsEl) {
+    const free = parseInt(localStorage.getItem('empire_free_packs_count') ?? '3') || 0;
+    packsEl.textContent = free + (free === 1 ? ' paquet' : ' paquets');
+  }
 }
 
 // ============================================================

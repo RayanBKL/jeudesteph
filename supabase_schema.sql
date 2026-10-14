@@ -1,5 +1,5 @@
 -- ============================================================
--- STÉPHANE, LE ROI DU CENDRIER — SCHEMA SUPABASE & SÉCURITÉ RLS
+-- THE ASHTRAY KING — SCHEMA SUPABASE & SÉCURITÉ RLS
 -- À exécuter dans le "SQL Editor" de Supabase
 -- ============================================================
 

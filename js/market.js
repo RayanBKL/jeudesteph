@@ -1,100 +1,293 @@
 // ============================================================
-// STÉPHANE — Market & Bourse
+// THE ASHTRAY KING — Marché du Jour & Bourse (Zero Emojis)
+// 24h Daily Reset, Seeded per Player, Realistic Drop Rates
 // ============================================================
 
 const Market = {
-  currentTab: 'mon',
-  randomMarketCache: null,
-  randomMarketExpiry: 0,
+  currentTab: 'jour',
+  boughtToday: {},
 
   renderMarket() {
     const content = document.getElementById('market-content');
     if (!content) return;
 
+    // Set up tab events
+    document.querySelectorAll('.market-tab').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.market-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.currentTab = btn.dataset.mtab;
+        this.renderMarket();
+      };
+    });
+
     switch (this.currentTab) {
-      case 'mon':    this.renderMyMarket(content); break;
-      case 'jeu':    this.renderGameMarket(content); break;
-      case 'alea':   this.renderRandomMarket(content); break;
-      case 'amis':   this.renderFriendsMarket(content); break;
+      case 'jour':     this.renderDailyMarket(content); break;
+      case 'mon':      this.renderMyMarket(content); break;
+      case 'quartier': this.renderNeighborhoodMarket(content); break;
+      case 'amis':     this.renderFriendsMarket(content); break;
+      default:         this.renderDailyMarket(content); break;
     }
   },
 
-  // MY MARKET
+  // ============================================================
+  // MARCHÉ DU JOUR (Official 24h Daily Reset, Seeded per User)
+  // ============================================================
+  renderDailyMarket(content) {
+    const stock = this.getDailyMarketStock();
+    const timeLeft = this.getTimeUntilMidnight();
+    const hrs = Math.floor(timeLeft / 3600000);
+    const mins = Math.floor((timeLeft % 3600000) / 60000);
+    const secs = Math.floor((timeLeft % 60000) / 1000);
+
+    let html = `
+      <div class="market-daily-banner">
+        <div class="mdb-title">
+          <strong>Sélection Officielle du Jour</strong>
+          <p>Catalogue unique réassorti chaque jour à minuit. Taux d'apparition stricts.</p>
+        </div>
+        <div class="game-timer-pill">
+          <span class="icon-inline">${getIcon('clock')}</span>
+          <span>Prochain réassort : <strong>${hrs}h ${mins}m ${secs}s</strong></span>
+        </div>
+      </div>
+      <div class="market-list-grid">
+    `;
+
+    stock.forEach((item, i) => {
+      const basePrice = Math.round(getBoursePrice(item.id) * GAME_CONST.GAME_MARKET_BUY_RATIO);
+      const discount = item.discount || 0;
+      const price = discount > 0 ? Math.round(basePrice * (1 - discount / 100)) : basePrice;
+      const isBought = this.boughtToday[item.id];
+      const rColor = rarityColor(item.rarity);
+      const rName = RARITIES[item.rarity]?.name || item.rarity;
+      const resolvedImg = resolveCigaretteImage(item);
+      const stickerGraphic = resolvedImg
+        ? `<img src="${resolvedImg}" alt="${item.name}" class="ml-sticker-img" />`
+        : generateCleanCigaretteSVG(item);
+
+      html += `
+        <div class="market-listing-card rarity-${item.rarity}" style="border-color:${rColor}">
+          ${item.badge ? `<div class="ml-promo-badge">${item.badge}</div>` : ''}
+          <div class="ml-cig-preview">
+            <div class="ml-sticker-box">
+              ${stickerGraphic}
+            </div>
+          </div>
+          <div class="ml-body">
+            <div class="ml-header">
+              <span class="ml-name">${item.name}</span>
+              <span class="ml-rarity-badge" style="color:${rColor}">${rName}</span>
+            </div>
+            <div class="ml-series">${SERIES[item.series]?.name || ''}</div>
+            <div class="ml-desc">"${item.desc || ''}"</div>
+            <div class="ml-footer">
+              <div class="ml-price-tag">
+                <span class="ml-price-val">${fmt(price)}</span>
+                ${discount > 0 ? `<span class="ml-price-old">${fmt(basePrice)}</span>` : `<span class="ml-price-label">Bourse : ${fmt(getBoursePrice(item.id))}</span>`}
+              </div>
+              <button class="btn-primary btn-sm btn-daily-buy" data-idx="${i}" data-price="${price}" ${isBought ? 'disabled' : ''}>
+                ${isBought ? 'Acheté' : 'Acheter'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+    content.innerHTML = html;
+
+    // Attach buy listeners
+    content.querySelectorAll('.btn-daily-buy').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.dataset.idx);
+        const price = parseInt(btn.dataset.price);
+        const item = stock[idx];
+        if (!item || this.boughtToday[item.id]) return;
+
+        if (!spendMoney(price)) {
+          showToast('Pas assez d\'argent !', 'error');
+          return;
+        }
+
+        addCigarette(item);
+        this.boughtToday[item.id] = true;
+        showToast(`Acheté : ${item.name}`, 'success');
+        this.renderDailyMarket(content);
+      };
+    });
+  },
+
+  getDailyMarketStock() {
+    const list = (typeof CIGARETTES !== 'undefined' && Array.isArray(CIGARETTES) && CIGARETTES.length > 0)
+      ? CIGARETTES
+      : ((typeof window !== 'undefined' && window.CIGARETTES) || (typeof CIGARETTES_DB !== 'undefined' ? CIGARETTES_DB : []));
+
+    if (!list || list.length === 0) return [];
+
+    // Generate deterministic seed for the user for TODAY's date (YYYY-MM-DD)
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const userKey = (GameState.pseudo || 'guest') + '_' + (GameState.userId || 'local') + '_' + todayStr;
+    
+    let hash = 0;
+    for (let i = 0; i < userKey.length; i++) {
+      hash = ((hash << 5) - hash) + userKey.charCodeAt(i);
+      hash |= 0;
+    }
+    const rng = (typeof seededRng === 'function') ? seededRng(Math.abs(hash) + 1) : Math.random;
+
+    // Draw 8 unique items with realistic tiers
+    const stock = [];
+    const usedIds = new Set();
+
+    // 1 Épique guaranteed
+    const epics = list.filter(c => c.rarity === 'epique');
+    if (epics.length > 0) {
+      const pick = epics[Math.floor(rng() * epics.length)];
+      usedIds.add(pick.id);
+      stock.push({ ...pick, discount: 20, badge: 'VENTE FLASH -20%' });
+    }
+
+    // 2 Rares guaranteed
+    const rares = list.filter(c => c.rarity === 'rare' && !usedIds.has(c.id));
+    for (let k = 0; k < 2 && rares.length > 0; k++) {
+      const pick = rares[Math.floor(rng() * rares.length)];
+      usedIds.add(pick.id);
+      stock.push({ ...pick, discount: 15, badge: 'OFFRE DU JOUR' });
+    }
+
+    // 3 Peu-communes
+    const uncommons = list.filter(c => c.rarity === 'peu-commune' && !usedIds.has(c.id));
+    for (let k = 0; k < 3 && uncommons.length > 0; k++) {
+      const pick = uncommons[Math.floor(rng() * uncommons.length)];
+      usedIds.add(pick.id);
+      stock.push({ ...pick, discount: 10, badge: 'IMPORT DIRECT' });
+    }
+
+    // 2 Communes
+    const commons = list.filter(c => c.rarity === 'commune' && !usedIds.has(c.id));
+    for (let k = 0; k < 2 && commons.length > 0; k++) {
+      const pick = commons[Math.floor(rng() * commons.length)];
+      usedIds.add(pick.id);
+      stock.push({ ...pick, discount: 0, badge: 'ESSENTIEL' });
+    }
+
+    // Fill up to 8 if needed
+    while (stock.length < 8) {
+      const remaining = list.filter(c => !usedIds.has(c.id));
+      if (!remaining.length) break;
+      const pick = remaining[Math.floor(rng() * remaining.length)];
+      usedIds.add(pick.id);
+      stock.push(pick);
+    }
+
+    return stock;
+  },
+
+  getTimeUntilMidnight() {
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+    return midnight.getTime() - now.getTime();
+  },
+
+  // ============================================================
+  // MON ÉTAL (Player's Personal Market Stall)
+  // ============================================================
   renderMyMarket(content) {
     const maxSlots = GameState.marketSlots;
     const listings = GameState.myListings;
 
-    let html = `<div class="my-market-header">
-      <span>Emplacements : ${listings.length}/${maxSlots}</span>
-    </div>`;
+    let html = `
+      <div class="my-market-header">
+        <div>
+          <strong>Mon Étal de Vente</strong>
+          <p>Mettez en vente vos doubles auprès d'autres joueurs (Commission : 5%).</p>
+        </div>
+        <span class="badge">Emplacements : ${listings.length}/${maxSlots}</span>
+      </div>
+    `;
 
     // Sell form
     const inv = getInventoryArray().filter(e => !GameState.myListings.find(l => l.cigId === e.cig.id));
     if (inv.length && listings.length < maxSlots) {
-      html += `<div class="sell-form">
-        <select id="sel-sell-cig" class="game-select">
-          <option value="">Choisir une cigarette...</option>
-          ${inv.map(e => `<option value="${e.cig.id}">${e.cig.icon} ${e.cig.name} (${RARITIES[e.cig.rarity]?.name}) — ${fmt(getBoursePrice(e.cig.id))} bourse</option>`).join('')}
-        </select>
-        <input type="number" id="sell-price" class="game-input" placeholder="Prix" min="1" style="width:100px" />
-        <button id="btn-sell-cig" class="btn-primary">Mettre en vente</button>
-      </div>`;
+      html += `
+        <div class="sell-form-box">
+          <select id="sel-sell-cig" class="game-select">
+            <option value="">Sélectionner une cigarette...</option>
+            ${inv.map(e => `<option value="${e.cig.id}">${e.cig.name} (${RARITIES[e.cig.rarity]?.name}) — Valeur bourse : ${fmt(getBoursePrice(e.cig.id))}</option>`).join('')}
+          </select>
+          <div class="sell-input-row">
+            <input type="number" id="sell-price" class="game-input" placeholder="Prix de vente (€)" min="1" />
+            <button id="btn-sell-cig" class="btn-primary">Mettre en vente</button>
+          </div>
+        </div>
+      `;
     }
 
     if (listings.length === 0) {
-      html += `<div class="market-empty">Votre tabac est vide. Mettez des cigarettes en vente !</div>`;
+      html += `<div class="market-empty-box">Votre étal est actuellement vide. Choisissez une cigarette à mettre en vente ci-dessus.</div>`;
     } else {
+      html += `<div class="market-list-grid">`;
       listings.forEach(listing => {
         const cig = listing.cigData;
-        html += `<div class="market-listing rarity-${cig.rarity}">
-          <div class="ml-icon">${cig.icon || '🚬'}</div>
-          <div class="ml-info">
-            <div class="ml-name">${cig.name}</div>
-            <div class="ml-rarity" style="color:${rarityColor(cig.rarity)}">${RARITIES[cig.rarity]?.name || ''}</div>
-            <div style="font-size:0.72rem;color:var(--text-dim)">Bourse : ${fmt(getBoursePrice(cig.id))}</div>
+        const rColor = rarityColor(cig.rarity);
+        html += `
+          <div class="market-listing-card rarity-${cig.rarity}" style="border-color:${rColor}">
+            <div class="ml-cig-preview">${renderRealCigaretteHTML(cig, 'card')}</div>
+            <div class="ml-body">
+              <div class="ml-header">
+                <span class="ml-name">${cig.name}</span>
+                <span class="ml-rarity-badge" style="color:${rColor}">${RARITIES[cig.rarity]?.name || ''}</span>
+              </div>
+              <div class="ml-footer">
+                <div class="ml-price-tag">
+                  <span class="ml-price-val">${fmt(listing.price)}</span>
+                  <span class="ml-price-label">En vente</span>
+                </div>
+                <button class="btn-secondary btn-sm btn-market-remove" data-listing="${listing.id}">Retirer</button>
+              </div>
+            </div>
           </div>
-          <div class="ml-price">${fmt(listing.price)}</div>
-          <div class="ml-actions">
-            <button class="btn-market-remove" data-listing="${listing.id}">Retirer</button>
-          </div>
-        </div>`;
+        `;
       });
+      html += `</div>`;
     }
-
-    html += `<div style="font-size:0.8rem;color:var(--text-dim);margin-top:8px">Commission de vente : 5% — Vous recevez l'argent immédiatement à l'achat.</div>`;
 
     content.innerHTML = html;
 
-    // Events
     const sellBtn = document.getElementById('btn-sell-cig');
-    if (sellBtn) sellBtn.addEventListener('click', () => this.listCig());
+    if (sellBtn) sellBtn.onclick = () => this.listCig();
+
     content.querySelectorAll('.btn-market-remove').forEach(btn => {
-      btn.addEventListener('click', () => this.removeListing(btn.dataset.listing));
+      btn.onclick = () => this.removeListing(btn.dataset.listing);
     });
   },
 
   listCig() {
     const cigId = document.getElementById('sel-sell-cig')?.value;
     const priceInput = document.getElementById('sell-price')?.value;
-    if (!cigId) return showToast('Choisissez une cigarette !', 'error');
+    if (!cigId) return showToast('Sélectionnez une cigarette', 'error');
     const price = parseInt(priceInput);
-    if (!price || price < 1) return showToast('Prix invalide !', 'error');
-    if (GameState.myListings.length >= GameState.marketSlots) return showToast('Tabac plein !', 'error');
-    const entry = GameState.inventory[cigId];
-    if (!entry || entry.count <= 0) return showToast('Cigarette introuvable !', 'error');
+    if (!price || price < 1) return showToast('Prix invalide', 'error');
+    if (GameState.myListings.length >= GameState.marketSlots) return showToast('Étal complet', 'error');
 
-    // Remove from inventory
+    const entry = GameState.inventory[cigId];
+    if (!entry || entry.count <= 0) return showToast('Cigarette introuvable', 'error');
+
     if (!removeCigarette(cigId, 1)) return;
 
     const listing = {
       id: Date.now().toString() + Math.random().toString(36).slice(2),
-      cigId, cigData: { ...entry.cig },
-      price, listedAt: Date.now(),
+      cigId,
+      cigData: { ...entry.cig },
+      price,
+      listedAt: Date.now(),
       seller: GameState.pseudo,
     };
     GameState.myListings.push(listing);
     saveGame();
-    showToast(`🏪 ${entry.cig.name} mis en vente pour ${fmt(price)} !`, 'success');
+    showToast(`${entry.cig.name} mis en vente pour ${fmt(price)}`, 'success');
     this.renderMarket();
   },
 
@@ -102,7 +295,6 @@ const Market = {
     const idx = GameState.myListings.findIndex(l => l.id === listingId);
     if (idx === -1) return;
     const listing = GameState.myListings[idx];
-    // Return to inventory
     addCigarette(listing.cigData);
     GameState.myListings.splice(idx, 1);
     saveGame();
@@ -110,146 +302,130 @@ const Market = {
     this.renderMarket();
   },
 
-  // GAME MARKET (1h rotation)
-  renderGameMarket(content) {
-    const gameStock = this.getGameMarketStock();
-    const timeLeft = this.getGameMarketTimeLeft();
-    const mins = Math.floor(timeLeft / 60000);
-    const secs = Math.floor((timeLeft % 60000) / 1000);
+  // ============================================================
+  // TABACS DU QUARTIER (Simulated Active Community Stalls)
+  // ============================================================
+  renderNeighborhoodMarket(content) {
+    const stalls = [
+      { name: "Tabac Le Balto — Chez Gérard", owner: "Gérard", seed: 101 },
+      { name: "Civette de la Gare — Momo", owner: "Momo", seed: 202 },
+      { name: "Le Relais PMU — Dédé", owner: "Dédé", seed: 303 },
+      { name: "Kiosque 24/7 — Kevin", owner: "Kevin93", seed: 404 }
+    ];
 
-    let html = `<div class="game-timer-text">🕐 Renouvellement dans ${mins}:${secs.toString().padStart(2,'0')}</div>`;
+    const current6hSlot = Math.floor(Date.now() / (6 * 3600000));
+    let html = `
+      <div class="market-daily-banner">
+        <div>
+          <strong>Tabacs &amp; Étalages du Quartier</strong>
+          <p>Cessions entre particuliers et habitués du quartier (Renouvelé toutes les 6 heures).</p>
+        </div>
+      </div>
+    `;
 
-    gameStock.forEach((item, i) => {
-      const price = Math.round(getBoursePrice(item.id) * GAME_CONST.GAME_MARKET_BUY_RATIO);
-      html += `<div class="market-listing rarity-${item.rarity}">
-        <div class="ml-icon">${item.icon || '🚬'}</div>
-        <div class="ml-info">
-          <div class="ml-name">${item.name}</div>
-          <div class="ml-rarity" style="color:${rarityColor(item.rarity)}">${RARITIES[item.rarity]?.name || ''}</div>
-          <div style="font-size:0.72rem;color:var(--text-dim)">Prix bourse : ${fmt(getBoursePrice(item.id))}</div>
-        </div>
-        <div class="ml-price">${fmt(price)}</div>
-        <div class="ml-actions">
-          <button class="btn-market-buy" data-item="${i}" data-price="${price}">Acheter</button>
-        </div>
-      </div>`;
+    stalls.forEach(stall => {
+      const rng = seededRng(stall.seed + current6hSlot);
+      const eligible = CIGARETTES.filter(c => c.rarity !== 'mythique' && !c.seasonal);
+      const items = [];
+      for (let i = 0; i < 2; i++) {
+        items.push(eligible[Math.floor(rng() * eligible.length)]);
+      }
+
+      html += `
+        <div class="neighborhood-stall-box">
+          <div class="ns-header">
+            <strong>${stall.name}</strong>
+            <span class="ns-owner">Gérant : ${stall.owner}</span>
+          </div>
+          <div class="market-list-grid">
+      `;
+
+      items.forEach((item, idx) => {
+        const variance = 0.85 + (rng() * 0.3); // 85% to 115% of bourse
+        const price = Math.round(getBoursePrice(item.id) * variance);
+        const rColor = rarityColor(item.rarity);
+        const resolvedImg = resolveCigaretteImage(item);
+        const stickerGraphic = resolvedImg
+          ? `<img src="${resolvedImg}" alt="${item.name}" class="ml-sticker-img" />`
+          : generateCleanCigaretteSVG(item);
+        html += `
+          <div class="market-listing-card rarity-${item.rarity}" style="border-color:${rColor}">
+            <div class="ml-cig-preview">
+              <div class="ml-sticker-box">
+                ${stickerGraphic}
+              </div>
+            </div>
+            <div class="ml-body">
+              <div class="ml-header">
+                <span class="ml-name">${item.name}</span>
+                <span class="ml-rarity-badge" style="color:${rColor}">${RARITIES[item.rarity]?.name || ''}</span>
+              </div>
+              <div class="ml-footer">
+                <div class="ml-price-tag">
+                  <span class="ml-price-val">${fmt(price)}</span>
+                </div>
+                <button class="btn-primary btn-sm btn-ns-buy" data-cid="${item.id}" data-price="${price}">Acheter</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div></div>`;
     });
 
     content.innerHTML = html;
-    content.querySelectorAll('.btn-market-buy').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.item);
+
+    content.querySelectorAll('.btn-ns-buy').forEach(btn => {
+      btn.onclick = () => {
+        const cid = btn.dataset.cid;
         const price = parseInt(btn.dataset.price);
-        const item = gameStock[idx];
-        if (!item) return;
-        if (!spendMoney(price)) { showToast('Pas assez d\'argent !', 'error'); return; }
-        addCigarette(item);
-        showToast(`✅ Acheté : ${item.name} !`, 'success');
-        btn.closest('.market-listing').style.opacity = '0.4';
+        const cig = CIGARETTES.find(c => c.id === cid);
+        if (!cig) return;
+
+        if (!spendMoney(price)) {
+          showToast('Pas assez d\'argent !', 'error');
+          return;
+        }
+
+        addCigarette(cig);
         btn.disabled = true;
         btn.textContent = 'Acheté';
-      });
+        showToast(`Acheté : ${cig.name}`, 'success');
+      };
     });
   },
 
-  getGameMarketStock() {
-    // Seeded by hour
-    const hourSeed = Math.floor(Date.now() / 3600000);
-    const rng = seededRng(hourSeed);
-    const eligible = CIGARETTES.filter(c => c.rarity !== 'mythique' && !c.seasonal);
-    const shuffled = [...eligible].sort(() => rng() - 0.5);
-    return shuffled.slice(0, 10);
-  },
-
-  getGameMarketTimeLeft() {
-    const nextHour = (Math.floor(Date.now() / 3600000) + 1) * 3600000;
-    return nextHour - Date.now();
-  },
-
-  // RANDOM MARKET (15min rotation)
-  renderRandomMarket(content) {
-    if (Date.now() > this.randomMarketExpiry || !this.randomMarketCache) {
-      const rng = seededRng(Math.floor(Date.now() / 900000));
-      const eligible = CIGARETTES.filter(c => !c.seasonal);
-      const shuffled = [...eligible].sort(() => rng() - 0.5);
-      this.randomMarketCache = shuffled.slice(0, 8);
-      this.randomMarketExpiry = (Math.floor(Date.now() / 900000) + 1) * 900000;
-    }
-
-    const timeLeft = this.randomMarketExpiry - Date.now();
-    const mins = Math.floor(timeLeft / 60000);
-
-    let html = `<div class="game-timer-text">🎲 Tabac de Gérard (change dans ${mins} min)
-      <button id="btn-new-random" class="btn-secondary btn-sm" style="margin-left:8px">Autre tabac 🔄</button>
-    </div>`;
-
-    this.randomMarketCache.forEach((item, i) => {
-      const price = Math.round(getBoursePrice(item.id) * (0.9 + Math.random() * 0.2));
-      html += `<div class="market-listing rarity-${item.rarity}">
-        <div class="ml-icon">${item.icon || '🚬'}</div>
-        <div class="ml-info">
-          <div class="ml-name">${item.name}</div>
-          <div class="ml-rarity" style="color:${rarityColor(item.rarity)}">${RARITIES[item.rarity]?.name || ''}</div>
-        </div>
-        <div class="ml-price">${fmt(price)}</div>
-        <div class="ml-actions">
-          <button class="btn-market-buy" data-item="${i}" data-price="${price}">Acheter</button>
-        </div>
-      </div>`;
-    });
-
-    content.innerHTML = html;
-
-    document.getElementById('btn-new-random')?.addEventListener('click', () => {
-      this.randomMarketCache = null;
-      this.renderMarket();
-    });
-
-    content.querySelectorAll('.btn-market-buy').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.item);
-        const price = parseInt(btn.dataset.price);
-        const item = this.randomMarketCache[idx];
-        if (!item) return;
-        if (!spendMoney(price)) { showToast('Pas assez d\'argent !', 'error'); return; }
-        addCigarette(item);
-        showToast(`✅ Acheté : ${item.name} !`, 'success');
-        btn.closest('.market-listing').style.opacity = '0.4';
-        btn.disabled = true;
-      });
-    });
-  },
-
-  // FRIENDS MARKET
+  // ============================================================
+  // TABACS AMIS
+  // ============================================================
   renderFriendsMarket(content) {
-    if (!GameState.friends.length) {
-      content.innerHTML = '<div class="market-empty">Ajoutez des amis pour voir leurs tabacs !</div>';
+    if (!GameState.friends || !GameState.friends.length) {
+      content.innerHTML = `
+        <div class="market-empty-box">
+          <p>Vous n'avez pas encore d'amis connectés.</p>
+          <p style="font-size:0.8rem;color:var(--text-dim);margin-top:8px">Ajoutez des amis via l'onglet Amis pour explorer leurs étals personnels.</p>
+        </div>
+      `;
       return;
     }
-    let html = '<div class="friends-market-list">';
-    GameState.friends.forEach(friend => {
-      html += `<div style="margin-bottom:8px">
-        <button class="btn-secondary btn-sm" data-friend="${friend.code}">🏪 Tabac de ${friend.pseudo}</button>
-      </div>`;
-    });
-    html += '</div><div id="friend-market-display"></div>';
-    content.innerHTML = html;
-    content.querySelectorAll('[data-friend]').forEach(btn => {
-      btn.addEventListener('click', () => this.showFriendMarket(btn.dataset.friend));
-    });
-  },
 
-  showFriendMarket(friendCode) {
-    // Friend listings are stored globally for simplicity
-    const display = document.getElementById('friend-market-display');
-    const friend = GameState.friends.find(f => f.code === friendCode);
-    if (!display || !friend) return;
-    display.innerHTML = `<p style="color:var(--text-muted);font-size:0.9rem;margin-top:8px">Le tabac de ${friend.pseudo} est actuellement vide. (Système multijoueur complet disponible avec backend)</p>`;
-  },
+    let html = `<div class="friends-market-list">`;
+    GameState.friends.forEach(friend => {
+      html += `
+        <div class="friend-stall-row">
+          <span>Étal de <strong>${friend.pseudo}</strong></span>
+          <button class="btn-secondary btn-sm" data-friend="${friend.code}">Consulter l'étal</button>
+        </div>
+      `;
+    });
+    html += `</div><div id="friend-market-display"></div>`;
+    content.innerHTML = html;
+  }
 };
 
 // ============================================================
-// BOURSE
+// BOURSE DU CENDRIER (Zero Emojis, Sleek Badges)
 // ============================================================
 const Bourse = {
   filter: '',
@@ -273,27 +449,32 @@ const Bourse = {
       const history = GameState.bourseHistory[cig.id] || [];
       const prevPrice = history.length >= 2 ? history[history.length - 2]?.price : price;
       const trend = price > (prevPrice || price) ? 'up' : price < (prevPrice || price) ? 'down' : 'flat';
-      const trendIcon = trend === 'up' ? '📈 +' : trend === 'down' ? '📉 -' : '➡️';
+      const trendSign = trend === 'up' ? '+' : trend === 'down' ? '-' : '=';
       const diff = Math.abs(price - (prevPrice || price));
       const owned = (GameState.inventory[cig.id]?.count || 0);
 
-      return `<div class="bourse-item" data-cig="${cig.id}">
-        <div class="bi-icon">${cig.icon || '🚬'}</div>
-        <div class="bi-info">
-          <div class="bi-name">${cig.name} ${owned > 0 ? `<span style="background:var(--accent);color:#000;border-radius:100px;padding:1px 6px;font-size:0.65rem">×${owned}</span>` : ''}</div>
-          <div class="bi-rarity" style="color:${rarityColor(cig.rarity)}">${RARITIES[cig.rarity]?.name || ''}</div>
-          <div class="bi-circulation">Série : ${SERIES[cig.series]?.name || cig.series}</div>
+      return `
+        <div class="bourse-item" data-cig="${cig.id}">
+          <div class="bi-cig-preview">${renderRealCigaretteHTML(cig, 'slot')}</div>
+          <div class="bi-info">
+            <div class="bi-name">
+              ${cig.name}
+              ${owned > 0 ? `<span class="owned-badge">×${owned}</span>` : ''}
+            </div>
+            <div class="bi-rarity" style="color:${rarityColor(cig.rarity)}">${RARITIES[cig.rarity]?.name || ''}</div>
+            <div class="bi-circulation">Série : ${SERIES[cig.series]?.name || cig.series}</div>
+          </div>
+          <div class="bi-right">
+            <div class="bi-price">${fmt(price)}</div>
+            <div class="bi-trend ${trend}">${trendSign} ${fmt(diff)}</div>
+          </div>
         </div>
-        <div>
-          <div class="bi-price">${fmt(price)}</div>
-          <div class="bi-trend ${trend}">${trendIcon}${fmt(diff)}</div>
-        </div>
-      </div>`;
+      `;
     }).join('');
 
     // Click to show detail
     listEl.querySelectorAll('.bourse-item').forEach(el => {
-      el.addEventListener('click', () => this.showDetail(el.dataset.cig));
+      el.onclick = () => this.showDetail(el.dataset.cig);
     });
 
     this.renderPredictions();
@@ -305,22 +486,21 @@ const Bourse = {
     if (!cig) return;
     const price = getBoursePrice(cigId);
     const owned = GameState.inventory[cigId]?.count || 0;
-    const max = cig.maxCirculation ? `Max en circulation : ${cig.maxCirculation}` : '';
+    const rColor = rarityColor(cig.rarity);
 
     openModal(`
-      <div class="modal-cig-header">
-        <div class="modal-cig-icon">${cig.icon || '🚬'}</div>
-        <div class="modal-cig-name">${cig.name}</div>
-        <div class="modal-cig-rarity" style="color:${rarityColor(cig.rarity)}">${RARITIES[cig.rarity]?.name}</div>
+      <div class="modal-cig-showcase">
+        ${renderRealCigaretteHTML(cig, 'card')}
+        <div class="modal-cig-name" style="margin-top:10px">${cig.name}</div>
+        <div class="modal-cig-rarity" style="color:${rColor}">${RARITIES[cig.rarity]?.name} · ${SERIES[cig.series]?.name || ''}</div>
       </div>
-      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;text-align:center">"${cig.desc || ''}"</p>
+      <p class="modal-cig-quote">"${cig.desc || ''}"</p>
       <div class="modal-stats">
-        <div class="modal-stat"><div class="modal-stat-val">${fmt(price)}</div><div class="modal-stat-lbl">Prix bourse</div></div>
-        <div class="modal-stat"><div class="modal-stat-val">${owned}</div><div class="modal-stat-lbl">En votre possession</div></div>
+        <div class="modal-stat"><div class="modal-stat-val">${fmt(price)}</div><div class="modal-stat-lbl">Cours bourse</div></div>
+        <div class="modal-stat"><div class="modal-stat-val">${owned}</div><div class="modal-stat-lbl">En stock</div></div>
         <div class="modal-stat"><div class="modal-stat-val">+${RARITIES[cig.rarity]?.energy || 0}</div><div class="modal-stat-lbl">Énergie</div></div>
         <div class="modal-stat"><div class="modal-stat-val">+${RARITIES[cig.rarity]?.cough || 0}</div><div class="modal-stat-lbl">Toux</div></div>
       </div>
-      ${max ? `<p style="font-size:0.8rem;color:var(--gold);text-align:center">${max}</p>` : ''}
       <div class="modal-actions" style="margin-top:16px">
         ${owned > 0 ? `<button id="modal-btn-sell" class="btn-secondary">Vendre au jeu (${fmt(Math.round(price * 0.7))})</button>` : ''}
         <button id="modal-btn-equip" class="btn-primary">Équiper en course</button>
@@ -332,14 +512,14 @@ const Bourse = {
       removeCigarette(cigId, 1);
       earnMoney(sellPrice);
       recordSale(cigId, sellPrice);
-      showToast(`💸 Vendu au jeu : ${fmt(sellPrice)}`, 'success');
+      showToast(`Vendu au jeu : ${fmt(sellPrice)}`, 'success');
       closeModal();
+      this.render();
     });
 
     document.getElementById('modal-btn-equip')?.addEventListener('click', () => {
       closeModal();
       showPage('inventaire');
-      setTimeout(() => renderInventory(), 200);
     });
   },
 
@@ -347,25 +527,23 @@ const Bourse = {
     const el = document.getElementById('active-predictions');
     if (!el) return;
 
-    // Resolve old predictions
     const now = Date.now();
     GameState.predictions = GameState.predictions.filter(pred => {
       if (pred.resolveAt > now) return true;
-      // Resolve
       const oldPrice = pred.priceAtStart;
       const curPrice = getBoursePrice(pred.cigId);
       const diff = (curPrice - oldPrice) / oldPrice;
       if (Math.abs(diff) < 0.02) {
         earnMoney(pred.mise);
-        showToast('🎯 Prédiction nulle — Mise remboursée', 'gold');
+        showToast('Prédiction nulle — Mise remboursée', 'gold');
       } else {
         const won = (pred.direction === 'hausse' && diff > 0) || (pred.direction === 'baisse' && diff < 0);
         if (won) {
           const gain = Math.round(pred.mise * GAME_CONST.PRED_MULTIPLIER);
           earnMoney(gain);
-          showToast(`🎯 Prédiction gagnée ! +${fmt(gain)}`, 'gold');
+          showToast(`Prédiction gagnée ! +${fmt(gain)}`, 'gold');
         } else {
-          showToast(`🎯 Prédiction perdue. -${fmt(pred.mise)}`, 'error');
+          showToast(`Prédiction perdue : -${fmt(pred.mise)}`, 'error');
         }
       }
       return false;
@@ -373,7 +551,7 @@ const Bourse = {
     saveGame();
 
     if (!GameState.predictions.length) {
-      el.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem">Aucune prédiction active.</div>';
+      el.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem">Aucune position ouverte.</div>';
       return;
     }
 
@@ -382,12 +560,14 @@ const Bourse = {
       const timeLeft = Math.max(0, pred.resolveAt - Date.now());
       const hrs = Math.floor(timeLeft / 3600000);
       const mins = Math.floor((timeLeft % 3600000) / 60000);
-      return `<div class="pred-item">
-        <span>${cig?.icon || '🚬'} ${cig?.name || pred.cigId}</span>
-        <span>${pred.direction === 'hausse' ? '📈' : '📉'} ${pred.direction}</span>
-        <span>Mise : ${fmt(pred.mise)}</span>
-        <span style="color:var(--text-dim)">${hrs}h${mins}m restants</span>
-      </div>`;
+      return `
+        <div class="pred-item">
+          <span>${cig?.name || pred.cigId}</span>
+          <span class="pred-badge ${pred.direction}">${pred.direction.toUpperCase()}</span>
+          <span>Mise : ${fmt(pred.mise)}</span>
+          <span style="color:var(--text-dim)">${hrs}h${mins}m</span>
+        </div>
+      `;
     }).join('');
   },
 
@@ -395,14 +575,14 @@ const Bourse = {
     const sel = document.getElementById('pred-cig');
     if (!sel) return;
     sel.innerHTML = CIGARETTES.map(c =>
-      `<option value="${c.id}">${c.icon} ${c.name} (${RARITIES[c.rarity]?.name})</option>`
+      `<option value="${c.id}">${c.name} (${RARITIES[c.rarity]?.name})</option>`
     ).join('');
   },
 
   addPrediction(cigId, direction, mise) {
-    if (!cigId) return showToast('Choisissez une cigarette', 'error');
+    if (!cigId) return showToast('Sélectionnez une marque', 'error');
     if (!mise || mise < 10 || mise > 1000) return showToast('Mise entre 10 et 1000 €', 'error');
-    if (GameState.predictions.length >= GAME_CONST.MAX_PREDICTIONS) return showToast('Maximum 5 prédictions actives', 'error');
+    if (GameState.predictions.length >= GAME_CONST.MAX_PREDICTIONS) return showToast('Maximum 5 positions actives', 'error');
     if (!spendMoney(mise)) return showToast('Pas assez d\'argent', 'error');
 
     GameState.predictions.push({
@@ -412,7 +592,10 @@ const Bourse = {
       resolveAt: Date.now() + 86400000,
     });
     saveGame();
-    showToast(`🎯 Prédiction enregistrée !`, 'success');
+    showToast('Position enregistrée', 'success');
     this.renderPredictions();
-  },
+  }
 };
+
+window.Market = Market;
+window.Bourse = Bourse;

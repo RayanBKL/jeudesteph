@@ -3,378 +3,593 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Stéphane, le Roi du Cendrier — Le jeu de course et de collection de cigarettes virtuelles le plus absurde du web. 18+ uniquement." />
-  <meta name="theme-color" content="#1a0a00" />
-  <title>Stéphane, le Roi du Cendrier 🚬</title>
+  <meta name="description" content="The Ashtray King — Jeu de collection et de course de cigarettes satirique. 18+ uniquement." />
+  <meta name="theme-color" content="#090a0f" />
+  <title>The Ashtray King</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@700;900&family=Dela+Gothic+One&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@700;800;900&family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="preload" href="assets/fonts/cendrier.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="icon" href="assets/stephane_avatar.jpg" type="image/jpeg" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    (function() {
+      const CURRENT_V = "55";
+      if (localStorage.getItem("app_asset_version") !== CURRENT_V) {
+        localStorage.setItem("app_asset_version", CURRENT_V);
+        if (!window.location.search.includes("t=")) {
+          window.location.replace(window.location.pathname + "?t=" + Date.now());
+        }
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css?v=55" />
+  <link rel="stylesheet" href="css/empire.css?v=55" />
+  <link rel="stylesheet" href="css/theme.css?v=55" />
+  <link rel="stylesheet" href="css/packs.css?v=55" />
+  <link rel="stylesheet" href="css/games.css?v=55" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 </head>
 <body>
 
+<!-- ÉCRAN DE CHARGEMENT -->
+<div id="splash-screen" aria-hidden="true">
+  <img src="assets/logo.jpg" class="splash-logo" alt="" />
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+</div>
+
+<!-- AGE GATE -->
 <div id="age-gate" class="overlay-full">
   <div class="age-gate-box">
-    <div class="age-gate-icon">🚬</div>
-    <h1>Stéphane<br><span class="subtitle-inline">le Roi du Cendrier</span></h1>
-    <p class="age-warning">Ce jeu contient des références au tabac et des mécaniques de pari (argent virtuel uniquement). Il est strictement réservé aux personnes majeures.</p>
+    <div class="age-gate-logo-wrap">
+      <img src="assets/logo.jpg" class="brand-logo-img" alt="The Ashtray King" />
+    </div>
+    <h1>The Ashtray<br><span class="subtitle-inline">King</span></h1>
+    <p class="age-warning">Ce jeu contient des références au tabac et des mécaniques de course et de marché virtuel. Il est strictement réservé aux personnes majeures.</p>
     <div class="age-buttons">
-      <button id="btn-age-ok" class="btn-primary btn-huge">J'ai 18 ans ou plus ✅</button>
+      <button id="btn-age-ok" class="btn-primary btn-huge">J'ai 18 ans ou plus</button>
       <button id="btn-age-no" class="btn-secondary">J'ai moins de 18 ans</button>
     </div>
-    <p class="age-legal">🏛 Le tabac est dangereux pour la santé. Ce jeu est satirique et ne fait pas l'apologie du tabac. Argent virtuel uniquement.</p>
+    <p class="age-legal">Le tabac est dangereux pour la santé. Ce jeu est une satire fictive et ne promeut pas l'usage du tabac. Argent virtuel uniquement.</p>
   </div>
 </div>
 
+<!-- AUTH SCREEN -->
 <div id="auth-screen" class="overlay-full hidden">
   <div class="auth-box">
-    <div class="auth-logo">🚬</div>
+    <div class="auth-logo-wrap">
+      <img src="assets/logo.jpg" class="brand-logo-img-sm" alt="The Ashtray King" />
+    </div>
     <h2 id="auth-title">Créer un compte</h2>
     
     <div id="auth-status-msg" class="hidden auth-msg-box"></div>
 
     <div id="auth-form">
       <input type="text" id="auth-pseudo" class="game-input" placeholder="Pseudo (max 20 caractères)" maxlength="20" />
-      <input type="email" id="auth-email" class="game-input" placeholder="Votre vraie adresse email" />
-      <input type="password" id="auth-password" class="game-input" placeholder="Mot de passe sécurisé (min 6 car.)" />
-      <button id="btn-register" class="btn-primary btn-full">🎮 Créer mon compte</button>
+      <input type="email" id="auth-email" class="game-input" placeholder="Ton adresse e-mail" />
+      <input type="password" id="auth-password" class="game-input" placeholder="Mot de passe (8 car. : maj, min, chiffre)" />
+      <button id="btn-register" class="btn-primary btn-full">Créer mon compte</button>
       <p class="auth-switch">Déjà un compte ? <a href="#" id="link-to-login">Se connecter</a></p>
     </div>
 
     <div id="login-form" class="hidden">
       <input type="email" id="login-email" class="game-input" placeholder="Votre adresse email" />
       <input type="password" id="login-password" class="game-input" placeholder="Mot de passe" />
-      <button id="btn-login" class="btn-primary btn-full">🔑 Connexion</button>
+      <button id="btn-login" class="btn-primary btn-full">Connexion</button>
       <p class="auth-switch"><a href="#" id="link-forgot-pw">Mot de passe oublié ?</a></p>
       <p class="auth-switch">Pas encore de compte ? <a href="#" id="link-to-register">Créer un compte</a></p>
     </div>
 
     <div id="mfa-form" class="hidden">
-      <p class="mfa-desc">🔐 Double authentification activée. Entrez le code à 6 chiffres de votre application Google Authenticator :</p>
+      <p class="mfa-desc">Double authentification activée. Entrez le code à 6 chiffres de votre application Google Authenticator :</p>
       <input type="text" id="mfa-code" class="game-input text-center" placeholder="123456" maxlength="6" />
       <button id="btn-verify-mfa" class="btn-primary btn-full">Valider le code</button>
       <button id="btn-cancel-mfa" class="btn-secondary btn-full" style="margin-top:8px">Annuler</button>
     </div>
 
-    <p class="auth-legal">Sécurisé via Supabase Cloud & RLS · Jeu 18+ · Argent virtuel uniquement.</p>
+    <p class="auth-legal">Ta progression est sauvegardée en ligne · Jeu 18+ · Argent virtuel uniquement.</p>
   </div>
 </div>
 
+<!-- MAIN GAME UI -->
 <div id="game-ui" class="hidden">
   <header id="top-bar">
     <div class="top-left">
-      <button id="btn-profile-top" class="game-title-sm">🚬 Stéphane</button>
+      <button id="btn-profile-top" class="top-profile-btn" title="Mon profil">
+        <img src="assets/stephane_avatar.jpg" id="top-avatar" class="top-avatar" alt="" />
+        <span class="top-pseudo" id="top-pseudo">Joueur</span>
+      </button>
     </div>
     <div class="top-center">
-      <div class="resource-pill"><span class="res-icon">💶</span><span id="hud-money">0 €</span></div>
-      <div class="resource-pill"><span class="res-icon">📦</span><span id="hud-packs">0</span></div>
-      <div class="resource-pill"><span class="res-icon">⚡</span><span id="hud-level">Niv. 1</span></div>
+      <div class="resource-pill" id="pill-hud-money" title="Argent disponible">
+        <span class="res-icon" id="icon-hud-money"></span>
+        <span id="hud-money">0 €</span>
+      </div>
+      <div class="resource-pill" title="Paquets disponibles">
+        <span class="res-icon" id="icon-hud-packs"></span>
+        <span id="hud-packs">0</span>
+      </div>
+      <div class="resource-pill" title="Niveau joueur">
+        <span class="res-icon" id="icon-hud-level"></span>
+        <span id="hud-level">Niv. 1</span>
+      </div>
     </div>
     <div class="top-right">
-      <button id="btn-settings" class="btn-icon" title="Paramètres">⚙️</button>
+      <span id="top-sync" class="top-sync" data-state="ok" title="Progression sauvegardée en ligne"></span>
+      <button id="btn-audio-toggle" class="btn-icon" title="Son Arcade (Activer/Désactiver)">
+        <span id="icon-audio">🔊</span>
+      </button>
+      <button id="btn-settings" class="btn-icon" title="Paramètres">
+        <span id="icon-settings"></span>
+      </button>
     </div>
   </header>
 
   <main id="game-content">
 
-    <section class="page active" id="page-course">
-      <div class="page-inner">
-        <h2 class="page-title">🏃 La Course</h2>
-        <div class="track-selector" id="track-selector">
-          <div class="track-card active" data-track="trottoir">
-            <div class="track-icon">🚶</div>
-            <div class="track-name">Trottoir</div>
-            <div class="track-info">500 m · ~60 s</div>
-            <div class="track-reward">🥇 60 € | 🥈 35 € | 🥉 20 €</div>
+    <!-- ══════════════════════════════════════════════════════
+         PAGE: CLICKER (Le Tabac - Écran Principal)
+         ══════════════════════════════════════════════════════ -->
+    <section class="page active" id="page-clicker">
+
+      <!-- Cash counter & Empire bar -->
+      <div class="clicker-cash-zone">
+        <div class="clicker-cash-amount" id="clicker-cash">0 €</div>
+        <div class="clicker-income-row">
+          <div class="clicker-income-pill" title="Ce que rapporte chaque clic sur Stéphane (cartes équipées + talents)">
+            <span class="pill-label">Chaque clic</span>
+            <span class="pill-val" id="clicker-cpc">+1 €</span>
           </div>
-          <div class="track-card locked" data-track="boulevard" id="track-card-boulevard">
-            <div class="track-icon">🚗</div>
-            <div class="track-name">Boulevard</div>
-            <div class="track-info">800 m · ~90 s</div>
-            <div class="track-reward">🥇 150 € | 🥈 90 € | 🥉 50 €</div>
-            <div class="track-lock">🔒 Niv. 10</div>
+          <div class="clicker-income-pill" title="Ce que tes clics te rapportent en ce moment (moyenne sur 5 secondes)">
+            <span class="pill-label">Tes clics / seconde</span>
+            <span class="pill-val" id="clicker-click-rate">+0 €</span>
           </div>
-          <div class="track-card locked" data-track="autoroute" id="track-card-autoroute">
-            <div class="track-icon">🛣️</div>
-            <div class="track-name">Autoroute</div>
-            <div class="track-info">1 200 m · ~120 s</div>
-            <div class="track-reward">🥇 400 € | 🥈 240 € | 🥉 130 €</div>
-            <div class="track-lock">🔒 Niv. 25</div>
+          <div class="clicker-income-pill" title="Ce que rapportent tes cartes toutes seules, chaque seconde, même sans cliquer">
+            <span class="pill-label">Tes cartes / seconde</span>
+            <span class="pill-val" id="clicker-cps">+0 €</span>
           </div>
+          <button class="clicker-help-btn" id="btn-clicker-help" title="D'où viennent ces chiffres ?" aria-label="Explications">?</button>
         </div>
-
-        <div class="equipment-section">
-          <h3>🚬 Cigarettes équipées <span id="slot-info" class="slot-count">(0/3 équipées)</span></h3>
-          <div class="cigarette-slots" id="cigarette-slots"></div>
-        </div>
-
-        <div class="race-start-zone">
-          <button id="btn-start-solo" class="btn-primary btn-giant">🏁 Course Solo</button>
-          <button id="btn-start-duel" class="btn-secondary btn-big">⚔️ Défier un ami</button>
-        </div>
-
-        <div class="streak-display">
-          <span>🔥 Série Or :</span> <strong id="gold-streak">0</strong> consécutives
-          <span id="bonus-indicator" class="hidden bonus-badge">+50% prochain gain !</span>
-        </div>
-
-        <div class="daily-solo-info">
-          <span>Courses aujourd'hui : <strong id="daily-races">0</strong>/30</span>
-          <span id="half-gain-warn" class="hidden warn-text">⚠️ Gains divisés par 2 !</span>
+        <div class="empire-level-bar-wrap">
+          <div class="empire-level-label">
+            <span id="empire-level-display">Empire Niv. 1</span>
+            <span id="empire-xp-text">0 / 1000 XP</span>
+          </div>
+          <div class="empire-xp-bar"><div id="empire-xp-fill"></div></div>
         </div>
       </div>
+
+      <!-- Combo display -->
+      <div id="clicker-combo"></div>
+
+      <!-- Main click target -->
+      <div class="clicker-arena">
+        <button id="clicker-target" aria-label="Taper pour gagner de l'argent">
+          <div id="clicker-pop-zone"></div>
+          <img src="assets/stephane_avatar.jpg" class="click-target-img" alt="Stéphane" />
+          <span class="click-target-label">Clique pour fumer</span>
+        </button>
+      </div>
+
+      <!-- Synergy Banner -->
+      <div id="clicker-synergy-banner" style="width:100%;text-align:center"></div>
+
+      <!-- Equipped cards strip -->
+      <div class="equipped-strip" id="equipped-strip">
+        <div class="equipped-slot" id="eq-slot-0" data-slot="0" title="Emplacement clic 1">
+          <span class="slot-emoji">➕</span>
+          <span>Clic 1</span>
+        </div>
+        <div class="equipped-slot" id="eq-slot-1" data-slot="1" title="Emplacement clic 2">
+          <span class="slot-emoji">➕</span>
+          <span>Clic 2</span>
+        </div>
+        <div class="equipped-slot" id="eq-slot-2" data-slot="2" title="Emplacement clic 3">
+          <span class="slot-emoji">➕</span>
+          <span>Clic 3</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Bar -->
+      <div class="clicker-actions-row" style="display:flex;gap:10px;justify-content:center;margin:12px 0 16px;flex-wrap:wrap">
+        <button class="btn-empire btn-empire-secondary" id="btn-quick-talents" style="font-size:0.8rem;padding:7px 14px;border-radius:20px;display:flex;align-items:center;gap:6px">
+          <span>🌳</span> <span>Talents & Boosts</span>
+        </button>
+        <button class="btn-empire btn-empire-secondary" id="btn-quick-empire" style="font-size:0.8rem;padding:7px 14px;border-radius:20px;display:flex;align-items:center;gap:6px">
+          <span>🏢</span> <span>Arrière-Boutique</span>
+        </button>
+        <button class="btn-empire btn-empire-secondary" id="btn-quick-bourse" style="font-size:0.8rem;padding:7px 14px;border-radius:20px;display:flex;align-items:center;gap:6px">
+          <span>📈</span> <span>Bourse</span>
+        </button>
+      </div>
+
+      <!-- Stats Transparente & Précise -->
+      <div class="clicker-stats-bar">
+        <div class="clicker-stat-box" title="Nombre total de clics réalisés">
+          <div class="clicker-stat-label">Total Clics</div>
+          <div class="clicker-stat-val" id="stat-total-clicks">0</div>
+          <div class="clicker-stat-sub" id="stat-sub-clicks">0 manuels · 0 auto</div>
+        </div>
+        <div class="clicker-stat-box" title="Argent gagné uniquement grâce à vos clics et autoclics">
+          <div class="clicker-stat-label">Gains aux Clics</div>
+          <div class="clicker-stat-val" id="stat-clicks-earned">0 €</div>
+          <div class="clicker-stat-sub">Au doigt & talents</div>
+        </div>
+        <div class="clicker-stat-box" title="Argent généré automatiquement par vos cartes en réserve">
+          <div class="clicker-stat-label">Revenu Passif Total</div>
+          <div class="clicker-stat-val" id="stat-passive-earned">0 €</div>
+          <div class="clicker-stat-sub">Par votre empire</div>
+        </div>
+        <div class="clicker-stat-box" title="Fortune totale cumulée depuis le début">
+          <div class="clicker-stat-label">Fortune Cumulée</div>
+          <div class="clicker-stat-val" id="stat-total-earned">0 €</div>
+          <div class="clicker-stat-sub">Clics + Passif</div>
+        </div>
+      </div>
+
     </section>
 
-    <!-- RACE ARENA -->
+    <!-- RACE ARENA (STYLE PMU COURSE DE CHEVAUX) -->
     <section class="page hidden" id="page-race">
-      <div class="race-arena">
-        <div class="race-track-container">
-          <div class="race-track" id="race-track">
-            <div class="track-scenery" id="track-scenery"></div>
-            <div class="track-road">
-              <div class="road-stripes" id="road-stripes"></div>
-            </div>
-            <div class="finish-flag" id="finish-flag">🏁</div>
+      <div class="race-arena pmu-arena">
+
+        <!-- Top info bar -->
+        <div class="pmu-topbar">
+          <div class="pmu-track-info">
+            <span class="pmu-track-badge" id="pmu-track-badge">Trottoir</span>
+            <span class="pmu-dist-total" id="pmu-dist-total">500 m</span>
           </div>
-          <div class="stephane-runner" id="stephane-runner">
-            <div class="runner-anim" id="runner-anim">
-              <div class="runner-cig-smoke" id="runner-smoke"></div>
-              <div class="runner-body">
-                <div class="runner-head">
-                  <div class="runner-face">😤</div>
+          <div class="pmu-live-chrono" id="r-time">0.0s</div>
+          <button id="btn-abandon" class="pmu-btn-abandon">✕ Abandon</button>
+        </div>
+
+        <!-- Classement en direct -->
+        <div class="pmu-leaderboard" id="pmu-leaderboard">
+          <div class="pmu-lead-pill lead-1st"><span class="pod-badge b-1st">1er</span> <strong id="lead-pos-1">Stéphane</strong></div>
+          <div class="pmu-lead-pill lead-2nd"><span class="pod-badge b-2nd">2e</span> <strong id="lead-pos-2">Gégé</strong></div>
+          <div class="pmu-lead-pill lead-3rd"><span class="pod-badge b-3rd">3e</span> <strong id="lead-pos-3">Momo</strong></div>
+          <div class="pmu-lead-pill lead-4th"><span class="pod-badge b-4th">4e</span> <strong id="lead-pos-4">Dédé</strong></div>
+        </div>
+
+        <!-- Hippodrome multi-couloirs -->
+        <div class="pmu-track-board" id="pmu-track-board">
+          <div class="pmu-finish-line">
+            <span class="pmu-finish-text">ARRIVÉE</span>
+          </div>
+
+          <!-- Couloir 1 : Stéphane / Le Joueur -->
+          <div class="pmu-lane pmu-lane-player" id="lane-player">
+            <div class="pmu-lane-header">
+              <span class="pmu-lane-badge gold-badge">#1 VOUS</span>
+            </div>
+            <div class="pmu-lane-rail">
+              <div class="pmu-runner-chip" id="runner-player" style="left: 0%;">
+                <div class="pmu-avatar-frame pmu-avatar-gold">
+                  <img src="assets/stephane_avatar.jpg" class="pmu-avatar-img" alt="Stéphane" />
+                  <div class="pmu-smoke-burst" id="pmu-player-smoke"></div>
+                  <div class="pmu-cough-tag hidden" id="cough-bubble">TOUX</div>
                 </div>
-                <div class="runner-torso"></div>
-                <div class="runner-legs">
-                  <div class="runner-leg l" id="rleg-l"></div>
-                  <div class="runner-leg r" id="rleg-r"></div>
+                <div class="pmu-runner-details">
+                  <span class="pmu-runner-name" id="pmu-player-name">Stéphane</span>
+                  <span class="pmu-runner-speed" id="r-speed">0 km/h</span>
                 </div>
               </div>
             </div>
-            <div class="cough-bubble hidden" id="cough-bubble">TOUSSE ! 😷</div>
+          </div>
+
+          <!-- Couloir 2 : Gégé Philip Morris -->
+          <div class="pmu-lane" id="lane-bot-1">
+            <div class="pmu-lane-header">
+              <span class="pmu-lane-badge red-badge">#2 GÉGÉ</span>
+            </div>
+            <div class="pmu-lane-rail">
+              <div class="pmu-runner-chip" id="runner-bot-1" style="left: 0%;">
+                <div class="pmu-avatar-frame pmu-avatar-red">
+                  <span class="pmu-avatar-code">GÉ</span>
+                </div>
+                <div class="pmu-runner-details">
+                  <span class="pmu-runner-name">Gégé Philip Morris</span>
+                  <span class="pmu-runner-speed" id="speed-bot-1">-- km/h</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Couloir 3 : Momo Sans Filtre -->
+          <div class="pmu-lane" id="lane-bot-2">
+            <div class="pmu-lane-header">
+              <span class="pmu-lane-badge blue-badge">#3 MOMO</span>
+            </div>
+            <div class="pmu-lane-rail">
+              <div class="pmu-runner-chip" id="runner-bot-2" style="left: 0%;">
+                <div class="pmu-avatar-frame pmu-avatar-blue">
+                  <span class="pmu-avatar-code">MO</span>
+                </div>
+                <div class="pmu-runner-details">
+                  <span class="pmu-runner-name">Momo Sans Filtre</span>
+                  <span class="pmu-runner-speed" id="speed-bot-2">-- km/h</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Couloir 4 : Dédé le Briquet -->
+          <div class="pmu-lane" id="lane-bot-3">
+            <div class="pmu-lane-header">
+              <span class="pmu-lane-badge green-badge">#4 DÉDÉ</span>
+            </div>
+            <div class="pmu-lane-rail">
+              <div class="pmu-runner-chip" id="runner-bot-3" style="left: 0%;">
+                <div class="pmu-avatar-frame pmu-avatar-green">
+                  <span class="pmu-avatar-code">DÉ</span>
+                </div>
+                <div class="pmu-runner-details">
+                  <span class="pmu-runner-name">Dédé le Briquet</span>
+                  <span class="pmu-runner-speed" id="speed-bot-3">-- km/h</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- HUD & Contrôles en bas -->
         <div class="race-hud">
           <div class="gauges-row">
             <div class="gauge-wrap">
-              <div class="gauge-label">⚡ Énergie</div>
-              <div class="gauge-bar"><div class="gauge-fill energy-fill" id="g-energy" style="width:30%"></div><div class="green-zone"></div></div>
+              <div class="gauge-label">Énergie (Vitesse)</div>
+              <div class="gauge-bar">
+                <div class="gauge-fill energy-fill" id="g-energy" style="width:30%"></div>
+                <div class="green-zone"></div>
+              </div>
               <div class="gauge-val" id="gv-energy">30</div>
             </div>
             <div class="gauge-wrap">
-              <div class="gauge-label">😷 Toux</div>
-              <div class="gauge-bar cough-bar"><div class="gauge-fill cough-fill" id="g-cough" style="width:0%"></div></div>
+              <div class="gauge-label">Risque de Toux</div>
+              <div class="gauge-bar cough-bar">
+                <div class="gauge-fill cough-fill" id="g-cough" style="width:0%"></div>
+              </div>
               <div class="gauge-val" id="gv-cough">0</div>
             </div>
           </div>
+
           <div class="race-stats-row">
-            <div class="rs"><span class="rs-l">⏱</span><span class="rs-v" id="r-time">0.0s</span></div>
-            <div class="rs"><span class="rs-l">💨</span><span class="rs-v" id="r-speed">0 km/h</span></div>
-            <div class="rs"><span class="rs-l">📍</span><span class="rs-v" id="r-dist">0 m</span></div>
+            <div class="rs"><span class="rs-l">Distance</span><span class="rs-v" id="r-dist">0 m</span></div>
+            <div class="rs"><span class="rs-l">Position</span><span class="rs-v" id="r-live-rank">1er</span></div>
           </div>
+
           <div class="cig-queue-row" id="cig-queue"></div>
         </div>
 
         <div class="smoke-btn-container">
-          <button id="btn-fumer" class="btn-smoke">🚬 FUMER</button>
+          <button id="btn-fumer" class="btn-smoke">SPRINT BOOSTER</button>
           <div class="combo-zone" id="combo-zone"></div>
         </div>
-        <button id="btn-abandon" class="btn-abandon">Abandonner</button>
       </div>
     </section>
 
     <!-- RESULT -->
     <section class="page hidden" id="page-resultat">
       <div class="result-card">
-        <div class="result-medal-big" id="r-medal">🏅</div>
+        <div class="result-rank-banner" id="r-rank-banner">1ère Place</div>
         <div class="result-title" id="r-title">Course terminée !</div>
-        <div class="result-time-display" id="r-time">--</div>
+        <div class="result-time-display" id="r-time-result">--</div>
         <div class="result-rewards">
           <div class="reward-item" id="r-money">+0 €</div>
           <div class="reward-item xp-item" id="r-xp">+0 XP</div>
         </div>
+        <div class="podium-recap" id="r-podium"></div>
         <div class="combos-recap" id="r-combos"></div>
-        <button id="btn-result-ok" class="btn-primary btn-huge">🚀 Continuer</button>
+        <button id="btn-result-ok" class="btn-primary btn-huge">Continuer</button>
       </div>
     </section>
 
-    <!-- PAQUETS -->
-    <section class="page hidden" id="page-paquets">
-      <div class="page-inner">
-        <h2 class="page-title">📦 Paquets</h2>
-        <div class="free-pack-banner">
-          <div class="fpb-left">
-            <div class="fpb-icon">🎁</div>
-            <div>
-              <strong>Paquets gratuits</strong>
-              <div id="free-packs-count">0 / 5 disponibles</div>
-            </div>
-          </div>
-          <div class="fpb-right">
-            <div id="free-pack-timer" class="timer-text">Prochain dans 10:00</div>
-            <button id="btn-open-free" class="btn-primary" disabled>Ouvrir 📦</button>
-          </div>
+    <!-- ══════════════════════════════════════════════════════
+         PAGE: PAQUETS (Boutique Empire)
+         ══════════════════════════════════════════════════════ -->
+    <section class="page" id="page-paquets">
+      <div class="shop-screen">
+        <div class="shop-head">
+          <h2 class="page-title-empire">🎴 Boutique</h2>
+          <div class="shop-free-pill" title="Paquets gratuits en stock">🎁 <strong id="free-pack-stock">0/10</strong></div>
         </div>
-
-        <div class="pack-shop">
-          <div class="pack-card" id="pack-card-tabac">
-            <div class="pack-visual tabac-visual"></div>
-            <div class="pack-info">
-              <div class="pack-name">Tabac du Coin</div>
-              <div class="pack-price">100 €</div>
-              <div class="pack-odds-mini">Commune 70% · Rare 6,5% · Épique 1,4%</div>
-            </div>
-            <button class="btn-buy-pack btn-primary" data-pack="tabac">Acheter</button>
-          </div>
-          <div class="pack-card" id="pack-card-duty">
-            <div class="pack-visual duty-visual"></div>
-            <div class="pack-info">
-              <div class="pack-name">Duty Free</div>
-              <div class="pack-price">400 €</div>
-              <div class="pack-odds-mini">Commune 40% · Rare 20% · Épique 6,5% · Légendaire 1,4%</div>
-            </div>
-            <button class="btn-buy-pack btn-primary" data-pack="duty">Acheter</button>
-          </div>
-          <div class="pack-card" id="pack-card-contre">
-            <div class="pack-visual contre-visual"></div>
-            <div class="pack-info">
-              <div class="pack-name">Contrebande</div>
-              <div class="pack-price">1 100 €</div>
-              <div class="pack-odds-mini">Commune 20% · Rare 30% · Épique 15% · Légendaire 4,5% · Mythique 0,5%</div>
-            </div>
-            <button class="btn-buy-pack btn-primary" data-pack="contre">Acheter</button>
-          </div>
+        <div class="pack-carousel-wrap">
+          <button class="pack-nav pack-nav-prev" id="pack-nav-prev" aria-label="Paquet précédent">‹</button>
+          <div id="empire-packs-grid" class="pack-carousel"></div>
+          <button class="pack-nav pack-nav-next" id="pack-nav-next" aria-label="Paquet suivant">›</button>
         </div>
-
-        <div class="pity-tracker">
-          <h3>🍀 Garanties (Pity)</h3>
-          <div class="pity-bars">
-            <div class="pity-item"><span>Épique garantie :</span><div class="pity-bar-wrap"><div class="pity-bar-fill epic-pity" id="pbar-epic"></div></div><span id="ptext-epic">20 paquets Tabac</span></div>
-            <div class="pity-item"><span>Légendaire garantie :</span><div class="pity-bar-wrap"><div class="pity-bar-fill legendary-pity" id="pbar-legendary"></div></div><span id="ptext-legendary">15 paquets Duty Free</span></div>
-            <div class="pity-item"><span>Mythique garantie :</span><div class="pity-bar-wrap"><div class="pity-bar-fill mythic-pity" id="pbar-mythic"></div></div><span id="ptext-mythic">25 paquets Contrebande</span></div>
-          </div>
-        </div>
+        <div class="pack-dots" id="pack-dots"></div>
       </div>
     </section>
 
-    <!-- PACK OPENING OVERLAY -->
+    <!-- POKÉMON TCG POCKET STYLE PACK OPENING OVERLAY -->
     <div class="pack-opening-overlay hidden" id="pack-opening-overlay">
-      <div class="pack-stage" id="pack-stage">
-        <div class="pack-3d-wrap" id="pack-3d-wrap">
-          <div class="pack-3d" id="pack-3d">
-            <div class="pack-face pack-front" id="pack-front"></div>
-            <div class="pack-face pack-back"></div>
-            <div class="pack-face pack-top"></div>
+      <div class="tcg-opening-arena" id="tcg-arena">
+
+        <!-- Stage 1: Booster Scellé avec bande détachable -->
+        <div class="tcg-booster-stage" id="tcg-booster-stage">
+          <div class="tcg-pack-container" id="tcg-pack-container">
+            <div class="tcg-booster-body" id="tcg-booster-body">
+              <div class="tcg-booster-art" id="tcg-booster-art"></div>
+              <div class="tcg-booster-glare"></div>
+              <div class="tcg-tear-strip" id="tcg-tear-strip">
+                <span class="tcg-tear-line"></span>
+                <span class="tcg-tear-label">DÉCHIRER LE BOOSTER</span>
+              </div>
+            </div>
           </div>
-          <p class="tap-hint">Appuie pour ouvrir !</p>
+          <p class="tcg-prompt-text">Touchez pour ouvrir le booster</p>
         </div>
-        <div class="cards-row hidden" id="cards-row"></div>
-        <button class="btn-primary hidden" id="btn-pack-done">Super ! 🚀</button>
+
+        <!-- Stage 2: Révélation une par une (Pokémon TCG Pocket Style) -->
+        <div class="tcg-reveal-stage hidden" id="tcg-reveal-stage">
+          <div class="tcg-reveal-header">
+            <span class="tcg-counter" id="tcg-counter">Cigarette 1 / 5</span>
+            <button class="tcg-btn-skip" id="btn-tcg-skip">Passer tout</button>
+          </div>
+
+          <div class="tcg-cig-spotlight-zone" id="tcg-spotlight-zone">
+            <!-- Emplacement cigarette 3D réaliste -->
+            <div class="tcg-cig-showcase" id="tcg-cig-showcase"></div>
+            <!-- Carte infos avec stats -->
+            <div class="tcg-cig-info-card" id="tcg-cig-info-card"></div>
+          </div>
+
+          <div class="tcg-reveal-footer">
+            <button class="btn-primary btn-huge tcg-btn-next" id="btn-tcg-next">Suivante ➔</button>
+          </div>
+        </div>
+
+        <!-- Stage 3: Grand Récapitulatif des 5 cigarettes -->
+        <div class="tcg-recap-stage hidden" id="tcg-recap-stage">
+          <h2 class="tcg-recap-title">Tirage Terminé !</h2>
+          <p class="tcg-recap-subtitle">5 cigarettes ajoutées à votre collection</p>
+          <div class="tcg-recap-grid" id="tcg-recap-grid"></div>
+          <button class="btn-primary btn-huge tcg-btn-collect" id="btn-tcg-collect">Tout récupérer</button>
+        </div>
+
       </div>
     </div>
 
-    <!-- INVENTAIRE -->
-    <section class="page hidden" id="page-inventaire">
-      <div class="page-inner">
-        <h2 class="page-title">🚬 Inventaire</h2>
-        <div class="inv-toolbar">
-          <select id="inv-sort" class="game-select">
+    <!-- ══════════════════════════════════════════════════════
+         PAGE: INVENTAIRE (Collection de Cartes)
+         ══════════════════════════════════════════════════════ -->
+    <section class="page" id="page-inventaire">
+      <div class="empire-inventory-page">
+        <div class="inventory-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <h2 class="page-title-empire" style="margin:0">🎒 Collection</h2>
+            <span id="inv-owned-count" style="font-size:0.8rem;color:var(--text-muted)">0 / 0 collectibles</span>
+          </div>
+          <button id="btn-reset-empire-game" class="btn-empire btn-empire-secondary" style="font-size:0.75rem;padding:6px 12px;color:#ef4444;border-color:rgba(239,68,68,0.4)" title="Efface les anciennes cartes et recommence à neuf">🗑️ Reset Collection</button>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="cat-tabs">
+          <button class="cat-tab active" data-cat="all">🌟 Tout</button>
+          <button class="cat-tab" data-cat="tabac">🚬 Tabac & accessoires</button>
+          <button class="cat-tab" data-cat="alcool">🥤 Boissons</button>
+          <button class="cat-tab" data-cat="drogue">💊 Substances</button>
+          <button class="cat-tab" data-cat="actrice">👠 VIP</button>
+          <button class="cat-tab" data-cat="beauf">🧀 Terroirs</button>
+          <button class="cat-tab" data-cat="foot">⚽ Football</button>
+          <button class="cat-tab" data-cat="refs">📱 Mèmes</button>
+          <button class="cat-tab" data-cat="chanteur">🎤 Musique</button>
+          <button class="cat-tab" data-cat="culte">🎬 Culte</button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="inv-filter-bar" style="padding:0 12px">
+          <select id="inv-view-empire" class="game-select-empire" aria-label="Affichage">
+            <option value="owned">Mes cartes</option>
+            <option value="catalog">Catalogue complet</option>
+          </select>
+          <select id="inv-sort-empire" class="game-select-empire">
             <option value="rarity">Par rareté</option>
             <option value="value">Par valeur</option>
             <option value="name">Par nom</option>
+            <option value="owned">Possédés d'abord</option>
           </select>
-          <select id="inv-filter" class="game-select">
-            <option value="all">Toutes</option>
-            <option value="commune">Commune</option>
-            <option value="peu-commune">Peu commune</option>
-            <option value="rare">Rare</option>
-            <option value="epique">Épique</option>
-            <option value="legendaire">Légendaire</option>
-            <option value="mythique">Mythique</option>
-          </select>
-          <button id="btn-recycle" class="btn-secondary">♻️ Recycler</button>
         </div>
-        <div class="inv-grid" id="inv-grid"></div>
-        <div class="recycle-panel hidden" id="recycle-panel">
-          <h3>♻️ Recyclage</h3>
-          <div class="recycle-info">5×Commune→Peu commune · 5×Peu commune→Rare · 4×Rare→Épique · 3×Épique→Légendaire</div>
-          <div id="recycle-options"></div>
-        </div>
-        <div class="series-section">
-          <h3>📚 Séries complétées</h3>
-          <div id="series-grid"></div>
-        </div>
+
+        <!-- Cards grid -->
+        <div id="empire-inv-grid" class="cards-grid" style="padding:8px 12px 120px"></div>
       </div>
     </section>
 
-    <!-- MARCHÉ -->
+    <!-- MARCHÉ DU JOUR -->
     <section class="page hidden" id="page-marche">
       <div class="page-inner">
-        <h2 class="page-title">🏪 Marché des Tabacs</h2>
+        <h2 class="page-title"><span class="title-icon" id="icon-page-marche"></span> Marché du Jour</h2>
         <div class="market-tabs" id="market-tabs">
-          <button class="market-tab active" data-mtab="mon">Mon Tabac</button>
-          <button class="market-tab" data-mtab="jeu">Tabac du Jeu</button>
-          <button class="market-tab" data-mtab="alea">Tabac Aléatoire</button>
-          <button class="market-tab" data-mtab="amis">Tabac Ami</button>
+          <button class="market-tab active" data-mtab="jour">Marché du Jour</button>
+          <button class="market-tab" data-mtab="mon">Mon Étal</button>
+          <button class="market-tab" data-mtab="quartier">Tabacs du Quartier</button>
+          <button class="market-tab" data-mtab="amis">Tabacs Amis</button>
         </div>
         <div id="market-content"></div>
       </div>
     </section>
 
-    <!-- BOURSE -->
-    <section class="page hidden" id="page-bourse">
-      <div class="page-inner">
-        <h2 class="page-title">📈 Bourse du Cendrier</h2>
-        <input type="text" id="bourse-search" class="game-input" placeholder="Rechercher une marque..." />
-        <div id="bourse-list"></div>
-        <div class="predictions-box">
-          <h3>🎯 Prédictions</h3>
-          <div id="active-predictions"></div>
-          <div class="new-prediction">
-            <h4>Nouvelle prédiction</h4>
-            <select id="pred-cig" class="game-select"></select>
-            <div class="pred-btns">
-              <button class="pred-dir active" data-dir="hausse" id="pd-hausse">📈 Hausse</button>
-              <button class="pred-dir" data-dir="baisse" id="pd-baisse">📉 Baisse</button>
-            </div>
-            <input type="number" id="pred-mise" class="game-input" placeholder="Mise : 10 à 1000 €" min="10" max="1000" />
-            <button id="btn-pred-add" class="btn-primary">Parier 🎯</button>
-          </div>
+    <!-- ══════════════════════════════════════════════════════
+         PAGE: BOURSE (Trading de collectibles)
+         ══════════════════════════════════════════════════════ -->
+    <section class="page" id="page-bourse">
+      <div class="empire-inventory-page">
+        <div class="inventory-header">
+          <h2 class="page-title-empire">📈 Bourse</h2>
         </div>
+        <div id="bourse-empire-list" style="padding:0 12px 120px;display:flex;flex-direction:column;gap:10px"></div>
       </div>
     </section>
 
-    <!-- CASINO -->
+    <!-- CASINO EUROPÉEN MONTE-CARLO -->
     <section class="page hidden" id="page-casino">
       <div class="page-inner casino-inner">
-        <div class="casino-warn-banner">⚠️ Jeu de hasard virtuel — 18 ans et plus — Argent virtuel uniquement</div>
-        <h2 class="page-title">🎰 Casino de Stéphane</h2>
-        <div class="casino-tabs">
-          <button class="cas-tab active" data-ctab="pf">Pile ou Face</button>
-          <button class="cas-tab" data-ctab="roulette">Roulette</button>
-          <button class="cas-tab" data-ctab="cigs">Cigarettes</button>
+        <div class="casino-header-dashboard" id="casino-header-dashboard">
+          <div class="casino-balance-box">
+            <div class="casino-balance-info">
+              <span class="casino-balance-label">Solde Disponible</span>
+              <span class="casino-balance-val" id="casino-player-balance">0 €</span>
+            </div>
+            <button class="btn-bank-advance" id="btn-casino-bank-advance">
+              Avance de la banque
+            </button>
+          </div>
+          <div class="casino-last-result-badge is-idle" id="casino-last-result-badge">
+            <div class="result-info">
+              <div class="result-title">DERNIER RÉSULTAT</div>
+              <div class="result-amount" id="casino-last-result-amount">Faites vos jeux</div>
+            </div>
+          </div>
         </div>
+
+        <div class="casino-tabs-european">
+          <button class="cas-tab active" data-ctab="blackjack">Blackjack Européen</button>
+          <button class="cas-tab" data-ctab="roulette">Roulette Européenne</button>
+        </div>
+
         <div id="casino-content"></div>
-        <div class="casino-daily-info">Mises aujourd'hui : <strong id="bets-today">0</strong> / 50</div>
       </div>
     </section>
 
-    <!-- AMIS -->
-    <section class="page hidden" id="page-amis">
+    <!-- ══════════════════════════════════════════════════════
+         PAGE: EMPIRE (L'Arrière-Boutique)
+         ══════════════════════════════════════════════════════ -->
+    <section class="page" id="page-empire">
+      <div class="empire-inventory-page">
+        <div class="inventory-header">
+          <h2 class="page-title-empire">🏢 L'Empire</h2>
+        </div>
+        <div class="empire-level-display">
+          <div id="empire-level-display"></div>
+          <div class="empire-level-bar-wrap empire-rooms-level">
+            <div class="empire-level-label"><span id="empire-rooms-level">Empire Niv. 1</span><span id="empire-rooms-xp">0 / 1 000 XP</span></div>
+            <div class="empire-xp-bar"><div class="empire-xp-fill-bar" id="empire-rooms-xp-fill"></div></div>
+          </div>
+        </div>
+        <div id="empire-rooms-container" style="padding:0 12px 120px"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════
+         PAGE: AMIS (gardé pour futur mode duo clicker)
+         ══════════════════════════════════════════════════════ -->
+    <section class="page" id="page-amis">
       <div class="page-inner">
-        <h2 class="page-title">👥 Amis & Défis</h2>
+        <h2 class="page-title"><span class="title-icon" id="icon-page-amis"></span> Amis &amp; Défis</h2>
         <div class="friend-code-section">
           <span>Mon code : </span>
           <strong class="friend-code" id="my-code">---</strong>
-          <button id="btn-copy-code" class="btn-secondary btn-sm">📋 Copier</button>
+          <button id="btn-copy-code" class="btn-secondary btn-sm">Copier</button>
         </div>
         <div class="add-friend-row">
           <input type="text" id="add-friend-input" class="game-input" placeholder="Code ou pseudo d'un ami" />
-          <button id="btn-add-friend" class="btn-primary">➕ Ajouter</button>
+          <button id="btn-add-friend" class="btn-primary">Ajouter</button>
         </div>
         <div id="friends-list"></div>
-        <h3>⚔️ Défis actifs</h3>
+        <h3>Défis en cours</h3>
         <div id="active-challenges"></div>
       </div>
     </section>
@@ -382,29 +597,48 @@
     <!-- CLASSEMENTS -->
     <section class="page hidden" id="page-classements">
       <div class="page-inner">
-        <h2 class="page-title">🏆 Classements</h2>
+        <h2 class="page-title"><span class="title-icon" id="icon-page-classements"></span> Classements</h2>
         <div class="lb-tabs">
-          <button class="lb-tab active" data-lbtab="fortune">💰 Fortune</button>
-          <button class="lb-tab" data-lbtab="temps">⏱ Temps</button>
-          <button class="lb-tab" data-lbtab="victoires">⚔️ Victoires</button>
-          <button class="lb-tab" data-lbtab="vitrine">🌟 Vitrine</button>
+          <button class="lb-tab active" data-lbtab="fortune">Fortune</button>
+          <button class="lb-tab" data-lbtab="temps">Temps</button>
+          <button class="lb-tab" data-lbtab="victoires">Victoires</button>
+          <button class="lb-tab" data-lbtab="vitrine">Vitrine</button>
         </div>
         <div class="lb-scope">
-          <button class="scope-btn active" data-scope="global">🌍 Mondial</button>
-          <button class="scope-btn" data-scope="amis">👥 Amis</button>
+          <button class="scope-btn active" data-scope="global">Mondial</button>
+          <button class="scope-btn" data-scope="amis">Amis</button>
         </div>
         <div id="lb-list"></div>
-        <div class="lb-reward-info">🎁 Top 10 chaque semaine → Paquet Duty Free offert ! Classements remis à zéro chaque lundi.</div>
+        <div class="lb-reward-info">Top 10 chaque semaine ➔ Paquet Duty Free offert. Remise à zéro chaque lundi.</div>
       </div>
     </section>
 
     <!-- PROFIL -->
     <section class="page hidden" id="page-profil">
-      <div class="page-inner">
+      <div class="page-inner prof-inner">
+        <div class="cat-tabs prof-tabs" id="prof-tabs">
+          <button class="cat-tab active" data-ptab="profil">Profil</button>
+          <button class="cat-tab" data-ptab="amis">Amis<span class="tab-badge hidden" id="badge-friends"></span></button>
+          <button class="cat-tab" data-ptab="clan">Clan</button>
+        </div>
+        <div class="prof-pane" id="prof-pane-profil">
         <div class="profile-header">
-          <div class="profile-avatar">🚬</div>
+          <label class="profile-avatar-edit" title="Changer ma photo">
+            <img id="prof-avatar-img" class="profile-avatar-img" src="assets/stephane_avatar.jpg" alt="Ma photo de profil" />
+            <span class="profile-avatar-badge">📷</span>
+            <input type="file" id="prof-avatar-input" accept="image/*" hidden />
+          </label>
           <div class="profile-infos">
-            <div class="profile-pseudo" id="prof-pseudo">Joueur</div>
+            <div class="profile-pseudo-row">
+              <div class="profile-pseudo" id="prof-pseudo">Joueur</div>
+              <button class="btn-icon profile-edit-btn" id="btn-edit-pseudo" title="Modifier mon pseudo">✏️</button>
+            </div>
+            <form class="profile-pseudo-form hidden" id="prof-pseudo-form">
+              <input type="text" id="prof-pseudo-input" class="game-input" maxlength="20" autocomplete="nickname" />
+              <button type="submit" class="btn-empire btn-empire-primary">OK</button>
+              <button type="button" class="btn-empire btn-empire-secondary" id="btn-cancel-pseudo">✕</button>
+            </form>
+            <p class="profile-form-msg hidden" id="prof-pseudo-msg"></p>
             <div class="profile-rank" id="prof-rank">Fumeur du dimanche</div>
             <div class="xp-bar-wrap">
               <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
@@ -416,14 +650,35 @@
           <div class="pstat"><strong id="ps-money">0 €</strong><span>Fortune</span></div>
           <div class="pstat"><strong id="ps-races">0</strong><span>Courses</span></div>
           <div class="pstat"><strong id="ps-wins">0</strong><span>Victoires duel</span></div>
-          <div class="pstat"><strong id="ps-cigs">0</strong><span>Cigarettes</span></div>
+          <div class="pstat"><strong id="ps-cigs">0</strong><span>Cartes uniques</span></div>
         </div>
         <div class="skills-section">
-          <h3>⚡ Compétences <span class="skill-pts-badge" id="skill-pts">0 pts</span></h3>
+          <h3>Compétences <span class="skill-pts-badge" id="skill-pts">0 pts</span></h3>
           <div id="skills-grid"></div>
         </div>
+        </div>
+        <div class="prof-pane hidden" id="prof-pane-amis"></div>
+        <div class="prof-pane hidden" id="prof-pane-clan"></div>
+      </div>
+    </section>
+
+    <!-- RÉGLAGES -->
+    <section class="page hidden" id="page-reglages">
+      <div class="page-inner set-inner">
+        <div class="mg-header">
+          <button class="mg-back" id="set-back" aria-label="Retour">‹</button>
+          <div class="mg-header-title"><strong>Réglages</strong><span>Le jeu, ton compte, la sécurité</span></div>
+        </div>
+        <div class="set-card">
+          <div><strong>Son</strong><p class="sec-desc">Bruitages et ambiance du bar.</p></div>
+          <button id="set-audio" class="btn-secondary btn-sm">Activé</button>
+        </div>
+        <div class="set-card">
+          <div><strong>Compte</strong><p class="sec-desc" id="set-email">Connecté</p></div>
+          <button id="btn-logout" class="btn-danger btn-sm">Déconnexion</button>
+        </div>
         <div class="security-section">
-          <h3>🔐 Sécurité du compte</h3>
+          <h3>Sécurité du compte</h3>
           <div class="security-card">
             <div>
               <strong>Double Authentification (2FA / MFA)</strong>
@@ -432,44 +687,190 @@
             <button id="btn-toggle-2fa" class="btn-secondary btn-sm">Activer 2FA</button>
           </div>
         </div>
-        <div class="logout-section">
-          <button id="btn-logout" class="btn-danger">Déconnexion</button>
+        <div class="set-card set-danger">
+          <div><strong>Recommencer à zéro</strong><p class="sec-desc">Efface ta progression sur ce compte. Définitif.</p></div>
+          <button id="btn-reset-save-full" class="btn-secondary btn-sm">Réinitialiser</button>
         </div>
+        <p class="set-legal">The Ashtray King v1.0 · Jeu satirique réservé aux 18 ans et plus · Argent virtuel uniquement, aucun achat réel. Le tabac est dangereux pour la santé.</p>
+      </div>
+    </section>
+
+    <!-- PAGE: ARBRE DE TALENTS (3 VOIES) -->
+    <section class="page" id="page-talents">
+      <div class="page-inner empire-inventory-page">
+        <div class="inventory-header">
+          <h2 class="page-title-empire" style="font-family:var(--font-rpg);letter-spacing:1px">🔱 Arbre des Talents</h2>
+        </div>
+        <div id="talents-content"></div>
+      </div>
+    </section>
+
+    <!-- PAGE: MULTIJOUEUR (DUELS PVP & SALON) -->
+    <section class="page" id="page-multi">
+      <div class="page-inner empire-inventory-page">
+        <div class="inventory-header">
+          <h2 class="page-title-empire">🎲 Salle de jeux</h2>
+        </div>
+        <div id="multi-content"></div>
       </div>
     </section>
 
   </main>
+</div>
 
-  <nav id="bottom-nav">
-    <button class="nav-btn active" data-page="course">🏃<span>Course</span></button>
-    <button class="nav-btn" data-page="paquets">📦<span>Paquets</span></button>
-    <button class="nav-btn" data-page="inventaire">🚬<span>Inventaire</span></button>
-    <button class="nav-btn" data-page="marche">🏪<span>Marché</span></button>
-    <button class="nav-btn" data-page="bourse">📈<span>Bourse</span></button>
-    <button class="nav-btn" data-page="casino">🎰<span>Casino</span></button>
-    <button class="nav-btn" data-page="amis">👥<span>Amis</span></button>
-    <button class="nav-btn" data-page="classements">🏆<span>Top</span></button>
-  </nav>
+<!-- ══════════════════════════════════════════════════════
+     BOTTOM NAVIGATION BAR
+     ══════════════════════════════════════════════════════ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-btn active" data-page="clicker" aria-label="Clicker">
+    <span class="nav-icon-wrap" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-top:-18px;border:3px solid #06070d;box-shadow:0 4px 16px rgba(245,158,11,0.5)">🚬</span>
+    <span class="nav-label">CLIQUER</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="paquets" aria-label="Paquets">
+    <span class="nav-icon">🎴</span>
+    <span class="nav-label">Paquets</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="inventaire" aria-label="Collection">
+    <span class="nav-icon">🎒</span>
+    <span class="nav-label">Cartes</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="talents" aria-label="Talents">
+    <span class="nav-icon">⭐</span>
+    <span class="nav-label">Talents</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="multi" aria-label="Multi">
+    <span class="nav-icon">🎲</span>
+    <span class="nav-label">Jeux</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="bourse" aria-label="Bourse">
+    <span class="nav-icon">📈</span>
+    <span class="nav-label">Bourse</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="casino" aria-label="Casino">
+    <span class="nav-icon">🎰</span>
+    <span class="nav-label">Casino</span>
+  </button>
+</nav>
 
+<!-- OVERLAY POUR LE SELECTEUR DE PISTE -->
+<div class="modal-overlay hidden" id="track-overlay">
+  <div class="modal-box track-modal-box">
+    <button class="modal-close" id="track-close">✕</button>
+    <h3 style="font-family:var(--font-title);font-size:1.8rem;color:var(--accent);margin-bottom:16px;text-align:center;">Choisir la Piste</h3>
+    <div class="track-selector arcade-track-selector" id="track-selector">
+      <!-- Mêmes pistes qu'avant, insérées ici par JS ou codées en dur -->
+      <div class="track-card track-trottoir active" data-track="trottoir">
+        <div class="track-header-badge badge-easy">FACILE · ×1.0</div>
+        <div class="track-card-bg bg-trottoir"></div>
+        <div class="track-card-content">
+          <div class="track-name">Trottoir de Belleville</div>
+          <div class="track-sub">Pavés & Zinc</div>
+          <div class="track-info">500 m</div>
+        </div>
+      </div>
+      <div class="track-card track-boulevard" data-track="boulevard" id="track-card-boulevard">
+        <div class="track-header-badge badge-medium">MOYEN · ×1.8</div>
+        <div class="track-card-bg bg-boulevard"></div>
+        <div class="track-card-content">
+          <div class="track-name">Boulevard Magenta</div>
+          <div class="track-sub">Asphalte & Trafic</div>
+          <div class="track-info">800 m</div>
+        </div>
+      </div>
+      <div class="track-card track-autoroute" data-track="autoroute" id="track-card-autoroute">
+        <div class="track-header-badge badge-hard">HARDCORE · ×3.5</div>
+        <div class="track-card-bg bg-autoroute"></div>
+        <div class="track-card-content">
+          <div class="track-name">Périphérique Est</div>
+          <div class="track-sub">Poursuite nocturne</div>
+          <div class="track-info">1 200 m</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="toast-container"></div>
+
+<!-- Global Modal -->
 <div class="modal-overlay hidden" id="modal-overlay">
-  <div class="modal-box" id="modal-box">
+  <div class="modal-box" id="modal-box" style="max-width:600px;width:92vw">
     <button class="modal-close" id="modal-close">✕</button>
     <div id="modal-body"></div>
   </div>
 </div>
 
-<script src="js/data.js"></script>
-<script src="js/supabase.js"></script>
-<script src="js/game.js"></script>
-<script src="js/race.js"></script>
-<script src="js/packs.js"></script>
-<script src="js/market.js"></script>
-<script src="js/casino.js"></script>
-<script src="js/friends.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/main.js"></script>
+<!-- ══════════════════════════════════════════════════════
+     EMPIRE PACK OPENING OVERLAY
+     ══════════════════════════════════════════════════════ -->
+<div class="pack-opening-overlay hidden" id="empire-pack-overlay">
+  <div class="po-rays" aria-hidden="true"></div>
+  <div class="po-flash" id="po-flash" aria-hidden="true"></div>
+
+  <!-- Étape 1 : le paquet scellé, à déchirer -->
+  <div id="empire-booster-stage" class="po-stage">
+    <div class="po-booster-zone" id="pokemon-pack-container"></div>
+    <p class="po-hint" id="po-hint">Glisse le doigt sur le haut du paquet pour le déchirer</p>
+    <button class="btn-empire btn-empire-primary po-main-btn" id="btn-tear-booster">✂️ Déchirer le paquet</button>
+  </div>
+
+  <!-- Étape 2 : révélation carte par carte -->
+  <div id="empire-reveal-stage" class="po-stage hidden">
+    <div class="po-top-row">
+      <span id="empire-card-counter" class="po-counter">Carte 1/5</span>
+      <div class="po-dots" id="po-dots"></div>
+      <button id="btn-empire-skip" class="btn-empire btn-empire-secondary po-skip">Passer tout</button>
+    </div>
+    <div class="po-card-zone" id="empire-card-showcase"></div>
+    <p class="po-hint" id="po-reveal-hint">Touche la carte pour la retourner</p>
+    <button id="btn-empire-next-card" class="btn-empire btn-empire-primary po-main-btn">Retourner</button>
+  </div>
+
+  <!-- Étape 3 : récapitulatif -->
+  <div id="empire-recap-stage" class="po-stage hidden">
+    <h2 class="po-recap-title">Tirage terminé !</h2>
+    <p class="po-recap-sub" id="po-recap-sub"></p>
+    <div id="empire-recap-grid" class="pack-recap-grid"></div>
+    <button id="btn-empire-collect" class="btn-empire btn-empire-primary po-main-btn">Tout récupérer</button>
+  </div>
+</div>
+
+<!-- ═══ SCRIPTS ═══════════════════════════════════════════ -->
+<script src="js/audio.js?v=55"></script>
+<script src="js/icons.js?v=55"></script>
+<script src="js/cigarettes_db.js?v=55"></script>
+<script src="js/data.js?v=55"></script>
+<script src="js/supabase.js?v=55"></script>
+<script src="js/account.js?v=55"></script>
+<script src="js/empire_db_expansion.js?v=55"></script>
+<script src="js/cards_extra.js?v=55"></script>
+<script src="js/empire_db.js?v=55"></script>
+<script src="js/clicker.js?v=55"></script>
+<script src="js/pack_art.js?v=55"></script>
+<script src="js/cards.js?v=55"></script>
+<script src="js/empire.js?v=55"></script>
+<script src="js/game.js?v=55"></script>
+<script src="js/race.js?v=55"></script>
+<script src="js/packs.js?v=55"></script>
+<script src="js/market.js?v=55"></script>
+<script src="js/casino.js?v=55"></script>
+<script src="js/friends.js?v=55"></script>
+<script src="js/talents.js?v=55"></script>
+<script src="js/multiplayer.js?v=55"></script>
+<script src="js/games/league.js?v=55"></script>
+<script src="js/games/prestige.js?v=55"></script>
+<script src="js/games/game_ui.js?v=55"></script>
+<script src="js/games/bataille.js?v=55"></script>
+<script src="js/games/des421.js?v=55"></script>
+<script src="js/games/pbc.js?v=55"></script>
+<script src="js/games/course.js?v=55"></script>
+<script src="js/games/ut.js?v=55"></script>
+<script src="js/games/quiz.js?v=55"></script>
+<script src="js/games/online.js?v=55"></script>
+<script src="js/social.js?v=55"></script>
+<script src="js/games/hub.js?v=55"></script>
+<script src="js/ui.js?v=55"></script>
+<script src="js/profile.js?v=55"></script>
+<script src="js/main.js?v=55"></script>
 </body>
 </html>

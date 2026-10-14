@@ -1,13 +1,21 @@
 # ============================================================
-# Stéphane, le Roi du Cendrier — .htaccess Hostinger
+# The Ashtray King — .htaccess Hostinger (sécurité + cache)
 # ============================================================
 
+Options -Indexes
 RewriteEngine On
 RewriteBase /
 
 # HTTPS forcé
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Jamais servis au public : dépôt git, secrets, scripts, base de données, notes de travail
+RewriteRule ^(\.git|\.github|scripts|supabase|data|node_modules)(/|$) - [R=404,L]
+RewriteRule (^|/)\.(?!well-known) - [R=404,L]
+RewriteRule ^(CLAUDE|RECAP|README)\.md$ - [R=404,L]
+RewriteRule ^supabase_schema\.sql$ - [R=404,L]
+RewriteRule \.(py|sh|sql|bak|log|env|map|md)$ - [R=404,L]
 
 # Clean URL (pas de /index.html)
 RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.html[\s?] [NC]
@@ -18,34 +26,31 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 
-# === HEADERS DE SÉCURITÉ ===
+# === EN-TÊTES DE SÉCURITÉ ===
 <IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
   Header always set X-Content-Type-Options "nosniff"
-  Header always set X-Frame-Options "SAMEORIGIN"
-  Header always set X-XSS-Protection "1; mode=block"
+  Header always set X-Frame-Options "DENY"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+  # Scripts : le site lui-même + la bibliothèque Supabase (verrouillée par empreinte SRI dans index.html)
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com; connect-src 'self' https://xfktspcyvfwdyuzewyni.supabase.co wss://xfktspcyvfwdyuzewyni.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 </IfModule>
 
-# === COMPRESSION GZIP ===
+# === COMPRESSION ===
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
 </IfModule>
 
-# === CACHE ===
+# === CACHE (les fichiers JS/CSS changent de ?v= à chaque mise à jour) ===
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType text/html "access plus 0 seconds"
   ExpiresByType text/css "access plus 1 month"
   ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType font/woff2 "access plus 1 year"
   ExpiresByType image/jpeg "access plus 6 months"
   ExpiresByType image/png "access plus 6 months"
   ExpiresByType image/webp "access plus 6 months"
 </IfModule>
-
-# === BLOQUER FICHIERS SENSIBLES ===
-<FilesMatch "\.(env|log|sql|bak|git)$">
-  Order Allow,Deny
-  Deny from all
-</FilesMatch>
