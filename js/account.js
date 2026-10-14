@@ -18,7 +18,7 @@ const Account = (() => {
     'casino_last_result', 'casino_bank_advance_at', 'ashtray_pvp_deck', 'ashtray_audio_enabled',
   ];
   const PREFIXES = ['rules_seen_'];
-  const OWNER = 'ak_owner', STAMP = 'ak_stamp', DIRTY = 'ak_dirty';
+  const OWNER = 'ak_owner', STAMP = 'ak_stamp', DIRTY = 'ak_dirty', LEFT = 'ak_signed_out';
   const PUSH_DELAY = 20000;
 
   let user = null;
@@ -131,8 +131,16 @@ const Account = (() => {
   }
 
   // ── Démarrage ──────────────────────────────────────────────
+  // Efface tout ce qui appartient au compte précédent (données du jeu + photo)
+  function wipeAccountData() {
+    clearGameData();
+    ls.del(OWNER); ls.del(STAMP); ls.del(DIRTY); ls.del('player_avatar'); ls.del('player_avatar_small');
+  }
+
   async function boot() {
     hook();
+    // Déconnexion récente : le jeu a pu réécrire ses données juste avant le rechargement. On repart de zéro.
+    if (ls.get(LEFT) === '1') { wipeAccountData(); ls.del(LEFT); }
     const sb = client();
     if (!sb) {
       showAuth();
@@ -183,6 +191,7 @@ const Account = (() => {
         stamp = cloud.updated_at;                         // sécurité anti-boucle de rechargement
       } else {
         // Autre compte sur ce navigateur, première connexion ici, ou rien à perdre : la version en ligne gagne
+        if (owner && owner !== u.id) { ls.del('player_avatar'); ls.del('player_avatar_small'); }
         applySnapshot(cloud.data);
         ls.set(OWNER, u.id); ls.set(STAMP, cloud.updated_at); ls.del(DIRTY);
         sessionStorage.setItem('ak_reloaded', u.id + cloud.updated_at);
@@ -191,7 +200,7 @@ const Account = (() => {
       }
     } else {
       // Aucune sauvegarde en ligne : si les données de ce navigateur sont à ce joueur (ou à personne), on les envoie
-      if (owner && owner !== u.id) clearGameData();
+      if (owner && owner !== u.id) wipeAccountData();
       stamp = null;
       ls.set(OWNER, u.id);
       live = true;
@@ -216,8 +225,8 @@ const Account = (() => {
     clearTimeout(timer); timer = null;
     if (user && ls.get(DIRTY) === '1') await push();
     live = false;
-    clearGameData();
-    ls.del(OWNER); ls.del(STAMP); ls.del(DIRTY); ls.del('player_avatar'); ls.del('player_avatar_small');
+    wipeAccountData();
+    ls.set(LEFT, '1');
     if (window.CloudSync) await CloudSync.signOut();
     user = null; profile = null; stamp = null;
     location.reload();
