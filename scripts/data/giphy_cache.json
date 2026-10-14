@@ -20,12 +20,7 @@
 "q": "rick astley never gonna give you up"
 },
 "ref-nyan-cat": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "nyan cat",
-"loose": false,
-"title": "cat life GIF"
+"done": false
 },
 "ref-doge": {
 "done": true,
@@ -112,12 +107,7 @@
 "q": "gigachad"
 },
 "ref-trollface": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "trollface",
-"loose": false,
-"title": "Sus GIF"
+"done": false
 },
 "ref-pepe-la-grenouille": {
 "done": true,
@@ -174,10 +164,7 @@
 "q": "bernie sanders mittens"
 },
 "ref-ca-va-etre-tout-noir": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "tout noir aldo"
+"done": false
 },
 "ref-chien-de-la-casse": {
 "done": true,
@@ -186,12 +173,7 @@
 "q": "angry dog"
 },
 "ref-wesh": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "Wesh",
-"loose": false,
-"title": "Look Away Oh No GIF"
+"done": false
 },
 "ref-quoicoubeh": {
 "done": true,
@@ -200,12 +182,7 @@
 "q": "Quoicoubeh"
 },
 "ref-apagnan": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "apagnan",
-"loose": true,
-"title": "Sanjay Dutt No GIF"
+"done": false
 },
 "ref-ratio": {
 "done": true,
@@ -228,12 +205,7 @@
 "q": "Gênant"
 },
 "ref-tchoin": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "tchoin",
-"loose": true,
-"title": "Queen Rihanna GIF"
+"done": false
 },
 "ref-fanny": {
 "done": true,
@@ -242,12 +214,7 @@
 "q": "Fanny"
 },
 "ref-c-est-pas-faux": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "kaamelott c'est pas faux",
-"loose": false,
-"title": "kaamelott GIF"
+"done": false
 },
 "ref-thierry-henry-main": {
 "done": true,
@@ -300,14 +267,11 @@
 "meme-casse-toi-pauv-con": {
 "done": true,
 "pass2": true,
-"found": false,
-"q": "sarkozy casse toi pauv con"
+"found": true,
+"source": "image"
 },
 "meme-je-traverse-la-rue": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "je traverse la rue pour vous trouver un travail macron"
+"done": false
 },
 "meme-ca-m-en-touche-une": {
 "done": true,
@@ -335,29 +299,16 @@
 "done": true,
 "pass2": true,
 "found": true,
-"q": "c'est de la merde",
-"loose": true,
-"title": "Kad Merad Fbi GIF by CANAL+"
+"source": "copy"
 },
 "meme-comment-est-votre-blanquette": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "oss 117 blanquette",
-"loose": true,
-"title": "Animated GIF"
+"done": false
 },
 "meme-j-aime-me-beurrer-la-biscotte": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "oss 117 beurrer la biscotte"
+"done": false
 },
 "meme-c-est-une-bonne-situation-ca-scribe": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "mission cleopatre bonne situation scribe"
+"done": false
 },
 "meme-le-gras-c-est-la-vie": {
 "done": true,
@@ -368,10 +319,7 @@
 "title": "kaamelott GIF"
 },
 "meme-faut-pas-respirer-la-compote": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "faut pas respirer la compote"
+"done": false
 },
 "meme-on-en-a-gros": {
 "done": true,
@@ -380,18 +328,10 @@
 "q": "kaamelott perceval"
 },
 "meme-okayyy": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "okay les visiteurs",
-"loose": true,
-"title": "philippe poutou revolution GIF by franceinfo"
+"done": false
 },
 "meme-sur-un-malentendu": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "sur un malentendu ça peut marcher"
+"done": false
 },
 "meme-il-s-appelle-juste-leblanc": {
 "done": true,
@@ -402,36 +342,22 @@
 "title": "reno visiteurs GIF"
 },
 "meme-jusqu-ici-tout-va-bien": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "la haine jusqu'ici tout va bien"
+"done": false
 },
 "meme-casse": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "brice de nice cassé",
-"loose": false,
-"title": "Twitch GIF"
+"done": false
 },
 "meme-ils-sont-fous-ces-romains": {
 "done": true,
 "pass2": true,
-"found": false,
-"q": "asterix ils sont fous ces romains"
+"found": true,
+"source": "image"
 },
 "meme-c-est-l-histoire-d-un-mec": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "C'est l'histoire d'un mec"
+"done": false
 },
 "meme-tu-veux-un-whisky": {
-"done": true,
-"pass2": true,
-"found": false,
-"q": "tu veux un whisky"
+"done": false
 },
 "meme-pays-de-galles-independant": {
 "done": true,
@@ -442,647 +368,658 @@
 "title": "The Beautiful Game Futbol GIF by World Cup"
 },
 "meme-mais-qu-est-ce-que-c-est-que-ce-binz": {
-"done": true,
-"pass2": true,
-"found": true,
-"q": "Mais qu'est-ce que c'est que ce binz ?",
-"loose": true,
-"title": "Peut Etre GIF by Lunik Co-op"
+"done": false
 },
 "meme-oui-oui-baguette": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Oui oui baguette"
+"pass2": true,
+"found": true,
+"q": "Oui oui baguette",
+"loose": false,
+"title": "French Baguette Lol GIF by ALDI FRANCE"
 },
 "meme-putain-comme-virgule": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Putain comme virgule"
+"pass2": true,
+"found": true,
+"source": "image"
 },
 "meme-faut-dire-bonjour": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Faut dire bonjour"
+"done": false
 },
 "meme-le-francais-qui-rale": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le Français qui râle"
+"done": false
 },
 "meme-bonne-journee-de-mamie": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Bonne journée de mamie"
+"done": false
 },
 "meme-le-groupe-whatsapp-de-la-famille": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Le groupe WhatsApp de la famille"
+"pass2": true,
+"found": true,
+"q": "family group chat",
+"loose": false,
+"title": "Twinning Locked In GIF"
 },
 "meme-le-vocal-de-7-minutes": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Le vocal de 7 minutes"
+"pass2": true,
+"found": true,
+"q": "voice message long",
+"loose": false,
+"title": "Stalking I Love You GIF by La Guarimba Film Festival"
 },
 "meme-vu-a-14-h-02": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Vu à 14 h 02"
+"pass2": true,
+"found": true,
+"q": "left on read",
+"loose": false,
+"title": "Blue Cat Nopecat GIF"
 },
 "meme-les-lacs-du-connemara-a-4-h": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Les Lacs du Connemara à 4 h"
+"done": false
 },
 "meme-la-chenille": {
-"done": true,
-"found": false,
-"title": null,
-"q": "La Chenille"
+"done": false
 },
 "meme-le-tonton-du-mariage": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le tonton du mariage"
+"done": false
 },
 "meme-la-belle-mere": {
 "done": true,
-"found": false,
-"title": null,
-"q": "La belle-mère"
+"pass2": true,
+"found": true,
+"q": "mother in law",
+"loose": false,
+"title": "Starz Mother In Law GIF by Vida"
 },
 "meme-c-est-carre": {
-"done": true,
-"found": false,
-"title": null,
-"q": "C'est carré"
+"done": false
 },
 "meme-chokbar": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Chokbar"
+"pass2": true,
+"found": true,
+"q": "Chokbar",
+"loose": false,
+"title": "Chokbar GIF"
 },
 "meme-askip": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Askip"
+"pass2": true,
+"found": true,
+"q": "Askip",
+"loose": false,
+"title": "Askip Okoo GIF by RTBF"
 },
 "meme-cheh": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Cheh"
+"pass2": true,
+"found": true,
+"q": "cheh",
+"loose": false,
+"title": "Cheh GIF"
 },
 "meme-la-flemme": {
 "done": true,
-"found": false,
-"title": null,
-"q": "La flemme"
+"pass2": true,
+"found": true,
+"q": "lazy flemme",
+"loose": false,
+"title": "Tired Couch Potato GIF by ZTIKIX"
 },
 "meme-wallah": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Wallah"
+"pass2": true,
+"found": true,
+"q": "wallah",
+"loose": false,
+"title": "Mister V Wallah GIF"
 },
 "meme-zinzin": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Zinzin"
+"pass2": true,
+"found": true,
+"q": "Zinzin",
+"loose": false,
+"title": " "
 },
 "meme-masterclass": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Masterclass"
+"done": false
 },
 "meme-le-mytho": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Le mytho"
+"pass2": true,
+"found": true,
+"q": "Le mytho",
+"loose": true,
+"title": "Jonathan Cohen Love GIF by CANAL+"
 },
 "meme-la-hess": {
-"done": true,
-"found": false,
-"title": null,
-"q": "La hess"
+"done": false
 },
 "meme-kassos": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Kassos"
+"done": false
 },
 "meme-crari": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Crari"
+"done": false
 },
 "meme-wesh-alors": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Wesh alors"
+"done": false
 },
 "meme-siuuu": {
 "done": true,
-"found": false,
-"title": null,
-"q": "ronaldo siuuu"
+"pass2": true,
+"found": true,
+"q": "ronaldo siuuu celebration",
+"loose": false,
+"title": "Cristiano Ronaldo Siuuu GIF"
 },
 "meme-la-main-dans-la-poche": {
-"done": true,
-"found": false,
-"title": null,
-"q": "La main dans la poche"
+"done": false
 },
 "meme-le-daron-a-la-plage": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le daron à la plage"
+"done": false
 },
 "meme-t-as-les-crampons": {
-"done": true,
-"found": false,
-"title": null,
-"q": "T'as les crampons ?"
+"done": false
 },
 "meme-le-scooter-de-3-h-du-mat": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le Scooter de 3 h du Mat'"
+"done": false
 },
 "meme-il-fait-beau-donc-la-bretagne": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Il fait beau donc la Bretagne"
+"done": false
 },
 "meme-le-parisien-en-vacances": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le Parisien en vacances"
+"done": false
 },
 "meme-le-marseillais-qui-exagere": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le Marseillais qui exagère"
+"done": false
 },
 "meme-le-ch-ti-qui-dit-hein": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le Ch'ti qui dit hein"
+"done": false
 },
 "meme-pain-au-chocolat-ou-chocolatine": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Pain au chocolat ou chocolatine"
+"done": false
 },
 "meme-la-bise-ou-le-check": {
-"done": true,
-"found": false,
-"title": null,
-"q": "La bise ou le check ?"
+"done": false
 },
 "meme-les-pates-au-beurre": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Les pâtes au beurre"
+"done": false
 },
 "meme-le-kebab-sauce-samourai": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le kebab sauce samouraï"
+"done": false
 },
 "meme-la-file-a-la-poste": {
-"done": true,
-"found": false,
-"title": null,
-"q": "La file à la Poste"
+"done": false
 },
 "meme-le-wi-fi-de-la-sncf": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le Wi-Fi de la SNCF"
+"done": false
 },
 "meme-le-controleur-arrive": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le contrôleur arrive"
+"done": false
 },
 "meme-le-lundi-matin": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Le lundi matin"
+"pass2": true,
+"found": true,
+"q": "Le lundi matin",
+"loose": false,
+"title": "Blanche Neige Lol GIF by ALDI FRANCE"
 },
 "meme-le-dimanche-soir": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le dimanche soir"
+"done": false
 },
 "meme-le-pont-du-mois-de-mai": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le pont du mois de mai"
+"done": false
 },
 "meme-les-bouchons-du-15-aout": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Les bouchons du 15 août"
+"done": false
 },
 "meme-le-coup-de-fil-du-12-juillet": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le coup de fil du 12 juillet"
+"done": false
 },
 "meme-l-arbitre-est-vendu": {
-"done": true,
-"found": false,
-"title": null,
-"q": "L'arbitre est vendu"
+"done": false
 },
 "meme-le-daron-au-barbecue": {
-"done": true,
-"found": false,
-"title": null,
-"q": "Le daron au barbecue"
+"done": false
 },
 "meme-tralalero-tralala": {
-"done": true,
-"found": false,
-"title": null,
-"q": "tralalero tralala"
+"done": false
 },
 "meme-tung-tung-tung-sahur": {
 "done": true,
-"found": false,
-"title": null,
-"q": "tung tung tung sahur"
+"pass2": true,
+"found": true,
+"q": "tung tung tung sahur",
+"loose": false,
+"title": "Tung Tung Dance GIF"
 },
 "meme-ballerina-cappuccina": {
 "done": true,
-"found": false,
-"title": null,
-"q": "ballerina cappuccina"
+"pass2": true,
+"found": true,
+"q": "ballerina cappuccina",
+"loose": false,
+"title": "ballerina GIF"
 },
 "meme-bombardiro-crocodilo": {
-"done": true,
-"found": false,
-"title": null,
-"q": "bombardiro crocodilo"
+"done": false
 },
 "meme-brr-brr-patapim": {
-"done": true,
-"found": false,
-"title": null,
-"q": "brr brr patapim"
+"done": false
 },
 "meme-lirili-larila": {
-"done": true,
-"found": false,
-"title": null,
-"q": "lirili larila"
+"done": false
 },
 "meme-chimpanzini-bananini": {
 "done": true,
-"found": false,
-"title": null,
-"q": "chimpanzini bananini"
+"pass2": true,
+"found": true,
+"q": "chimpanzini bananini",
+"loose": true,
+"title": "Peace Douces GIF by Dawn To Fitness"
 },
 "meme-cappuccino-assassino": {
 "done": true,
-"found": false,
-"title": null,
-"q": "cappuccino assassino"
+"pass2": true,
+"found": true,
+"q": "cappuccino assassino",
+"loose": false,
+"title": "art coffee GIF"
 },
 "meme-hawk-tuah": {
 "done": true,
-"found": false,
-"title": null,
-"q": "hawk tuah"
+"pass2": true,
+"found": true,
+"q": "hawk tuah",
+"loose": false,
+"title": "Spit GIF by Camjaysmith"
 },
 "meme-moo-deng": {
 "done": true,
-"found": false,
-"title": null,
-"q": "moo deng"
+"pass2": true,
+"found": true,
+"q": "moo deng",
+"loose": false,
+"title": "Snl Weekend Update GIF by Saturday Night Live"
 },
 "meme-labubu": {
 "done": true,
-"found": false,
-"title": null,
-"q": "labubu"
+"pass2": true,
+"found": true,
+"q": "labubu",
+"loose": false,
+"title": "Popmart Labubu GIF by popmartglobal"
 },
 "meme-very-demure": {
 "done": true,
-"found": false,
-"title": null,
-"q": "very demure"
+"pass2": true,
+"found": true,
+"q": "very demure",
+"loose": false,
+"title": "Slay GIF by Taimi"
 },
 "meme-brainrot": {
 "done": true,
-"found": false,
-"title": null,
-"q": "brainrot"
+"pass2": true,
+"found": true,
+"q": "brainrot",
+"loose": false,
+"title": "Horse GIF"
 },
 "meme-aura-1000": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Aura +1000"
+"pass2": true,
+"found": true,
+"q": "Aura +1000",
+"loose": false,
+"title": "Aura GIF"
 },
 "meme-fanum-tax": {
 "done": true,
-"found": false,
-"title": null,
-"q": "fanum tax"
+"pass2": true,
+"found": true,
+"q": "fanum tax",
+"loose": false,
+"title": "Streamer Explosion GIF"
 },
 "meme-gyatt": {
 "done": true,
-"found": false,
-"title": null,
-"q": "gyatt"
+"pass2": true,
+"found": true,
+"q": "gyatt",
+"loose": false,
+"title": "Twerk Booty GIF"
 },
 "meme-delulu": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Delulu"
+"pass2": true,
+"found": true,
+"q": "Delulu",
+"loose": false,
+"title": "Kp Nepali GIF"
 },
 "meme-sus": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Sus"
+"pass2": true,
+"found": true,
+"source": "image"
 },
 "meme-npc": {
 "done": true,
-"found": false,
-"title": null,
-"q": "NPC"
+"pass2": true,
+"found": true,
+"q": "NPC",
+"loose": false,
+"title": "Bot Npc GIF"
 },
 "meme-big-chungus": {
 "done": true,
-"found": false,
-"title": null,
-"q": "big chungus"
+"pass2": true,
+"found": true,
+"q": "big chungus",
+"loose": false,
+"title": "Bugs Bunny Big Chungus GIF"
 },
 "meme-ugandan-knuckles": {
 "done": true,
-"found": false,
-"title": null,
-"q": "ugandan knuckles"
+"pass2": true,
+"found": true,
+"q": "ugandan knuckles",
+"loose": false,
+"title": "Marcelo Knuckles GIF"
 },
 "meme-wojak": {
 "done": true,
-"found": false,
-"title": null,
-"q": "wojak"
+"pass2": true,
+"found": true,
+"q": "wojak",
+"loose": false,
+"title": "Angry Wojak GIF by Leroy Patterson"
 },
 "meme-doomer": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Doomer"
+"pass2": true,
+"found": true,
+"q": "Doomer",
+"loose": false,
+"title": "Sad Wojak GIF by Database數據"
 },
 "meme-sad-pablo-escobar": {
 "done": true,
-"found": false,
-"title": null,
-"q": "sad pablo escobar waiting"
+"pass2": true,
+"found": true,
+"q": "sad pablo escobar waiting",
+"loose": false,
+"title": "Sad Pablo Escobar GIF"
 },
 "meme-kermit-sipping-tea": {
 "done": true,
-"found": false,
-"title": null,
-"q": "kermit sipping tea"
+"pass2": true,
+"found": true,
+"q": "kermit sipping tea",
+"loose": false,
+"title": "Kermit The Frog Tea GIF"
 },
 "meme-drake-hotline-bling": {
 "done": true,
-"found": false,
-"title": null,
-"q": "drake hotline bling"
+"pass2": true,
+"found": true,
+"q": "drake hotline bling",
+"loose": false,
+"title": "hotline bling drake GIF"
 },
 "meme-two-buttons": {
 "done": true,
-"found": false,
-"title": null,
-"q": "two buttons sweating"
+"pass2": true,
+"found": true,
+"q": "two buttons sweating",
+"loose": false,
+"title": "Nervous Red Buttons GIF by Masters of Mayhem"
 },
 "meme-expanding-brain": {
 "done": true,
-"found": false,
-"title": null,
-"q": "expanding brain"
+"pass2": true,
+"found": true,
+"q": "expanding brain",
+"loose": false,
+"title": "Brain GIF"
 },
 "meme-woman-yelling-at-cat": {
 "done": true,
-"found": false,
-"title": null,
-"q": "woman yelling at cat"
+"pass2": true,
+"found": true,
+"q": "woman yelling at cat",
+"loose": false,
+"title": "The Real Housewives Of Beverly Hills Reaction GIF by MOODMAN"
 },
 "meme-change-my-mind": {
 "done": true,
-"found": false,
-"title": null,
-"q": "steven crowder change my mind"
+"pass2": true,
+"found": true,
+"q": "steven crowder change my mind",
+"loose": false,
+"title": "Louder With Crowder GIF by Splash Designworks (aka splashdw.com)"
 },
 "meme-surprised-pikachu": {
 "done": true,
-"found": false,
-"title": null,
-"q": "surprised pikachu"
+"pass2": true,
+"found": true,
+"q": "surprised pikachu",
+"loose": false,
+"title": "Surprised Meme GIF"
 },
 "meme-leonardo-dicaprio-cheers": {
 "done": true,
-"found": false,
-"title": null,
-"q": "dicaprio cheers"
+"pass2": true,
+"found": true,
+"q": "dicaprio cheers",
+"loose": false,
+"title": "cheers GIF"
 },
 "meme-confused-nick-young": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Confused Nick Young"
+"pass2": true,
+"found": true,
+"q": "Confused Nick Young",
+"loose": false,
+"title": "Question Mark Wtf GIF"
 },
 "meme-salt-bae": {
 "done": true,
-"found": false,
-"title": null,
-"q": "salt bae"
+"pass2": true,
+"found": true,
+"q": "salt bae",
+"loose": false,
+"title": "salt salting GIF"
 },
 "meme-roll-safe": {
 "done": true,
-"found": false,
-"title": null,
-"q": "roll safe thinking"
+"pass2": true,
+"found": true,
+"q": "roll safe thinking",
+"loose": false,
+"title": "Think Tap Tap GIF by DraftKings"
 },
 "meme-disaster-girl": {
 "done": true,
-"found": false,
-"title": null,
-"q": "disaster girl"
+"pass2": true,
+"found": true,
+"q": "disaster girl",
+"loose": false,
+"title": "Girl Fire GIF by MOODMAN"
 },
 "meme-success-kid": {
 "done": true,
-"found": false,
-"title": null,
-"q": "success kid"
+"pass2": true,
+"found": true,
+"q": "success kid",
+"loose": false,
+"title": "Success Kid GIF by MOODMAN"
 },
 "meme-bad-luck-brian": {
 "done": true,
-"found": false,
-"title": null,
-"q": "bad luck brian"
+"pass2": true,
+"found": true,
+"q": "bad luck brian",
+"loose": false,
+"title": "luck majority GIF"
 },
 "meme-ight-imma-head-out": {
 "done": true,
-"found": false,
-"title": null,
-"q": "spongebob ight imma head out"
+"pass2": true,
+"found": true,
+"q": "spongebob ight imma head out",
+"loose": false,
+"title": "Meme Leaving GIF by MOODMAN"
 },
 "meme-mike-wazowski": {
 "done": true,
-"found": false,
-"title": null,
-"q": "mike wazowski"
+"pass2": true,
+"found": true,
+"q": "mike wazowski",
+"loose": false,
+"title": "Monsters Inc Face Swap GIF"
 },
 "meme-huh-cat": {
 "done": true,
-"found": false,
-"title": null,
-"q": "huh cat"
+"pass2": true,
+"found": true,
+"q": "huh cat",
+"loose": false,
+"title": "Miao Miao Lol GIF by Respective"
 },
 "meme-banana-cat": {
 "done": true,
-"found": false,
-"title": null,
-"q": "banana cat crying"
+"pass2": true,
+"found": true,
+"q": "banana cat crying",
+"loose": false,
+"title": "Sad Cat GIF"
 },
 "meme-smurf-cat": {
 "done": true,
-"found": false,
-"title": null,
-"q": "smurf cat"
+"pass2": true,
+"found": true,
+"q": "smurf cat",
+"loose": false,
+"title": "Blue Cat GIF by Justin"
 },
 "meme-dancing-polish-cow": {
 "done": true,
-"found": false,
-"title": null,
-"q": "polish cow dance"
+"pass2": true,
+"found": true,
+"q": "polish cow dance",
+"loose": false,
+"title": "cow pole dancing GIF"
 },
 "meme-maxwell-the-cat": {
 "done": true,
-"found": false,
-"title": null,
-"q": "maxwell cat"
+"pass2": true,
+"found": true,
+"q": "maxwell cat",
+"loose": false,
+"title": "Cat Spinning GIF"
 },
 "meme-oiia-cat": {
 "done": true,
-"found": false,
-"title": null,
-"q": "oiia oiia cat"
+"pass2": true,
+"found": true,
+"q": "oiia oiia cat",
+"loose": false,
+"title": "Cat Festival GIF by W&W"
 },
 "meme-floppa": {
 "done": true,
-"found": false,
-"title": null,
-"q": "floppa"
+"pass2": true,
+"found": true,
+"q": "floppa",
+"loose": false,
+"title": "Growl Growling GIF"
 },
 "meme-sad-hamster": {
-"done": true,
-"found": false,
-"title": null,
-"q": "sad hamster"
+"done": false
 },
 "meme-cat-vibing": {
 "done": true,
-"found": false,
-"title": null,
-"q": "cat vibing"
+"pass2": true,
+"found": true,
+"q": "cat vibing",
+"loose": false,
+"title": "Cat Vibes GIF by Evergreen Cannabis"
 },
 "meme-dancing-toothless": {
 "done": true,
-"found": false,
-"title": null,
-"q": "toothless dancing"
+"pass2": true,
+"found": true,
+"q": "toothless dancing",
+"loose": false,
+"title": "toothless GIF"
 },
 "meme-john-pork": {
 "done": true,
-"found": false,
-"title": null,
-"q": "john pork"
+"pass2": true,
+"found": true,
+"q": "john pork",
+"loose": false,
+"title": "John Pork GIF by STRAPPED!"
 },
 "meme-bing-chilling": {
 "done": true,
-"found": false,
-"title": null,
-"q": "bing chilling john cena"
+"pass2": true,
+"found": true,
+"q": "bing chilling john cena",
+"loose": false,
+"title": "You Cant See Me John Cena GIF by WWE"
 },
 "meme-mr-incredible-uncanny": {
 "done": true,
-"found": false,
-"title": null,
-"q": "mr incredible becoming uncanny"
+"pass2": true,
+"found": true,
+"q": "mr incredible becoming uncanny",
+"loose": false,
+"title": "Baby Becoming GIF"
 },
 "meme-absolute-cinema": {
 "done": true,
-"found": false,
-"title": null,
-"q": "absolute cinema"
+"pass2": true,
+"found": true,
+"q": "absolute cinema",
+"loose": false,
+"title": "Martin Scorsese Cinema GIF"
 },
 "meme-erm-what-the-sigma": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Erm What the Sigma"
+"pass2": true,
+"found": true,
+"q": "Erm What the Sigma",
+"loose": false,
+"title": "Sigma Whistle GIF"
 },
 "meme-ishowspeed": {
 "done": true,
-"found": false,
-"title": null,
-"q": "ishowspeed"
+"pass2": true,
+"found": true,
+"q": "ishowspeed",
+"loose": false,
+"title": "Cracking Up Lol GIF by STRAPPED!"
 },
 "meme-mog": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Mog"
+"pass2": true,
+"found": true,
+"q": "Mog",
+"loose": false,
+"title": "Pigeon Looks GIF"
 },
 "meme-rickroll-du-comptoir": {
 "done": true,
-"found": false,
-"title": null,
-"q": "Rickroll du Comptoir"
+"pass2": true,
+"found": true,
+"source": "copy"
 }
 }

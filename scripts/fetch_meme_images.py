@@ -8,7 +8,7 @@ import html, io, json, os, re, sys, time, urllib.parse, urllib.request
 from PIL import Image
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = sys.argv[1]
+OUT = sys.argv[1] if __name__ == "__main__" else ""
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36", "Accept-Language": "fr-FR,fr;q=0.9"}
 Q = json.load(open(os.path.join(BASE, "scripts", "data", "meme_queries.json")))
 
