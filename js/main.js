@@ -253,9 +253,12 @@ document.getElementById('link-forgot-pw')?.addEventListener('click', async (e) =
   if (!email || !email.includes('@')) return;
 
   if (window.sb) {
-    const { error } = await sb.auth.resetPasswordForEmail(email);
-    if (error) showToast(error.message, 'error');
-    else showToast('Email de réinitialisation envoyé !', 'success');
+    const captchaToken = Captcha.take('login');
+    if (captchaToken === null) { showToast('Vérification anti-robot en cours : patiente une seconde puis réessaie.', 'info'); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { captchaToken, redirectTo: location.origin + '/' });
+    Captcha.reset('login');
+    if (error) showToast(/rate|seconds/i.test(error.message) ? 'Trop de demandes. Réessaie dans quelques minutes.' : error.message, 'error');
+    else showToast('Si ce compte existe, un e-mail de réinitialisation vient de partir.', 'success');
   } else {
     showToast('Service disponible une fois connecté à Supabase', 'info');
   }
@@ -701,3 +704,28 @@ init();
   if (document.readyState === 'complete') done();
   else window.addEventListener('load', done, { once: true });
 })();
+
+// Lien « mot de passe oublié » cliqué dans l'e-mail : on demande le nouveau mot de passe
+if (window.sb) {
+  sb.auth.onAuthStateChange((ev) => {
+    if (ev !== 'PASSWORD_RECOVERY') return;
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'soc-modal';
+      el.innerHTML = `<div class="soc-modal-card"><h3>Nouveau mot de passe</h3>
+        <input type="password" id="np-pass" class="game-input" placeholder="8 car. : maj, min, chiffre" autocomplete="new-password" />
+        <p class="soc-msg is-error hidden" id="np-msg"></p>
+        <button class="btn-empire btn-empire-primary soc-wide" id="np-ok">Enregistrer</button></div>`;
+      document.body.appendChild(el);
+      el.querySelector('#np-ok').addEventListener('click', async () => {
+        const pw = el.querySelector('#np-pass').value;
+        const msg = el.querySelector('#np-msg');
+        if (pw.length < 8 || !/[a-z]/.test(pw) || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) { msg.textContent = 'Il faut 8 caractères minimum avec une minuscule, une majuscule et un chiffre.'; msg.classList.remove('hidden'); return; }
+        const { error } = await sb.auth.updateUser({ password: pw });
+        if (error) { msg.textContent = /same|different/i.test(error.message) ? 'Choisis un mot de passe différent de l\'ancien.' : error.message; msg.classList.remove('hidden'); return; }
+        el.remove();
+        showToast('Mot de passe changé.', 'success');
+      });
+    }, 1200);
+  });
+}

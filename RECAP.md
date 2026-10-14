@@ -181,9 +181,8 @@ Si rien ne manque après quelques jours de test, le dossier d'archive peut être
 ## 3. Ce qui reste à faire
 
 ### Avant la mise en ligne (Hostinger)
-- [ ] **Régénérer les clés** : le jeton Supabase (`sbp_…`) et la clé Giphy ont été collés dans une conversation. Les révoquer et en créer de nouveaux dans `.env`.
-- [ ] **Domaine + e-mails** : lancer `scripts/go_live.sh https://ton-domaine.fr smtp_host port user pass expediteur` (site_url, redirections autorisées, SMTP, confirmation d'e-mail obligatoire). Aujourd'hui la confirmation est coupée (sinon Supabase limite à 2 e-mails/heure). Prendre un SMTP (Resend, Brevo…).
-- [ ] **Anti-bots à l'inscription** : activer Cloudflare Turnstile (Supabase > Auth > Attack Protection) et ajouter son domaine dans la CSP du `.htaccess`.
+- [x] Clés régénérées (14/10) ; domaine `theastrayking.bklvision.fr` ; e-mails via Resend (`noreply@bklvision.fr`, domaine vérifié), confirmation d'e-mail obligatoire, mails en français ; Turnstile actif à l'inscription, la connexion et « mot de passe oublié » (clés dans `.env`, la secrète seulement dans Supabase).
+- [ ] **Tester en vrai** une inscription avec une vraie adresse e-mail (mail de confirmation, lien, mot de passe oublié) une fois le site en ligne.
 - [ ] **Ne publier que le nécessaire** : si Hostinger déploie tout le dépôt, `.htaccess` cache `.git`, `scripts`, `supabase`, `data`, `.env`, `*.md`. Vérifier en ligne que `/.env`, `/.git/config`, `/scripts/` donnent bien 404.
 - [ ] Faire un commit : tout le travail est indexé mais **pas encore commité**. Ne jamais pousser `.env` (il est dans `.gitignore`).
 

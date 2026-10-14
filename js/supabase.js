@@ -4,6 +4,7 @@
 
 const SUPABASE_CONFIG = {
   url: 'https://xfktspcyvfwdyuzewyni.supabase.co',
+  turnstileSiteKey: '0x4AAAAAAFWqRyO-WzP2ADy0',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhma3RzcGN5dmZ3ZHl1emV3eW5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1ODgxOTAsImV4cCI6MjEwNjE2NDE5MH0.R_Z0sobT8A3epxDFkKu8dy8AA0uuvo7BaTHpYYHhBow'
 };
 
@@ -23,6 +24,35 @@ var sb = getSupabase();
 window.sb = sb;
 
 
+// Anti-robots (Cloudflare Turnstile) : un jeton à usage unique par inscription / connexion
+const Captcha = {
+  ids: {}, tokens: {},
+  enabled() { return !!SUPABASE_CONFIG.turnstileSiteKey; },
+  mount(name, selector) {
+    const el = document.querySelector(selector);
+    if (!this.enabled() || !el || !window.turnstile || this.ids[name] !== undefined) return;
+    this.ids[name] = window.turnstile.render(el, {
+      sitekey: SUPABASE_CONFIG.turnstileSiteKey, theme: 'dark', language: 'fr',
+      callback: t => { this.tokens[name] = t; },
+      'expired-callback': () => { this.tokens[name] = null; },
+      'error-callback': () => { this.tokens[name] = null; },
+    });
+  },
+  // Renvoie le jeton (ou undefined si désactivé, ou null si pas encore validé) puis relance le défi
+  take(name) {
+    if (!this.enabled()) return undefined;
+    const t = this.tokens[name] || null;
+    return t;
+  },
+  reset(name) {
+    this.tokens[name] = null;
+    if (window.turnstile && this.ids[name] !== undefined) { try { window.turnstile.reset(this.ids[name]); } catch (e) {} }
+  },
+};
+window.Captcha = Captcha;
+window.onTurnstileLoad = () => { Captcha.mount('register', '#ts-register'); Captcha.mount('login', '#ts-login'); };
+if (window.turnstile) window.onTurnstileLoad();
+
 const CloudSync = {
   currentUser: null,
   isOnline: false,
@@ -34,13 +64,17 @@ const CloudSync = {
   async signUp(email, password, pseudo) {
     if (!sb) return { ok: false, msg: 'Supabase non initialisé' };
     try {
+      const captchaToken = Captcha.take('register');
+      if (captchaToken === null) return { ok: false, msg: 'Vérification anti-robot en cours : patiente une seconde puis réessaie.' };
       const { data, error } = await sb.auth.signUp({
         email,
         password,
         options: {
-          data: { pseudo: pseudo }
+          data: { pseudo: pseudo },
+          captchaToken
         }
       });
+      Captcha.reset('register');
 
       if (error) throw error;
 
@@ -69,10 +103,14 @@ const CloudSync = {
   async signIn(email, password) {
     if (!sb) return { ok: false, msg: 'Supabase non initialisé' };
     try {
+      const captchaToken = Captcha.take('login');
+      if (captchaToken === null) return { ok: false, msg: 'Vérification anti-robot en cours : patiente une seconde puis réessaie.' };
       const { data, error } = await sb.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: { captchaToken }
       });
+      Captcha.reset('login');
 
       if (error) throw error;
 
