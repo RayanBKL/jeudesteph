@@ -31,8 +31,14 @@ Jeu web satirique 18+ (HTML/CSS/JS vanilla, sans build) : un clicker + jeu de co
 - **Dialogues** : jamais de `confirm()`/`prompt()`/`alert()` du navigateur (pas pro) : utiliser `GameDialog.confirm/prompt/alert` (`js/dialog.js`, asynchrone). **Un seul onglet actif** par navigateur (verrou `ak_tab_lock` dans `js/account.js`).
 - **Pages** : Profil (`page-profil`, onglets Profil/Amis/Clan) et Réglages (`page-reglages`, ouvert par la roue dentée) sont deux écrans séparés.
 
+## Git : deux branches
+- **`main` = la version en ligne** (Hostinger déploie `main`). On ne travaille et on ne commite **jamais directement sur `main`** (elle est protégée : il faut passer par une demande de fusion).
+- **`dev` = la branche de travail** : toutes les retouches, bugs et nouveautés se font ici (ou sur une branche courte `fix/…` créée depuis `dev`).
+- Pour mettre en ligne : `scripts/publier.sh` (vérifie la syntaxe et les images, pousse `dev`, fusionne dans `main`). Jamais sans que le porteur du projet l'ait demandé.
+- Urgence en ligne : créer une branche depuis `main`, corriger, fusionner dans `main` puis refusionner `main` dans `dev`.
+
 ## Comment vérifier un changement
 1. `python3 -m http.server 8765` dans le dossier du jeu.
 2. Tester avec un navigateur automatisé (Playwright + Chromium) en **mobile 390×844 et 375×667** et en **PC 1440×900 et 1440×760**, regarder les captures, vérifier : aucune erreur JS, aucune 404, aucun écran qui dépasse.
 3. Pour tout ce qui touche l'argent : vérifier qu'une mise est bien débitée puis créditée, et qu'un clic augmente l'argent affiché.
-4. Ne rien commiter sans qu'on le demande.
+4. Ne rien commiter sans qu'on le demande. Fermer les serveurs de test (`python3 -m http.server`…) quand on a fini : ils gênent le porteur du projet.
