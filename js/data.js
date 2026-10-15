@@ -320,7 +320,7 @@ function drawCigarette(packType, rarity) {
 
 // Les images des mèmes ont changé (GIF) mais gardent le même nom de fichier : ce numéro force les navigateurs à les recharger.
 // À incrémenter quand on remplace des images de mèmes.
-const MEME_IMG_REV = 3;
+const MEME_IMG_REV = 4;
 function withImgRev(url) { return (typeof url === 'string' && url.indexOf('assets/cards/ref_') === 0 && url.indexOf('?') < 0) ? url + '?r=' + MEME_IMG_REV : url; }
 
 function resolveCigaretteImage(cig) {
