@@ -147,8 +147,8 @@ const UltimateTeam = (() => {
   }
 
   // ── Écran de composition ───────────────────────────────────
-  function start(container) {
-    st = { container, squad: loadSquad(), view: 'squad' };
+  function start(container, opts) {
+    st = { container, squad: loadSquad(), view: 'squad', online: !!(opts && opts.online) };
     if (st.squad.every(x => !x)) { st.squad = autoSquad(); saveSquad(st.squad); }
     render();
   }
@@ -177,7 +177,7 @@ const UltimateTeam = (() => {
     const idx = Object.fromEntries(SLOTS.map((s, i) => [s.id, s]));
     container.innerHTML = `
       <div class="mg-screen mg-ut">
-        ${GameUI.header(GAME, 'Ton équipe de 11, ta cohésion, ton match')}
+        ${GameUI.header(GAME, st.online ? 'Contre l\'équipe d\'un vrai joueur' : 'Ton équipe de 11, ta cohésion, ton match')}
         <div class="ut-stats">
           <div class="ut-stat"><span>Note</span><strong>${ev.ovr}</strong></div>
           <div class="ut-stat"><span>Cohésion</span><strong class="${ev.cohesion >= 70 ? 'is-good' : ev.cohesion >= 40 ? 'is-mid' : 'is-bad'}">${ev.cohesion}</strong></div>
@@ -192,7 +192,7 @@ const UltimateTeam = (() => {
         </div>
         <p class="mg-hint">${owned < 11 ? `Tu n'as que ${owned} footballeur${owned > 1 ? 's' : ''} : les trous sont bouchés par des joueurs du quartier. Ouvre des « Album du Ballon d'Or » !` : 'Touche un joueur pour le changer · vert = même club, orange = même pays'}</p>
         <div class="mg-actions">
-          <button class="btn-empire btn-empire-primary" data-play>Jouer le match</button>
+          <button class="btn-empire btn-empire-primary" data-play>${st.online ? 'Affronter une équipe' : 'Jouer le match'}</button>
         </div>
       </div>`;
     GameUI.bindBack(container);
@@ -201,7 +201,7 @@ const UltimateTeam = (() => {
       st.squad = autoSquad(); saveSquad(st.squad); render();
       if (typeof showToast === 'function') showToast('Meilleure équipe composée', 'success');
     });
-    container.querySelector('[data-play]').addEventListener('click', playMatch);
+    container.querySelector('[data-play]').addEventListener('click', () => (st.online ? playOnline() : playMatch()));
   }
 
   // ── Choix d'un joueur pour une case ────────────────────────
@@ -322,6 +322,75 @@ const UltimateTeam = (() => {
     if (score[0] > 0 && typeof Prestige !== 'undefined') Prestige.emit('ut_goals', { n: score[0] });
     await GameUI.sleep(skip ? 100 : 700);
     GameUI.showResult(st.container.querySelector('.mg-screen'), GAME, result, `${score[0]} - ${score[1]} contre ${ai.name}`, () => start(st.container));
+  }
+
+
+  // ── Match en ligne : le serveur simule le match contre l'équipe enregistrée d'un autre joueur ──
+  async function playOnline() {
+    const btn = st.container.querySelector('[data-play]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Recherche d\'une équipe…'; }
+    try { if (window.Account && Account.push) await Account.push(); } catch (e) {}
+    const sbx = window.sb;
+    const { data, error } = await sbx.rpc('ut_play', { p_squad: st.squad.map(x => x || null) });
+    if (error) {
+      if (typeof GameDialog !== 'undefined') await GameDialog.alert((error.message || 'Erreur').replace(/^.*?:\s*/, ''), { title: 'Match impossible' });
+      return render();
+    }
+    if (data.no_opponent) {
+      if (typeof GameDialog !== 'undefined') await GameDialog.alert('Ton équipe est enregistrée. Personne d\'autre n\'a encore composé la sienne : reviens plus tard, ou joue contre l\'ordinateur en attendant.', { title: 'Pas encore d\'adversaire' });
+      return render();
+    }
+    return replayServer(data);
+  }
+
+  async function replayServer(res) {
+    const me = { name: (typeof GameState !== 'undefined' && GameState.pseudo) || 'Mon équipe', ev: { ovr: res.me.ovr, cohesion: res.me.cohesion } };
+    const ai = { name: res.opp.pseudo, ev: { ovr: res.opp.ev.ovr, cohesion: res.opp.ev.cohesion } };
+    const esc = x => String(x == null ? '' : x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    let skip = false;
+    st.container.innerHTML = `
+      <div class="mg-screen mg-ut mg-ut-match">
+        ${GameUI.header(GAME, 'Match en direct')}
+        <div class="ut-score">
+          <div class="ut-team"><strong>${esc(me.name)}</strong><span>Note ${me.ev.ovr} · Coh. ${me.ev.cohesion}</span></div>
+          <div class="ut-board"><span id="ut-s0">0</span><em id="ut-min">0'</em><span id="ut-s1">0</span></div>
+          <div class="ut-team ut-team-ai"><strong>${esc(ai.name)}</strong><span>Note ${ai.ev.ovr} · Coh. ${ai.ev.cohesion}</span></div>
+        </div>
+        <div class="ut-feed" id="ut-feed"></div>
+        <div class="mg-actions"><button class="btn-empire btn-empire-secondary" data-skip>Résultat direct</button></div>
+      </div>`;
+    GameUI.bindBack(st.container);
+    st.container.querySelector('[data-skip]').addEventListener('click', () => { skip = true; });
+    const feedEl = st.container.querySelector('#ut-feed');
+    const push = (min, text, cls = '') => {
+      const row = document.createElement('div');
+      row.className = `ut-event ${cls}`;
+      row.innerHTML = `<em>${min}'</em><span>${text}</span>`;
+      feedEl.prepend(row);
+    };
+    const score = [0, 0];
+    push(0, `Coup d'envoi ! ${esc(me.name)} contre ${esc(ai.name)}.`);
+    for (const ev of res.events) {
+      if (ev.t === 'goal') {
+        score[ev.s]++;
+        push(ev.m, `<strong>${esc(ev.n)}</strong> frappe… ${rnd(COMMENTS.goal)}`, ev.s === 0 ? 'is-goal' : 'is-goal-ai');
+        if (window.SoundFX) (ev.s === 0 && SoundFX.win ? SoundFX.win() : SoundFX.click && SoundFX.click());
+      } else if (ev.t === 'miss') push(ev.m, `${esc(ev.n)} tente sa chance, ${rnd(COMMENTS.miss)}`);
+      else push(ev.m, rnd(COMMENTS.calm));
+      st.container.querySelector('#ut-s0').textContent = score[0];
+      st.container.querySelector('#ut-s1').textContent = score[1];
+      st.container.querySelector('#ut-min').textContent = ev.m + "'";
+      if (!skip) await GameUI.sleep(750);
+    }
+    st.container.querySelector('#ut-s0').textContent = res.score[0];
+    st.container.querySelector('#ut-s1').textContent = res.score[1];
+    st.container.querySelector('#ut-min').textContent = "90'";
+    push(90, `Coup de sifflet final : ${res.score[0]} - ${res.score[1]}.`);
+    if (res.result === 'win' && res.score[1] === 0) Prestige.emit('perfect', { game: GAME });
+    if (res.score[0] > 0 && typeof Prestige !== 'undefined') Prestige.emit('ut_goals', { n: res.score[0] });
+    await GameUI.sleep(skip ? 100 : 700);
+    const pre = res.lp ? League.applyResult(GAME, res.lp, res.result) : { error: 'Tu as déjà affronté cette équipe 3 fois aujourd\'hui : pas de points cette fois.' };
+    GameUI.showResult(st.container.querySelector('.mg-screen'), GAME, res.result, `${res.score[0]} - ${res.score[1]} contre ${esc(ai.name)}`, () => start(st.container, { online: true }), pre);
   }
 
   return { start, evaluate, SLOTS, LINKS };

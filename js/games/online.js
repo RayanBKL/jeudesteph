@@ -5,8 +5,8 @@
 // ============================================================
 
 const Online = (() => {
-  const TOTAL_TIME = { pbc: 25, des421: 45, quiz: 10 };
-  const GAME_IDS = ['pbc', 'des421', 'quiz'];
+  const TOTAL_TIME = { pbc: 25, des421: 45, quiz: 10, bataille: 30 };
+  const GAME_IDS = ['pbc', 'des421', 'quiz', 'bataille', 'course'];
   const cache = {};
   let run = null;          // partie en cours d'affichage
   let searchTimer = null;
@@ -29,11 +29,11 @@ const Online = (() => {
   }
 
   // ── Choix du mode (ordi / vrai joueur) ─────────────────────
-  async function chooser(container, game, localStart) {
+  async function chooser(container, game, localStart, onlineStart) {
     stopAll();
     const name = League.GAMES[game].name;
     let resume = null;
-    if (available()) {
+    if (available() && !onlineStart) {
       const { data } = await sb().rpc('my_active_match', { p_game: game });
       resume = data || null;
     }
@@ -42,13 +42,13 @@ const Online = (() => {
         ${GameUI.header(game, 'Choisis ton adversaire')}
         <div class="on-modes">
           ${resume ? `<button class="on-mode on-mode-resume" data-resume><strong>Reprendre ma partie en cours</strong><span>Un adversaire t'attend</span></button>` : ''}
-          <button class="on-mode" data-online ${available() ? '' : 'disabled'}><strong>Contre un vrai joueur</strong><span>Les points comptent double-ish : victoire ×1,5. Seul moyen de monter jusqu'au sommet.</span></button>
+          <button class="on-mode" data-online ${available() ? '' : 'disabled'}><strong>Contre un vrai joueur</strong><span>${onlineStart ? 'Ton équipe est enregistrée et affronte celle d\'un autre joueur (le match est simulé par le serveur). Victoire ×1,5.' : 'Victoire ×1,5 : le seul moyen de monter jusqu\'au sommet.'}</span></button>
           <button class="on-mode" data-local><strong>Contre l'ordinateur</strong><span>Plafonné au rang Buraliste I. Parfait pour s'entraîner.</span></button>
         </div>
       </div>`;
     GameUI.bindBack(container);
     container.querySelector('[data-local]').addEventListener('click', localStart);
-    container.querySelector('[data-online]').addEventListener('click', () => search(container, game, localStart));
+    container.querySelector('[data-online]').addEventListener('click', () => onlineStart ? onlineStart() : search(container, game, localStart));
     container.querySelector('[data-resume]')?.addEventListener('click', () => watch(container, resume, game, localStart));
   }
 
@@ -127,7 +127,10 @@ const Online = (() => {
     r.me = await profileOf(ids[me]); r.opp = await profileOf(ids[opp]);
     r.meId = ids[me];
     r.data = data;
-    const sig = JSON.stringify([data.state, data.mine, data.status, r.held, r.myChoice, r.notice]);
+    if (data.game === 'course' && typeof RaceEngine !== 'undefined' && RaceEngine.pvp) {
+      if (data.status !== 'active') { RaceEngine.stop(); backToHub(); } else RaceEngine.setGhost(data.state.progress[opp]);
+    }
+    const sig = JSON.stringify([data.state, data.mine, data.status, r.held, r.myChoice, r.notice, data.game === 'course' ? Math.floor((Date.now() + r.offset) / 1000) : 0]);
     if (sig === r.sig) return;
     r.sig = sig;
     if (data.status !== 'active') return finish();
@@ -141,30 +144,32 @@ const Online = (() => {
     const r = run; if (!r || !r.data || r.data.status !== 'active' || !r.data.deadline) return;
     const left = (Date.parse(r.data.deadline) - (Date.now() + r.offset)) / 1000;
     const fill = r.container.querySelector('.qz-timer-fill');
-    if (fill) fill.style.transform = `scaleX(${Math.max(0, Math.min(1, left / TOTAL_TIME[r.game]))})`;
-    const t = r.container.querySelector('.on-time'); if (t) t.textContent = `${Math.max(0, Math.ceil(left))} s`;
-    if (left < -1.2 && !r.checking) {
+    if (fill && TOTAL_TIME[r.game]) fill.style.transform = `scaleX(${Math.max(0, Math.min(1, left / TOTAL_TIME[r.game]))})`;
+    const t = r.container.querySelector('.on-time'); if (t && TOTAL_TIME[r.game]) t.textContent = `${Math.max(0, Math.ceil(left))} s`;
+    if (r.game === 'course') courseTick(r);
+    if (left < -1.2 && !r.checking && !(r.game === 'course' && typeof RaceEngine !== 'undefined' && RaceEngine.pvp)) {
       r.checking = true;
       sb().rpc('match_timeout_check', { p_match: r.id }).then(({ data }) => { if (run === r && data) apply(data); }).finally(() => { if (run === r) r.checking = false; });
     }
   }
 
   function head(r, subtitle) {
-    const s = r.data.state, me = r.data.me, opp = 1 - me;
+    const s = r.data.state, me = r.data.me, opp = 1 - me, sc = s.scores || ['', ''];
     return `
       ${GameUI.header(r.game, subtitle)}
       <div class="mg-scoreboard on-board">
-        <div class="mg-score-side">${avatar(r.me)}<span>Toi</span><strong>${s.scores[me]}</strong></div>
+        <div class="mg-score-side">${avatar(r.me)}<span>Toi</span><strong>${sc[me]}</strong></div>
         <div class="mg-round"><span class="on-time"></span></div>
-        <div class="mg-score-side">${avatar(r.opp)}<span>${esc(r.opp.pseudo)}</span><strong>${s.scores[opp]}</strong></div>
+        <div class="mg-score-side">${avatar(r.opp)}<span>${esc(r.opp.pseudo)}</span><strong>${sc[opp]}</strong></div>
       </div>
-      <div class="qz-timer"><div class="qz-timer-fill" style="animation:none"></div></div>`;
+      ${TOTAL_TIME[r.game] ? '<div class="qz-timer"><div class="qz-timer-fill" style="animation:none"></div></div>' : ''}`;
   }
 
   function render() {
     const r = run, d = r.data, c = r.container;
-    const body = d.game === 'pbc' ? bodyPbc(r) : d.game === 'des421' ? bodyDes(r) : bodyQuiz(r);
-    c.innerHTML = `<div class="mg-screen mg-online mg-${d.game === 'des421' ? '421' : d.game}">${head(r, d.game === 'pbc' ? 'Premier à 3 points' : d.game === 'des421' ? 'Premier à 2 manches' : 'Question ' + (d.state.i + 1) + '/' + d.state.total)}${body}${r.notice ? `<p class="mg-hint">${esc(r.notice)}</p>` : ''}</div>`;
+    const body = d.game === 'pbc' ? bodyPbc(r) : d.game === 'des421' ? bodyDes(r) : d.game === 'bataille' ? bodyBataille(r) : d.game === 'course' ? bodyCourse(r) : bodyQuiz(r);
+    const sub = d.game === 'pbc' ? 'Premier à 3 points' : d.game === 'des421' ? 'Premier à 2 manches' : d.game === 'bataille' ? 'Premier à 3 manches' : d.game === 'course' ? '500 m · le plus rapide gagne' : 'Question ' + (d.state.i + 1) + '/' + d.state.total;
+    c.innerHTML = `<div class="mg-screen mg-online mg-${d.game === 'des421' ? '421' : d.game}">${head(r, sub)}${body}${r.notice ? `<p class="mg-hint">${esc(r.notice)}</p>` : ''}</div>`;
     c.querySelector('[data-mg-back]').addEventListener('click', leaveMatch);
     c.querySelectorAll('[data-mg-help]').forEach(b => b.addEventListener('click', () => GameUI.showRules(b.dataset.mgHelp)));
     bindBody(r);
@@ -262,6 +267,111 @@ const Online = (() => {
     if (data) apply(data); else { r.sig = ''; apply(r.data); }
   }
 
+  // ── Bataille de Comptoir ──
+  const BT_STAT = {
+    cps: { name: 'Passif', field: 'cashPerSec', fmt: v => '+' + btNum(v) + '/s' },
+    clk: { name: 'Clic', field: 'clickBoost', fmt: v => '+' + btNum(v) },
+    val: { name: 'Cote', field: 'value', fmt: v => btNum(v) + ' €' },
+  };
+  function btNum(n) {
+    n = Number(n) || 0;
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace('.', ',') + ' k';
+    return n >= 10 ? Math.round(n).toString() : n.toFixed(2).replace('.', ',');
+  }
+  function btCard(id, stat, o = {}) {
+    const c = (typeof getEmpireItemById === 'function' && getEmpireItemById(id)) || { name: 'Carte', rarity: 'commune' };
+    const img = (typeof CardsRenderer !== 'undefined') ? CardsRenderer.resolveCardPhoto(c) : '';
+    const st = BT_STAT[stat];
+    return `
+      <button class="bt-card rv-r-${esc(c.rarity)} ${o.cls || ''}" ${o.idx !== undefined ? `data-bidx="${o.idx}"` : ''} ${o.disabled ? 'disabled' : ''}>
+        <span class="bt-card-art" data-initial="${esc((c.name || '?').slice(0, 1))}"><img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()" /></span>
+        <span class="bt-card-name">${esc(c.name)}</span>
+        <span class="bt-card-stat">${st.fmt(o.value !== undefined ? o.value : (c[st.field] || 0))}</span>
+      </button>`;
+  }
+  function bodyBataille(r) {
+    const d = r.data, s = d.state, me = d.me, opp = 1 - me, last = s.last, locked = s.locked[me];
+    const hand = (d.mine && d.mine.hand) || [];
+    let board = '<div class="bt-slot"><span class="bt-slot-label">Toi</span><span class="bt-slot-empty">Ta carte</span></div><div class="bt-vs">VS</div><div class="bt-slot"><span class="bt-slot-label">' + esc(r.opp.pseudo) + '</span><span class="bt-slot-empty">?</span></div>';
+    if (last) {
+      const res = last.result === 0 ? 'draw' : (last.result - 1 === me ? 'win' : 'loss');
+      board = `<div class="bt-slot"><span class="bt-slot-label">Toi · ${BT_STAT[last.stat].name}</span>${btCard(last.cards[me], last.stat, { cls: res === 'win' ? 'is-winner' : '', value: last.values[me], disabled: true })}</div>
+        <div class="bt-vs is-${res}">${res === 'win' ? 'Gagné' : res === 'loss' ? 'Perdu' : 'Égalité'}</div>
+        <div class="bt-slot"><span class="bt-slot-label">${esc(r.opp.pseudo)}</span>${btCard(last.cards[opp], last.stat, { cls: res === 'loss' ? 'is-winner' : '', value: last.values[opp], disabled: true })}</div>`;
+    }
+    return `
+      <div class="bt-ai-hand">${Array.from({ length: s.sizes[opp] }, () => '<span class="bt-back"></span>').join('')}</div>
+      <div class="bt-stat-banner">Manche ${s.round} sur : <strong>${BT_STAT[s.stat].name}</strong></div>
+      <div class="bt-board">${board}</div>
+      <div class="bt-hand">${hand.map((id, i) => btCard(id, s.stat, { idx: i, disabled: locked })).join('')}</div>
+      <p class="mg-hint">${locked ? 'Carte posée. ' + esc(r.opp.pseudo) + ' réfléchit…' : `Pose ta carte la plus forte en <strong>${BT_STAT[s.stat].name}</strong>, ou garde-la pour plus tard`}</p>`;
+  }
+
+  // ── Course Clandestine (duel) ──
+  function courseTimes(r) { const s = r.data.state, me = r.data.me; return { mine: s.times[me], his: s.times[1 - me], myDone: s.done[me], hisDone: s.done[1 - me] }; }
+  function fmtT(t) { return t == null ? '—' : Number(t).toFixed(2).replace('.', ',') + ' s'; }
+  function bodyCourse(r) {
+    const d = r.data, s = d.state, me = d.me, opp = 1 - me, t = courseTimes(r);
+    const dist = Number(s.distance) || 500;
+    const bar = (label, pct) => `<div class="cr-lane"><span>${label}</span><div class="cr-track"><i style="width:${Math.max(0, Math.min(100, pct * 100))}%"></i></div></div>`;
+    const untilStart = (Date.parse(s.start_at) - (Date.now() + r.offset)) / 1000;
+    let main;
+    if (t.myDone) {
+      main = `<strong class="cr-big">Ton chrono : ${fmtT(t.mine)}</strong><p class="mg-hint">${t.hisDone ? 'Résultat…' : esc(r.opp.pseudo) + ' est encore sur la piste…'}</p>`;
+    } else if (untilStart > 0) {
+      main = `<strong class="cr-big">Départ dans ${Math.ceil(untilStart)} s</strong><p class="mg-hint">Prépare ton pouce : bouton Sprint ou barre espace. Tire sur ta clope quand l'énergie est basse, mais pas trop souvent : sinon Stéphane tousse.</p>`;
+    } else {
+      main = `<strong class="cr-big">La course est lancée !</strong><div class="mg-actions"><button class="btn-empire btn-empire-primary" data-launch>Rejoindre la piste</button></div>`;
+    }
+    return `
+      <div class="cr-lobby">
+        ${main}
+        ${bar('Toi', t.myDone ? 1 : (RaceEngine && RaceEngine.pvp ? RaceEngine.distance / dist : 0))}
+        ${bar(esc(r.opp.pseudo), t.hisDone ? 1 : (Number(s.progress[opp]) || 0) / dist)}
+      </div>`;
+  }
+
+  function courseTick(r) {
+    const d = r.data; if (!d || d.status !== 'active') return;
+    const s = d.state, serverNow = Date.now() + r.offset, start = Date.parse(s.start_at);
+    if (!r.raceLaunched && !s.done[d.me] && serverNow >= start - 400 && serverNow < start + 90000) launchRace(r);
+    // décompte affiché dans le salon
+    const big = r.container.querySelector('.cr-big');
+    if (big && !s.done[d.me] && serverNow < start) big.textContent = 'Départ dans ' + Math.ceil((start - serverNow) / 1000) + ' s';
+  }
+
+  function launchRace(r) {
+    if (r.raceLaunched && typeof RaceEngine !== 'undefined' && RaceEngine.pvp) return;
+    r.raceLaunched = true;
+    const s = r.data.state, id = r.id;
+    RaceEngine.startPvp({
+      matchId: id, startAt: Date.parse(s.start_at) - r.offset, trackId: s.track, oppName: r.opp.pseudo,
+      onProgress: dist => { sb().rpc('race_progress', { p_match: id, p_dist: Math.round(dist * 10) / 10 }).then(() => {}); },
+      onFinish: (time, taps) => submitRace(r, taps),
+    });
+  }
+
+  // Retour à l'écran de la salle de jeux SANS relancer l'accueil (ça coupe la partie en cours)
+  function backToHub() { if (window.GameHub) GameHub.keepScreenOnce = true; showPage('multi'); }
+
+  async function submitRace(r, taps, tries = 0) {
+    backToHub();
+    const { data, error } = await sb().rpc('race_submit', { p_match: r.id, p_taps: taps });
+    if (run !== r) return;
+    if (error && /trop rapide/i.test(error.message) && tries < 4) { await GameUI.sleep(1500); return submitRace(r, taps, tries + 1); }
+    if (error) { setNotice(error.message.replace(/^.*?:\s*/, '')); }
+    if (data) { r.sig = ''; apply(data); }
+  }
+
+  async function abandonRace() {
+    const r = run; if (!r) { RaceEngine.stop(); backToHub(); return; }
+    RaceEngine.stop();
+    backToHub();
+    const { data } = await sb().rpc('match_forfeit', { p_match: r.id });
+    if (run === r && data) { r.sig = ''; apply(data); }
+  }
+
   function bindBody(r) {
     const c = r.container, id = r.id;
     c.querySelectorAll('[data-move]').forEach(b => b.addEventListener('click', () => {
@@ -283,6 +393,13 @@ const Online = (() => {
       e.target.disabled = true;
       send(sb().rpc('d421_stop', { p_match: id }));
     });
+    c.querySelectorAll('[data-bidx]').forEach(b => b.addEventListener('click', () => {
+      c.querySelectorAll('[data-bidx]').forEach(x => x.disabled = true);
+      b.classList.add('is-picked');
+      if (window.SoundFX && SoundFX.click) SoundFX.click();
+      send(sb().rpc('bat_play', { p_match: id, p_idx: +b.dataset.bidx }));
+    }));
+    c.querySelector('[data-launch]')?.addEventListener('click', () => { r.raceLaunched = false; launchRace(r); });
     c.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => {
       r.myChoice = +b.dataset.k;
       c.querySelectorAll('[data-k]').forEach(x => x.disabled = true);
@@ -304,7 +421,9 @@ const Online = (() => {
     const lp = s.lp && s.lp[me === 0 ? 'p1' : 'p2'];
     const again = () => search(r.container, r.game, r.localStart);
     const detail = reason === 'forfait' ? (result === 'win' ? `${esc(r.opp.pseudo)} a quitté la partie` : 'Tu as quitté la partie')
-      : reason === 'abandon' ? 'Plus personne ne jouait' : `${s.scores[me]} à ${s.scores[opp]} contre ${esc(r.opp.pseudo)}`;
+      : reason === 'abandon' ? 'Plus personne ne jouait'
+      : d.game === 'course' ? `${fmtT(s.times[me])} contre ${fmtT(s.times[opp])} pour ${esc(r.opp.pseudo)}`
+      : `${s.scores[me]} à ${s.scores[opp]} contre ${esc(r.opp.pseudo)}`;
     let pre;
     if (reason === 'abandon') pre = { error: 'Partie annulée, aucun point en jeu.' };
     else if (!lp) pre = { error: 'Tu as déjà joué 10 fois contre ce joueur aujourd\'hui : pas de points cette fois.' };
@@ -314,7 +433,7 @@ const Online = (() => {
     stopAll();
   }
 
-  return { chooser, search, watch, available, stopAll, GAME_IDS };
+  return { chooser, search, watch, available, stopAll, abandonRace, GAME_IDS };
 })();
 
 if (typeof window !== 'undefined') window.Online = Online;

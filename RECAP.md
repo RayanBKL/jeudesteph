@@ -80,6 +80,13 @@ Reste à faire côté design : remplacer les emojis (navigation, titres, paquets
 - **Audit de sécurité** (`004_securite.sql`) : pseudos et photos au format strict (plus d'injection de code), profils sans argent/XP visibles, anciennes tables fermées, fonctions internes privées, mot de passe 8 car. avec min/maj/chiffre, `supabase-js` épinglé + SRI, CSP corrigée, `.htaccess` qui cache `.git`, `scripts`, `supabase`, `.env`, `*.md`.
 - GIF Giphy pour 32 mèmes (`scripts/fetch_meme_gifs.py`).
 
+### 10e passe (15/10/2026) : tout en ligne, mèmes, économie
+- **Les 6 jeux se jouent contre de vrais joueurs** (Bataille, Course, Ultimate Comptoir ajoutés, `007_jeux_en_ligne.sql`). Course arbitrée par rejeu serveur des sprints.
+- **Les 173 mèmes ont un GIF ou une vraie image** (plus aucun dessin généré) ; vrais visuels du brainrot trouvés sur Wikimedia Commons ; images des mèmes rechargées chez les joueurs (`MEME_IMG_REV` dans `js/data.js`).
+- **Économie** : clic de base 1 €, paquets ×12, cotes ×12, cartes rares et + réduites (`js/balance.js`, version 3, simulation `scripts/simulate_economy.js`). Les emplacements de l'Empire étaient écrasés (CSS) : corrigé, c'est eux qui donnent le revenu passif.
+- **Sauvegarde automatique chaque nuit** dans la base (`006_sauvegarde_auto.sql`, 7 jours) + `python3 scripts/backup_db.py` (copie locale).
+- Conflits de sauvegarde entre deux appareils : la partie la plus avancée est gardée sans poser de question.
+
 ### 8e passe (13/10/2026)
 
 - **Prestiges** : ne donnent plus de points de talent ni de paquets, objectifs ×3 (plus rares, à collectionner comme les trophées PlayStation).

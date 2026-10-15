@@ -407,6 +407,7 @@ window.addEventListener('keydown', (e) => {
 
 document.getElementById('btn-abandon')?.addEventListener('click', async () => {
   if (await GameDialog.confirm('Tu perds la course en cours.', { title: 'Abandonner ?', ok: 'Abandonner', danger: true })) {
+    if (RaceEngine.pvp && window.Online) { Online.abandonRace(); return; }
     const ranked = !!RaceEngine.leagueMode;
     RaceEngine.stop();
     if (ranked && typeof CourseClandestine !== 'undefined') CourseClandestine.onAbandon();
