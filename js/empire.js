@@ -290,7 +290,7 @@ const EmpireManager = (() => {
       ClickerEngine.setCash(currentCash - pack.price);
     }
     state.totalPacksOpened++;
-    // XP d'ouverture : 1 XP par tranche de 1 250 € dépensés (minimum 15)
+    // XP d'ouverture : prix d'origine / 100 (minimum 15)
     if (ClickerEngine.gainXP) ClickerEngine.gainXP(Balance.xpForPack(pack.price));
 
     const items = drawEmpirePack(packId, state.pityState);
@@ -2317,7 +2317,7 @@ const EmpireManager = (() => {
         Object.assign(state, saved);
         // Nouvelle échelle de l'économie (voir js/balance.js) : cotes et annonces des anciennes sauvegardes
         if ((saved.balanceVersion || 1) < Balance.VERSION) {
-          const k = Balance.VALUE_MULT;
+          const k = Balance.migrateFactors(saved.balanceVersion || 1).value;
           Object.values(state.priceHistory || {}).forEach(h => { if (h && typeof h.ema === 'number') h.ema = Math.round(h.ema * k); });
           (state.myListings || []).forEach(l => { ['price', 'currentBid', 'minBid'].forEach(f => { if (typeof l[f] === 'number') l[f] = Math.round(l[f] * k); }); });
         }

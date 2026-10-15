@@ -662,3 +662,9 @@
   #top-bar .top-right { flex-shrink: 0; gap: 4px; }
   #top-bar .top-right .btn-icon { width: 34px; height: 34px; }
 }
+
+/* ── L'Empire : les emplacements des cartes étaient écrasés (hauteur de ligne trop petite) ── */
+#page-empire > .empire-inventory-page { flex: 1; align-self: stretch; height: auto; display: flex; flex-direction: column; min-height: 0; padding-bottom: 8px !important; }
+#page-empire .empire-level-display { flex-shrink: 0; }
+#empire-rooms-container { grid-auto-rows: max-content; flex: 1 1 auto; min-height: 0; padding: 2px 12px 12px !important; }
+.empire-location { min-height: min-content; }

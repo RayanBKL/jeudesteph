@@ -1,24 +1,25 @@
 // ============================================================
 // THE ASHTRAY KING — Équilibrage de l'économie (un seul endroit pour tout régler)
 //
-// Objectif : progression LENTE et méritée. Pour un joueur qui joue 1 h par jour (simulation sur le vrai code,
-// voir scripts/simulate_economy.js) : ~40 paquets la 1re semaine, ~300 le 1er mois, ~1 500 en 3 mois et environ
-// 90 % des cartes en un an. Un joueur à 3 h par jour y arrive en ~3 mois.
+// Objectif : progression LENTE et méritée. Le clic de base vaut 1 € (il monte avec l'arbre des talents et les cartes
+// de clic). Pour un joueur qui joue 1 h par jour (simulation sur le vrai code, scripts/simulate_economy.js) :
+// ~40 paquets la 1re semaine, ~400 le 1er mois, ~1 800 en 3 mois et ~85 % des cartes en un an. À 3 h par jour : ~6 mois.
 //
-// Comment : toute la monnaie est « à l'échelle » (clic de base 12 €, paquets ×40, cote des cartes ×40) et les
-// revenus des cartes très rares sont réduits. Les cartes Mythiques et Légendaires rapportent moins qu'avant.
-// Pour changer le rythme : modifier PRICE_MULT / VALUE_MULT (plus haut = plus lent) puis relancer la simulation.
+// Comment : les paquets coûtent 12 fois plus qu'à l'origine, la cote des cartes aussi (revente ≈ 30-40 % du prix du
+// paquet), et les cartes Rares, Épiques, Légendaires et Mythiques rapportent moins qu'avant (le revenu passif ne vient
+// que des cartes placées dans les pièces de l'Empire).
+// Pour changer le rythme : modifier PRICE_MULT / VALUE_MULT (plus haut = plus lent), mettre VERSION à jour, puis relancer la simulation.
 // ============================================================
 
 const Balance = (() => {
-  const VERSION = 2;                 // à incrémenter si on change les valeurs : les anciennes sauvegardes sont converties
-  const PRICE_MULT = 40;             // prix des paquets
-  const VALUE_MULT = 40;             // cote des cartes (Bourse, revente)
-  const BASE_CLICK = 12;             // gain d'un clic sans aucune carte
-  const XP_PRICE_DIV = 1250;         // XP d'ouverture d'un paquet = prix / 1250 (minimum 15)
-  const MONEY_FROM_V1 = 12;          // anciennes sauvegardes : l'argent est multiplié par 12
-  // Revenu des cartes (€/s passif et bonus de clic) selon la rareté
-  const RARITY_INCOME = { commune: 1, 'peu-commune': 1, rare: 1, epique: 0.875, legendaire: 0.75, mythique: 0.5 };
+  const VERSION = 3;                 // à incrémenter si on change les valeurs : les anciennes sauvegardes sont converties
+  const PRICE_MULT = 12;             // prix des paquets (par rapport aux prix d'origine de empire_db.js)
+  const VALUE_MULT = 12;             // cote des cartes (Bourse, revente)
+  const BASE_CLICK = 1;              // gain d'un clic sans aucune carte ni talent (monte avec l'arbre des talents et les cartes de clic)
+  const XP_PRICE_DIV = 100 * PRICE_MULT;   // XP d'ouverture d'un paquet = prix d'origine / 100 (minimum 15)
+  const CASH_CAP_ON_MIGRATION = 150000;    // anciennes sauvegardes : l'argent converti est plafonné (~10 paquets)
+  // Revenu des cartes (€/s passif et bonus de clic) par rapport aux valeurs d'origine : les raretés hautes sont réduites
+  const RARITY_INCOME = { commune: 1, 'peu-commune': 1, rare: 0.7, epique: 0.4, legendaire: 0.15, mythique: 0.06 };
 
   const r2 = v => Math.round(v * 100) / 100;
 
@@ -48,7 +49,13 @@ const Balance = (() => {
     }
   }
 
-  return { VERSION, PRICE_MULT, VALUE_MULT, BASE_CLICK, XP_PRICE_DIV, MONEY_FROM_V1, init, xpForPack: price => Math.max(15, Math.round(price / XP_PRICE_DIV)) };
+  // Conversion des anciennes sauvegardes (version 1 = avant l'équilibrage, version 2 = 1re tentative avec clic à 12 €)
+  function migrateFactors(from) {
+    return from >= 2 ? { cash: 1 / 12, value: 12 / 40 } : { cash: 1, value: VALUE_MULT };
+  }
+  const capCash = v => Math.min(CASH_CAP_ON_MIGRATION, Math.round(v));
+
+  return { VERSION, PRICE_MULT, VALUE_MULT, BASE_CLICK, XP_PRICE_DIV, migrateFactors, capCash, init, xpForPack: price => Math.max(15, Math.round(price / XP_PRICE_DIV)) };
 })();
 
 if (typeof window !== 'undefined') window.Balance = Balance;

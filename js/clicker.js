@@ -736,10 +736,11 @@ const ClickerEngine = (() => {
 
         // Nouvelle échelle de l'économie (voir js/balance.js) : l'argent des anciennes sauvegardes est converti
         if (typeof Balance !== 'undefined' && (saved.balanceVersion || 1) < Balance.VERSION) {
-          state.cash = Math.round((state.cash || 0) * Balance.MONEY_FROM_V1);
-          state.totalEarned = Math.round((state.totalEarned || 0) * Balance.MONEY_FROM_V1);
-          state.earnedFromClicks = Math.round((state.earnedFromClicks || 0) * Balance.MONEY_FROM_V1);
-          state.earnedFromPassive = Math.round((state.earnedFromPassive || 0) * Balance.MONEY_FROM_V1);
+          const f = Balance.migrateFactors(saved.balanceVersion || 1).cash;
+          state.cash = Balance.capCash((state.cash || 0) * f);
+          state.totalEarned = Math.round((state.totalEarned || 0) * f);
+          state.earnedFromClicks = Math.round((state.earnedFromClicks || 0) * f);
+          state.earnedFromPassive = Math.round((state.earnedFromPassive || 0) * f);
         }
         if (typeof Balance !== 'undefined') state.balanceVersion = Balance.VERSION;
 

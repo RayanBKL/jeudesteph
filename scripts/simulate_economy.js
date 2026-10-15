@@ -1,7 +1,9 @@
-// Simulation de la progression d'un joueur sur un an avec le VRAI code du jeu (tirage des paquets, cartes, niveaux).
-// Usage : lancer le jeu (python3 -m http.server 8799 dans le dossier) puis
-//   node scripts/simulate_economy.js '[[1,1,40]]' '[1,3]'      (réglages [_, _, multiplicateur de prix], heures de jeu par jour)
-// Playwright doit être installé (npm i playwright). Les revenus des cartes sont déjà ceux de js/balance.js.
+// Simulation de la progression d'un joueur sur un an avec le VRAI code du jeu (tirage des paquets, cartes, niveaux,
+// pièces débloquées par niveau). Usage : lancer le jeu (python3 -m http.server 8799 dans le dossier du jeu) puis
+//   node scripts/simulate_economy.js '[[1,1,1]]' '[1,3]'
+// 1er argument : liste de réglages [_, _, multiplicateur de prix en plus de js/balance.js] ; 2e : heures de jeu par jour.
+// Hypothèses : 5 clics/s à 80 % d'efficacité pendant le jeu, tout l'argent va dans les paquets, 80 % des doublons revendus
+// à 33 % du prix du paquet, talents approchés par le niveau. Il faut Playwright (npm i playwright).
 const { chromium } = require('playwright');
 const grid = JSON.parse(process.argv[2]);
 const hoursList = JSON.parse(process.argv[3] || '[1]');
@@ -13,12 +15,12 @@ const hoursList = JSON.parse(process.argv[3] || '[1]');
   for (const hours of hoursList) for (const [cs, ck, cp] of grid) {
     const rows = await p.evaluate(([hoursPerDay, cs, ck, cp]) => {
       const xpFor = lvl => { const early = Math.min(lvl, 12) - 1, late = Math.max(0, lvl - 12); return Math.round(300 * Math.pow(1.35, early) * Math.pow(1.06, late) / 5) * 5; };
-      const F = { commune: 1, 'peu-commune': 1, rare: 1, epique: 0.875, legendaire: 0.75, mythique: 0.5 }; const SLOTS = [[1, 3], [3, 3], [5, 2], [8, 3], [15, 5]];
+      const SLOTS = [[1, 3], [3, 3], [5, 2], [8, 3], [15, 5]];
       const packs = Object.values(EMPIRE_PACKS).filter(pk => pk.price > 0).map(pk => ({ ...pk, price: Math.round(pk.price * cp) })).sort((a, b) => b.price - a.price);
       const pity = {}; const owned = new Set(); let cash = 0, xp = 0, level = 1, need = xpFor(1), opened = 0, uniq = 0, bestCps = [], bestClk = [], passive = 0, clickPow = 1;
-      const add = it => { let dup = owned.has(it.id); if (!dup) { owned.add(it.id); uniq++; bestCps.push(it.cashPerSec * F[it.rarity]); bestClk.push((it.clickBoost || 0) * F[it.rarity]); } return dup; };
+      const add = it => { let dup = owned.has(it.id); if (!dup) { owned.add(it.id); uniq++; bestCps.push(it.cashPerSec); bestClk.push(it.clickBoost || 0); } return dup; };
       const slotsFor = lvl => SLOTS.filter(([l]) => lvl >= l).reduce((a, [, s]) => a + s, 0);
-      const recalc = () => { bestCps.sort((a, b) => b - a); bestClk.sort((a, b) => b - a); if (bestCps.length > 40) bestCps.length = 40; if (bestClk.length > 8) bestClk.length = 8; passive = bestCps.slice(0, slotsFor(level)).reduce((a, b) => a + b, 0); clickPow = (12 + bestClk.slice(0, 3).reduce((a, b) => a + b, 0)) * (1 + 0.025 * level); passive *= (1 + 0.02 * level); };
+      const recalc = () => { bestCps.sort((a, b) => b - a); bestClk.sort((a, b) => b - a); if (bestCps.length > 40) bestCps.length = 40; if (bestClk.length > 8) bestClk.length = 8; passive = bestCps.slice(0, slotsFor(level)).reduce((a, b) => a + b, 0); const tl = Math.min(1, level / 55); clickPow = Math.max(1, Math.round((1 + bestClk.slice(0, 3).reduce((a, b) => a + b, 0)) * (1 + 3.5 * tl))); passive *= (1 + 1.2 * tl); };
       const gain = x => { xp += x; while (xp >= need) { xp -= need; level++; need = xpFor(level); } };
       for (let i = 0; i < 3; i++) drawEmpirePack('gratuit', pity).forEach(add); recalc();
       const rows = []; const STEP = 30; let target = null;
@@ -33,7 +35,7 @@ const hoursList = JSON.parse(process.argv[3] || '[1]');
             }
             if (target.price > cash) break;
             const pk = target; target = null;
-            cash -= pk.price; opened++; gain(Math.max(15, Math.round(pk.price / 1250)));
+            cash -= pk.price; opened++; gain(Balance.xpForPack(pk.price / cp));
             const items = drawEmpirePack(pk.id, pity); let dups = 0; items.forEach(it => { if (add(it)) dups++; });
             cash += 0.33 * pk.price * (dups / items.length) * 0.8;
           }
