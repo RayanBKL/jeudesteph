@@ -318,10 +318,15 @@ function drawCigarette(packType, rarity) {
 // Maps brands directly to custom comic stickers or renders crisp TCG artwork
 // ============================================================
 
+// Les images des mèmes ont changé (GIF) mais gardent le même nom de fichier : ce numéro force les navigateurs à les recharger.
+// À incrémenter quand on remplace des images de mèmes.
+const MEME_IMG_REV = 3;
+function withImgRev(url) { return (typeof url === 'string' && url.indexOf('assets/cards/ref_') === 0 && url.indexOf('?') < 0) ? url + '?r=' + MEME_IMG_REV : url; }
+
 function resolveCigaretteImage(cig) {
   if (!cig) return null;
-  if (cig.image && cig.image.startsWith('assets/cards/')) return cig.image;
-  if (cig.img && cig.img.startsWith('assets/cards/')) return cig.img;
+  if (cig.image && cig.image.startsWith('assets/cards/')) return withImgRev(cig.image);
+  if (cig.img && cig.img.startsWith('assets/cards/')) return withImgRev(cig.img);
 
   if (cig.image && (cig.image.startsWith('http://') || cig.image.startsWith('https://') || cig.image.startsWith('data:'))) {
     return cig.image;
@@ -333,7 +338,7 @@ function resolveCigaretteImage(cig) {
   // Local WebP standard path with category prefix
   const cat = cig.cat || 'cigarette';
   const prefix = cat === 'cigarette' ? 'cig' : cat === 'alcool' ? 'alc' : cat === 'briquet' ? 'acc' : cat === 'beauf' ? 'ter' : cat === 'actrice' ? 'act' : cat === 'foot' ? 'fbl' : cat === 'refs' ? 'ref' : cat === 'chanteur' ? 'mus' : cat === 'culte' ? 'cul' : 'drg';
-  return `assets/cards/${prefix}_${cig.id}.webp`;
+  return withImgRev(`assets/cards/${prefix}_${cig.id}.webp`);
 }
 
 // Global helper to get a random cigarette by rarity or any random cigarette

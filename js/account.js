@@ -171,20 +171,31 @@ const Account = (() => {
   }
 
   // Renvoie true si la page va se recharger avec la version en ligne
+  // Mesure de l'avancement d'une sauvegarde (clics, paquets ouverts, cartes, niveau)
+  function progressScore(data) {
+    try {
+      const c = JSON.parse((data && data.empire_clicker) || '{}'), e = JSON.parse((data && data.empire_state) || '{}');
+      const copies = Object.values(e.inventory || {}).reduce((a, v) => a + (+v > 0 ? +v : 0), 0);
+      return (c.totalClicks || 0) + 25 * (e.totalPacksOpened || 0) + 5 * copies + 1000 * (c.empireLevel || 1);
+    } catch (err) { return 0; }
+  }
+
+  // Deux versions de la partie (autre appareil ou onglet) : on garde la plus avancée, sans poser de question.
+  // Renvoie true si la page va se recharger avec la version en ligne
   async function resolveConflict() {
-    const loadOnline = await GameDialog.confirm('Les changements faits sur cet appareil seront perdus si tu charges la version en ligne. Si tu gardes cet appareil, c\'est la version en ligne qui sera écrasée.', { title: 'Ta progression a changé sur un autre appareil', ok: 'Charger la version en ligne', cancel: 'Garder cet appareil' });
-    if (loadOnline) {
-      const save = await pull();
-      if (save) {
-        applySnapshot(save.data);
-        ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY);
-        location.reload();
-        return true;
-      }
-      return false;
+    const save = await pull();
+    if (!save) { pushing = false; await push(true); return false; }
+    const keepLocal = progressScore(snapshot()) > progressScore(save.data);
+    if (!keepLocal) {
+      applySnapshot(save.data);
+      ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY);
+      location.reload();
+      return true;
     }
     pushing = false;
+    stamp = save.updated_at;
     await push(true);
+    if (typeof showToast === 'function') showToast('Partie synchronisée : la version la plus avancée a été gardée.', 'info');
     return false;
   }
 

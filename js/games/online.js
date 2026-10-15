@@ -246,7 +246,7 @@ const Online = (() => {
       hint = `${pts > 0 ? `Bien vu ! +${pts}` : 'Raté'} · c'était « ${esc(good)} »`;
     }
     return `
-      <div class="qz-photo"><img src="${esc(q.img)}" alt="" /></div>
+      <div class="qz-photo"><img src="${esc(typeof withImgRev === 'function' ? withImgRev(q.img) : q.img)}" alt="" /></div>
       <div class="qz-choices">
         ${q.choices.map((c, k) => `<button class="qz-choice ${r.myChoice === k ? 'is-picked' : ''}" data-k="${k}" ${answered ? 'disabled' : ''}>${esc(c)}</button>`).join('')}
       </div>
