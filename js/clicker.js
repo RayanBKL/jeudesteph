@@ -249,7 +249,7 @@ const ClickerEngine = (() => {
   }
 
   function getNominalClickPower() {
-    let base = 1.0; // Gain de base garanti
+    let base = (typeof Balance !== 'undefined') ? Balance.BASE_CLICK : 1.0; // Gain de base garanti
     const items = state.equippedClickCards.map(id => (typeof getEmpireItemById === 'function' ? getEmpireItemById(id) : null)).filter(Boolean);
     let cardBonus = 0;
     items.forEach(it => { cardBonus += (it.clickBoost || 0); });
@@ -723,6 +723,7 @@ const ClickerEngine = (() => {
       empireLevel: state.empireLevel,
       empireXP: state.empireXP,
       empireXPToNext: state.empireXPToNext,
+      balanceVersion: state.balanceVersion,
     }));
   }
 
@@ -732,6 +733,15 @@ const ClickerEngine = (() => {
       if (raw) {
         const saved = JSON.parse(raw);
         Object.assign(state, saved);
+
+        // Nouvelle échelle de l'économie (voir js/balance.js) : l'argent des anciennes sauvegardes est converti
+        if (typeof Balance !== 'undefined' && (saved.balanceVersion || 1) < Balance.VERSION) {
+          state.cash = Math.round((state.cash || 0) * Balance.MONEY_FROM_V1);
+          state.totalEarned = Math.round((state.totalEarned || 0) * Balance.MONEY_FROM_V1);
+          state.earnedFromClicks = Math.round((state.earnedFromClicks || 0) * Balance.MONEY_FROM_V1);
+          state.earnedFromPassive = Math.round((state.earnedFromPassive || 0) * Balance.MONEY_FROM_V1);
+        }
+        if (typeof Balance !== 'undefined') state.balanceVersion = Balance.VERSION;
 
         // Courbe d'XP : toujours recalculée depuis le niveau (les anciennes sauvegardes suivaient une autre courbe)
         state.empireXPToNext = xpForLevel(state.empireLevel || 1);
@@ -747,6 +757,7 @@ const ClickerEngine = (() => {
           state.earnedFromPassive = Math.max(0, state.totalEarned - state.earnedFromClicks);
         }
       }
+      if (typeof Balance !== 'undefined' && !state.balanceVersion) state.balanceVersion = Balance.VERSION;   // nouvelle partie : déjà à la bonne échelle
       if (typeof GameState !== 'undefined' && GameState.money > 0 && state.cash === 0) {
         state.cash = GameState.money;
       }

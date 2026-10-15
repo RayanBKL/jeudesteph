@@ -290,8 +290,8 @@ const EmpireManager = (() => {
       ClickerEngine.setCash(currentCash - pack.price);
     }
     state.totalPacksOpened++;
-    // XP d'ouverture : 1 XP par tranche de 100 € dépensés (minimum 15)
-    if (ClickerEngine.gainXP) ClickerEngine.gainXP(Math.max(15, Math.round(pack.price / 100)));
+    // XP d'ouverture : 1 XP par tranche de 1 250 € dépensés (minimum 15)
+    if (ClickerEngine.gainXP) ClickerEngine.gainXP(Balance.xpForPack(pack.price));
 
     const items = drawEmpirePack(packId, state.pityState);
     items.forEach(item => addToInventory(item.id));
@@ -2214,9 +2214,9 @@ const EmpireManager = (() => {
   function updateFreePackDisplay() {
     if (freePackTimerId) clearTimeout(freePackTimerId);
 
-    // 8 minutes par paquet gratuit (moins avec les talents « Livreur du Tabac » / « Grossiste Agréé »)
+    // 20 minutes par paquet gratuit (moins avec les talents « Livreur du Tabac » / « Grossiste Agréé »)
     const cdMult = (typeof TalentsEngine !== 'undefined' && TalentsEngine.getFreePackCooldownMult) ? TalentsEngine.getFreePackCooldownMult() : 1;
-    const cooldown = Math.round(8 * 60 * 1000 * cdMult);
+    const cooldown = Math.round(20 * 60 * 1000 * cdMult);
     const now = Date.now();
 
     let freePacks = parseInt(localStorage.getItem('empire_free_packs_count') ?? '3'); // 3 offerts au départ
@@ -2315,7 +2315,15 @@ const EmpireManager = (() => {
           return;
         }
         Object.assign(state, saved);
+        // Nouvelle échelle de l'économie (voir js/balance.js) : cotes et annonces des anciennes sauvegardes
+        if ((saved.balanceVersion || 1) < Balance.VERSION) {
+          const k = Balance.VALUE_MULT;
+          Object.values(state.priceHistory || {}).forEach(h => { if (h && typeof h.ema === 'number') h.ema = Math.round(h.ema * k); });
+          (state.myListings || []).forEach(l => { ['price', 'currentBid', 'minBid'].forEach(f => { if (typeof l[f] === 'number') l[f] = Math.round(l[f] * k); }); });
+        }
+        if (saved.balanceVersion !== Balance.VERSION) { state.balanceVersion = Balance.VERSION; saveState(); }
       } else {
+        state.balanceVersion = Balance.VERSION;
         saveState();
       }
     } catch(e) { /* ignore */ }
