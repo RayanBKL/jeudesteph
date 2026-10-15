@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Tableau de bord — The Ashtray King</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="stylesheet" href="css/admin.css?v=1" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header class="ad-top">
+    <h1>Tableau de bord</h1>
+    <nav class="ad-tabs" id="tabs" hidden>
+      <button data-tab="overview" class="is-on">Vue d'ensemble</button>
+      <button data-tab="players">Joueurs</button>
+      <button data-tab="flagged">Signalés</button>
+    </nav>
+    <div class="ad-right"><button id="refresh" hidden>Actualiser</button><a href="index.html">← Le jeu</a></div>
+  </header>
+  <main id="app"><p class="ad-msg">Chargement…</p></main>
+  <div id="modal" class="ad-modal" hidden></div>
+  <script src="js/supabase.js?v=1"></script>
+  <script src="js/admin.js?v=1"></script>
+</body>
+</html>

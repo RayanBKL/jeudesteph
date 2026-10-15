@@ -680,3 +680,12 @@
 /* ── Course : l'écran tient dans la zone de jeu (entre la barre du haut et celle du bas), le bouton Sprint reste visible ── */
 #page-race { position: absolute; inset: 0; z-index: 5; }
 #page-race .pmu-arena { height: 100%; }
+
+/* L'Empire : bandeau du revenu passif et du placement auto */
+.empire-auto-bar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 3px solid var(--outline); border-radius: 14px; }
+.empire-auto-bar strong { display: block; font-family: var(--font-title); font-weight: 400; font-size: 1.25rem; color: var(--gold); }
+.empire-auto-bar span { font-size: 0.75rem; color: var(--text-muted); }
+.empire-auto-bar .btn-empire { flex-shrink: 0; padding: 8px 12px !important; font-size: 0.8rem !important; }
+.empire-auto-bar > div { min-width: 0; }
+.empire-auto-bar strong { font-size: 1.15rem; white-space: nowrap; }
+@media (max-width: 480px) { .empire-auto-bar span { display: none; } .empire-auto-bar { padding: 8px 12px; } }

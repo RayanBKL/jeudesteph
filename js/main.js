@@ -656,6 +656,7 @@ function renderSettings() {
   const mail = document.getElementById('set-email');
   const u = window.Account && Account.user;
   if (mail) mail.textContent = u && u.email ? 'Connecté avec ' + u.email : 'Connecté';
+  if (window.sb && u) window.sb.rpc('am_i_admin').then(({ data }) => document.getElementById('set-admin')?.classList.toggle('hidden', !data)).catch(() => {});
   const a = document.getElementById('set-audio');
   if (a) a.textContent = (window.SoundFX && SoundFX.enabled) ? 'Activé' : 'Coupé';
 }

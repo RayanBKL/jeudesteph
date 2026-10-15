@@ -62,6 +62,7 @@ const EmpireManager = (() => {
     bindInventoryFilters();
     bindEmpireRooms();
     bindCasino();
+    try { autoFillRooms(); recalcAllPassives(); } catch (e) {}
     navigateTo('clicker');
     console.log('[EmpireManager] Ready.');
   }
@@ -77,6 +78,9 @@ const EmpireManager = (() => {
 
     document.getElementById('btn-quick-talents')?.addEventListener('click', () => navigateTo('talents'));
     document.getElementById('btn-quick-empire')?.addEventListener('click', () => navigateTo('empire'));
+    // « Tes cartes / seconde » : un clic mène à l'Arrière-Boutique, où se placent les cartes
+    const cpsPill = document.getElementById('clicker-cps')?.parentElement;
+    if (cpsPill) { cpsPill.style.cursor = 'pointer'; cpsPill.title = 'Placer mes cartes (Arrière-Boutique)'; cpsPill.addEventListener('click', () => navigateTo('empire')); }
     document.getElementById('btn-quick-bourse')?.addEventListener('click', () => navigateTo('bourse'));
   }
 
@@ -296,6 +300,7 @@ const EmpireManager = (() => {
     const items = drawEmpirePack(packId, state.pityState);
     items.forEach(item => addToInventory(item.id));
     emitPackPrestige(items);
+    autoFillRooms();
 
     saveState();
     openPackReveal(items, pack);
@@ -697,9 +702,23 @@ const EmpireManager = (() => {
   function renderEmpire() {
     const container = document.getElementById('empire-rooms-container');
     if (!container) return;
+    autoFillRooms();
     container.innerHTML = '';
 
     const empireLevel = ClickerEngine.getState().empireLevel;
+    const passive = ClickerEngine.getState().passivePerSec || 0;
+    const bar = document.createElement('div');
+    bar.className = 'empire-auto-bar';
+    bar.innerHTML = `<div><strong>${formatCash(passive)} €/s</strong><span>de revenu passif grâce aux cartes placées ici</span></div>
+      <button class="btn-empire ${state.autoRooms === false ? 'btn-empire-secondary' : 'btn-empire-primary'}" id="btn-empire-auto">Placement auto : ${state.autoRooms === false ? 'NON' : 'OUI'}</button>`;
+    container.appendChild(bar);
+    bar.querySelector('#btn-empire-auto').addEventListener('click', () => {
+      state.autoRooms = state.autoRooms === false;
+      saveState();
+      if (state.autoRooms !== false) autoFillRooms();
+      renderEmpire();
+      recalcAllPassives();
+    });
 
     Object.entries(state.rooms).forEach(([roomId, room]) => {
       const locked = empireLevel < room.unlockLevel;
@@ -750,6 +769,7 @@ const EmpireManager = (() => {
       slot.addEventListener('click', () => {
         const itemId = slot.dataset.item;
         const roomId = slot.closest('.empire-location').dataset.room;
+        if (state.autoRooms !== false) { ClickerEngine.showToast('Placement auto activé : désactive-le pour choisir toi-même', 'info'); return; }
         if (itemId && roomId) unassignFromRoom(roomId, itemId);
       });
     });
@@ -838,12 +858,26 @@ const EmpireManager = (() => {
     // Handled in renderEmpire
   }
 
+  // Placement automatique : les meilleures cartes (revenu passif) vont dans les pièces débloquées.
+  // Désactivable depuis la page de l'Empire (état.autoRooms === false) pour placer ses cartes à la main.
+  function autoFillRooms() {
+    if (state.autoRooms === false) return;
+    const level = (typeof ClickerEngine !== 'undefined' && ClickerEngine.getState) ? (ClickerEngine.getState().empireLevel || 1) : 1;
+    const open = Object.values(state.rooms).filter(r => level >= r.unlockLevel);
+    const slots = open.reduce((a, r) => a + r.slots, 0);
+    const best = Object.keys(state.inventory).filter(id => (state.inventory[id] || 0) > 0).map(id => getEmpireItemById(id)).filter(Boolean)
+      .sort((a, b) => (b.cashPerSec || 0) - (a.cashPerSec || 0)).slice(0, slots).map(i => i.id);
+    let i = 0, changed = false;
+    Object.values(state.rooms).forEach(r => {
+      const next = level >= r.unlockLevel ? best.slice(i, i += r.slots) : [];
+      if (JSON.stringify(next) !== JSON.stringify(r.assigned)) { r.assigned = next; changed = true; }
+    });
+    if (changed) { saveState(); recalcAllPassives(); }
+  }
+
   function recalcAllPassives() {
     const allAssigned = Object.values(state.rooms).flatMap(r => r.assigned);
-    const unique = [...new Set(allAssigned)];
-    const cs = ClickerEngine.getState();
-    cs.assignedPassiveCards = unique;
-    ClickerEngine.recalcPassive();
+    ClickerEngine.setPassiveCards([...new Set(allAssigned)]);   // (getState() renvoie une copie : on passe par cette fonction)
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -2275,6 +2309,7 @@ const EmpireManager = (() => {
         const items = drawEmpirePack('gratuit', state.pityState);
         items.forEach(item => addToInventory(item.id));
         emitPackPrestige(items);
+        autoFillRooms();
         saveState();
         openPackReveal(items, EMPIRE_PACKS.gratuit);
         updateFreePackDisplay();
@@ -2371,6 +2406,7 @@ const EmpireManager = (() => {
     addToInventory,
     saveState,
     resetEntireGame,
+    autoFillRooms,
     bindPackRevealButtons,
     renderInventory,
   };
