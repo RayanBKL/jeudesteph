@@ -20,7 +20,9 @@
 "q": "rick astley never gonna give you up"
 },
 "ref-nyan-cat": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "ref-doge": {
 "done": true,
@@ -107,7 +109,9 @@
 "q": "gigachad"
 },
 "ref-trollface": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "ref-pepe-la-grenouille": {
 "done": true,
@@ -164,7 +168,9 @@
 "q": "bernie sanders mittens"
 },
 "ref-ca-va-etre-tout-noir": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "ref-chien-de-la-casse": {
 "done": true,
@@ -173,7 +179,9 @@
 "q": "angry dog"
 },
 "ref-wesh": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "ref-quoicoubeh": {
 "done": true,
@@ -182,7 +190,9 @@
 "q": "Quoicoubeh"
 },
 "ref-apagnan": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "ref-ratio": {
 "done": true,
@@ -205,7 +215,9 @@
 "q": "Gênant"
 },
 "ref-tchoin": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "ref-fanny": {
 "done": true,
@@ -214,7 +226,9 @@
 "q": "Fanny"
 },
 "ref-c-est-pas-faux": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "ref-thierry-henry-main": {
 "done": true,
@@ -271,7 +285,9 @@
 "source": "image"
 },
 "meme-je-traverse-la-rue": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-ca-m-en-touche-une": {
 "done": true,
@@ -302,13 +318,19 @@
 "source": "copy"
 },
 "meme-comment-est-votre-blanquette": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-j-aime-me-beurrer-la-biscotte": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-c-est-une-bonne-situation-ca-scribe": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-gras-c-est-la-vie": {
 "done": true,
@@ -319,7 +341,9 @@
 "title": "kaamelott GIF"
 },
 "meme-faut-pas-respirer-la-compote": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-on-en-a-gros": {
 "done": true,
@@ -328,10 +352,14 @@
 "q": "kaamelott perceval"
 },
 "meme-okayyy": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-sur-un-malentendu": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-il-s-appelle-juste-leblanc": {
 "done": true,
@@ -342,10 +370,14 @@
 "title": "reno visiteurs GIF"
 },
 "meme-jusqu-ici-tout-va-bien": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-casse": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-ils-sont-fous-ces-romains": {
 "done": true,
@@ -354,10 +386,14 @@
 "source": "image"
 },
 "meme-c-est-l-histoire-d-un-mec": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-tu-veux-un-whisky": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-pays-de-galles-independant": {
 "done": true,
@@ -368,7 +404,9 @@
 "title": "The Beautiful Game Futbol GIF by World Cup"
 },
 "meme-mais-qu-est-ce-que-c-est-que-ce-binz": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-oui-oui-baguette": {
 "done": true,
@@ -385,13 +423,19 @@
 "source": "image"
 },
 "meme-faut-dire-bonjour": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-francais-qui-rale": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-bonne-journee-de-mamie": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-groupe-whatsapp-de-la-famille": {
 "done": true,
@@ -418,13 +462,19 @@
 "title": "Blue Cat Nopecat GIF"
 },
 "meme-les-lacs-du-connemara-a-4-h": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-la-chenille": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-tonton-du-mariage": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-la-belle-mere": {
 "done": true,
@@ -435,7 +485,9 @@
 "title": "Starz Mother In Law GIF by Vida"
 },
 "meme-c-est-carre": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-chokbar": {
 "done": true,
@@ -486,7 +538,9 @@
 "title": " "
 },
 "meme-masterclass": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-mytho": {
 "done": true,
@@ -497,16 +551,24 @@
 "title": "Jonathan Cohen Love GIF by CANAL+"
 },
 "meme-la-hess": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-kassos": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-crari": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-wesh-alors": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-siuuu": {
 "done": true,
@@ -517,49 +579,79 @@
 "title": "Cristiano Ronaldo Siuuu GIF"
 },
 "meme-la-main-dans-la-poche": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-daron-a-la-plage": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-t-as-les-crampons": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-scooter-de-3-h-du-mat": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-il-fait-beau-donc-la-bretagne": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-parisien-en-vacances": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-marseillais-qui-exagere": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-ch-ti-qui-dit-hein": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-pain-au-chocolat-ou-chocolatine": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-la-bise-ou-le-check": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-les-pates-au-beurre": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-kebab-sauce-samourai": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-la-file-a-la-poste": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-wi-fi-de-la-sncf": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-controleur-arrive": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-lundi-matin": {
 "done": true,
@@ -570,25 +662,39 @@
 "title": "Blanche Neige Lol GIF by ALDI FRANCE"
 },
 "meme-le-dimanche-soir": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-pont-du-mois-de-mai": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-les-bouchons-du-15-aout": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-coup-de-fil-du-12-juillet": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-l-arbitre-est-vendu": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-le-daron-au-barbecue": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-tralalero-tralala": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-tung-tung-tung-sahur": {
 "done": true,
@@ -607,13 +713,19 @@
 "title": "ballerina GIF"
 },
 "meme-bombardiro-crocodilo": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-brr-brr-patapim": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-lirili-larila": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-chimpanzini-bananini": {
 "done": true,
@@ -942,7 +1054,9 @@
 "title": "Growl Growling GIF"
 },
 "meme-sad-hamster": {
-"done": false
+"done": true,
+"pass3": true,
+"found": true
 },
 "meme-cat-vibing": {
 "done": true,
