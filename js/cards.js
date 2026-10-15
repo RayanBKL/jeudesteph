@@ -123,14 +123,14 @@ const CardsRenderer = (() => {
     if (!item) return null;
 
     // 1. Fichier WebP local explicite dans assets/cards/
-    if (item.img && item.img.startsWith('assets/cards/')) return item.img;
-    if (item.image && item.image.startsWith('assets/cards/')) return item.image;
+    if (item.img && item.img.startsWith('assets/cards/')) return withImgRev(item.img);
+    if (item.image && item.image.startsWith('assets/cards/')) return withImgRev(item.image);
 
     // 2. Chemin WebP déterministe standard (1470+ vraies photos locales)
     const cat = item.cat || 'cigarette';
     const cid = item.id;
     const prefix = cat === 'cigarette' ? 'cig' : cat === 'alcool' ? 'alc' : cat === 'briquet' ? 'acc' : cat === 'beauf' ? 'ter' : cat === 'actrice' ? 'act' : cat === 'foot' ? 'fbl' : cat === 'refs' ? 'ref' : cat === 'chanteur' ? 'mus' : cat === 'culte' ? 'cul' : 'drg';
-    return `assets/cards/${prefix}_${cid}.webp`;
+    return withImgRev(`assets/cards/${prefix}_${cid}.webp`);
   }
 
   // ── Sceau / Armoiries Vectorielles Collector (Si pas de photo authentique) ──

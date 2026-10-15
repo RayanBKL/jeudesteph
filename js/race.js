@@ -182,6 +182,7 @@ const RaceEngine = {
   },
 
   smoke() {
+    if (this.pvp) return this.pvpTap();
     if (!this.active || this.coughing) return;
 
     const available = this.cigarettes.filter(c => !c.used);
@@ -350,6 +351,149 @@ const RaceEngine = {
   stop() {
     this.active = false;
     if (this.rafId) cancelAnimationFrame(this.rafId);
+    if (this.pvp) this.endPvpUi();
+  },
+
+  // ── Duel en ligne ──────────────────────────────────────────
+  // Même physique que le serveur (pas fixe de 1/60 s, aucun bonus de carte) : le serveur rejoue les horodatages de tes
+  // sprints et c'est SON chrono qui fait foi. Ici on ne fait que l'affichage.
+  pvp: null,
+
+  startPvp(opts) {
+    // opts : { matchId, startAt (ms, horloge locale), trackId, oppName, onFinish(time, taps), onProgress(dist) }
+    this.track = TRACKS[opts.trackId] || TRACKS.trottoir;
+    this.pvp = { ...opts, taps: [], tapIdx: 0, k: 0, greenStreak: 0, lastTap: -1, lastReport: 0, ghostTarget: 0, finishTime: null, maxTime: 200 };
+    this.leagueMode = null;
+    this.distance = 0; this.speed = 0; this.energy = 30; this.cough = 0; this.coughing = false; this.coughTimer = 0; this.elapsed = 0;
+    this.cigarettes = []; this.currentCigIndex = 0;
+    this.comboState = { greenStreak: 0, lastBrands: [], combosFired: [] };
+    this.initRivals(this.track);
+    this.rivals = this.rivals.slice(0, 1);
+    const g = this.rivals[0]; g.name = opts.oppName; g.distance = 0; g.currentSpeed = 0;
+    this.pvpUi(true, opts.oppName);
+    showPage('race');
+    this.renderQueue();
+    this.active = true;
+    this.loopPvp();
+  },
+
+  pvpUi(on, oppName) {
+    const lane = document.getElementById('lane-bot-1');
+    const nameEl = document.querySelector('#runner-bot-1 .pmu-runner-name');
+    const badge = document.querySelector('#lane-bot-1 .pmu-lane-badge');
+    const code = document.querySelector('#runner-bot-1 .pmu-avatar-code');
+    this._origUi = this._origUi || { name: nameEl && nameEl.textContent, badge: badge && badge.textContent, code: code && code.textContent };
+    ['lane-bot-2', 'lane-bot-3'].forEach(id => document.getElementById(id)?.classList.toggle('hidden', on));
+    ['lead-pos-3', 'lead-pos-4'].forEach(id => document.getElementById(id)?.parentElement?.classList.toggle('hidden', on));
+    if (on) {
+      if (nameEl) nameEl.textContent = oppName;
+      if (badge) badge.textContent = '#2 ' + String(oppName).slice(0, 10).toUpperCase();
+      if (code) code.textContent = String(oppName).slice(0, 2).toUpperCase();
+    } else if (this._origUi) {
+      if (nameEl) nameEl.textContent = this._origUi.name;
+      if (badge) badge.textContent = this._origUi.badge;
+      if (code) code.textContent = this._origUi.code;
+    }
+  },
+
+  endPvpUi() {
+    this.pvpUi(false);
+    this.pvp = null;
+    hideCough();
+  },
+
+  pvpTap() {
+    const p = this.pvp;
+    if (!this.active || !p) return;
+    const t = Math.round(((Date.now() - p.startAt) / 1000) * 1000) / 1000;
+    if (t < 0 || t - p.lastTap < 0.06 || p.taps.length >= 650) return;
+    p.lastTap = t; p.taps.push(t);
+    if (window.SoundFX && SoundFX.puff) SoundFX.puff();
+    showSmokeEffect();
+  },
+
+  pvpSmoke() {
+    if (this.coughing) return;
+    const p = this.pvp;
+    let gain = 25, add = 22;
+    if (this.energy >= 10 && this.energy <= 25) {
+      gain *= 1.5; add = Math.round(add * 0.4); p.greenStreak++;
+      if (p.greenStreak >= 3) { this.speed = 44 * 1.3; add = 0; p.greenStreak = 0; }
+    } else p.greenStreak = 0;
+    this.energy = Math.min(100, this.energy + gain);
+    this.cough = Math.min(100, this.cough + add);
+  },
+
+  // Un pas de 1/60 s. Renvoie true quand la ligne d'arrivée est franchie
+  pvpStep() {
+    const p = this.pvp, dt = 1 / 60, k = p.k + 1;
+    while (p.tapIdx < p.taps.length && p.taps[p.tapIdx] < k * dt) { this.pvpSmoke(); p.tapIdx++; }
+    const prev = this.distance;
+    if (this.coughing) {
+      this.coughTimer -= dt; this.speed = 0;
+      if (this.coughTimer <= 0) { this.coughing = false; this.cough = Math.max(0, this.cough - 40); hideCough(); }
+    } else {
+      this.energy = Math.max(0, this.energy - 5 * dt);
+      this.cough = Math.max(0, this.cough - 8 * dt);
+      this.speed += (this.energy / 100 * 44 - this.speed) * 0.15;
+      this.distance += this.speed * 1000 / 3600 * dt;
+    }
+    if (this.cough >= 100 && !this.coughing) {
+      this.coughing = true; this.coughTimer = 3; this.speed = 0; p.greenStreak = 0;
+      if (window.SoundFX && SoundFX.cough) SoundFX.cough();
+      showCough();
+    }
+    p.k = k; this.elapsed = k * dt;
+    if (this.distance >= this.track.distance) {
+      p.finishTime = (k - 1) * dt + dt * (this.track.distance - prev) / (this.distance - prev);
+      return true;
+    }
+    return false;
+  },
+
+  setGhost(dist) {
+    const p = this.pvp; dist = Number(dist) || 0;
+    if (!p || dist <= p.ghostTarget) return;
+    const now = Date.now(), dtS = p.ghostAt ? (now - p.ghostAt) / 1000 : 0;
+    if (dtS > 0.3) p.ghostSpeed = Math.min(80, (dist - p.ghostTarget) / dtS * 3.6);
+    p.ghostAt = now; p.ghostTarget = dist;
+  },
+
+  loopPvp() {
+    if (!this.active || !this.pvp) return;
+    const p = this.pvp, T = (Date.now() - p.startAt) / 1000;
+    const zone = document.getElementById('combo-zone');
+    if (T < 0) {
+      if (zone) { zone.textContent = 'Départ dans ' + Math.ceil(-T) + ' s'; zone.style.opacity = '1'; }
+    } else {
+      if (zone && T < 1.5) zone.textContent = 'PARTEZ !';
+      let steps = 0;
+      while ((p.k + 1) / 60 <= T && steps < 900) {
+        steps++;
+        if (this.pvpStep()) { this.finishPvp(); return; }
+      }
+      if (T > p.maxTime) { this.finishPvp(); return; }
+    }
+    // Adversaire (position reçue du serveur, lissée)
+    const g = this.rivals[0];
+    if (g) {
+      g.distance += (p.ghostTarget - g.distance) * 0.12;
+      g.currentSpeed = p.ghostSpeed || 0;
+    }
+    const now = Date.now();
+    if (T >= 0 && now - p.lastReport > 400) { p.lastReport = now; if (p.onProgress) p.onProgress(this.distance); }
+    this.render();
+    this.rafId = requestAnimationFrame(() => this.loopPvp());
+  },
+
+  finishPvp() {
+    const p = this.pvp;
+    this.active = false;
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    if (window.SoundFX) SoundFX.win();
+    const taps = p.taps.slice(), time = p.finishTime, cb = p.onFinish;
+    this.endPvpUi();
+    if (cb) cb(time, taps);
   },
 
   finish() {

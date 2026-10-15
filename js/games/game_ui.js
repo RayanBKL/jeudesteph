@@ -11,6 +11,7 @@ const GameUI = (() => {
       'Chaque joueur a 0 à 3 points de cohésion selon ses liens. Hors de son poste, il en perd 2.',
       'La puissance de l\'équipe = les notes des joueurs × leur cohésion. Le milieu décide qui a le ballon, l\'attaque contre la défense décide des buts.',
       'Pas assez de footballeurs ? Les trous sont bouchés par des joueurs du quartier (note 50, aucun lien). Ouvre des « Album du Ballon d\'Or ».',
+      'En ligne : ton équipe est enregistrée et affronte celle d\'un vrai joueur (match simulé par le serveur). Tes cartes doivent être sauvegardées en ligne.',
     ],
     bataille: [
       'Tu reçois 5 cartes de ta collection, l\'ordi aussi.',
@@ -42,6 +43,13 @@ const GameUI = (() => {
       '1er : tu gagnes des points de ligue. 2e : rien ne bouge. 3e ou 4e : tu en perds.',
     ],
   };
+
+  // Versions en ligne
+  RULES.bataille.push('En ligne : chacun reçoit 5 cartes tirées de sa collection sauvegardée, la stat de la manche est tirée par le serveur. Si tu laisses filer les 30 secondes, une carte est posée au hasard.');
+  RULES.course.push('En ligne : duel à 2 sur 500 m. Même énergie pour tous (pas de bonus de cartes) et c\'est le serveur qui rejoue tes sprints : le chrono ne peut pas être truqué. Le plus rapide gagne.');
+  RULES.pbc.push('En ligne : les deux coups restent secrets jusqu\'à ce que tout le monde ait joué. 25 secondes par coup.');
+  RULES.des421.push('En ligne : c\'est le serveur qui lance les dés. 45 secondes par tour.');
+  RULES.quiz.push('En ligne : les mêmes 10 photos pour les deux joueurs, 10 secondes par question, bonus de rapidité.');
 
   function showRules(game) {
     const host = document.querySelector('#multi-content .mg-screen') || document.getElementById('multi-content');

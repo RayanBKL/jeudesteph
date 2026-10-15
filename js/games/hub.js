@@ -117,7 +117,7 @@ const GameHub = (() => {
       if (!c.querySelector('.mg-screen')) g.engine().start(c);
       return;
     }
-    if (window.Online && Online.GAME_IDS.includes(id)) Online.chooser(c, id, () => g.engine().start(c));
+    if (window.Online && (Online.GAME_IDS.includes(id) || id === 'ut')) Online.chooser(c, id, () => g.engine().start(c), id === 'ut' ? () => g.engine().start(c, { online: true }) : undefined);
     else g.engine().start(c);
     // Première partie : on explique les règles
     try {

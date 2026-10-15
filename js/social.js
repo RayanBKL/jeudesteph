@@ -21,8 +21,9 @@ const Social = (() => {
   function start() {
     if (started || !online()) return;
     started = true;
-    sb().rpc('touch_presence');
-    setInterval(() => { if (!document.hidden) sb().rpc('touch_presence'); }, 60000);
+    // (les appels Supabase ne partent que si on les « attend » : d'où le .then)
+    sb().rpc('touch_presence').then(() => {});
+    setInterval(() => { if (!document.hidden) sb().rpc('touch_presence').then(() => {}); }, 60000);
     setInterval(() => { if (!document.hidden) pollInvites(); }, 5000);
     setInterval(() => { if (!document.hidden) refreshBadge(); }, 30000);
     refreshBadge();
