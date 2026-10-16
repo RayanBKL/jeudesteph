@@ -85,6 +85,7 @@ Reste à faire côté design : remplacer les emojis (navigation, titres, paquets
 - **Les 173 mèmes ont un GIF ou une vraie image** (plus aucun dessin généré) ; vrais visuels du brainrot trouvés sur Wikimedia Commons ; images des mèmes rechargées chez les joueurs (`MEME_IMG_REV` dans `js/data.js`).
 - **Économie** : clic de base 1 €, paquets ×12, cotes ×12, cartes rares et + réduites (`js/balance.js`, version 3, simulation `scripts/simulate_economy.js`). Les emplacements de l'Empire étaient écrasés (CSS) : corrigé, c'est eux qui donnent le revenu passif.
 - **Sauvegarde automatique chaque nuit** dans la base (`006_sauvegarde_auto.sql`, 7 jours) + `python3 scripts/backup_db.py` (copie locale).
+- **Tableau de bord admin** (`admin.html`) : joueurs, évolution, signalements, crédits, suppression de compte. Entrée « Empire » dans la barre du bas. Revenu passif des pièces réparé (copie d'état).
 - Conflits de sauvegarde entre deux appareils : la partie la plus avancée est gardée sans poser de question.
 
 ### 8e passe (13/10/2026)

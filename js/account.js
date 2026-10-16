@@ -290,6 +290,25 @@ const Account = (() => {
     window.addEventListener('online', () => { if (ls.get(DIRTY) === '1') push(); });
 
     if (typeof startGame === 'function') startGame();
+    setTimeout(applyGrants, 1500);
+  }
+
+  // Crédits accordés par l'administrateur : appliqués une seule fois, puis la partie est sauvegardée
+  async function applyGrants() {
+    const sb = client();
+    if (!sb || !user || blocked || typeof ClickerEngine === 'undefined') return;
+    const { data, error } = await sb.rpc('my_grants');
+    if (error || !data || !data.length) return;
+    data.forEach(g => {
+      const cash = ClickerEngine.getCash();
+      const next = g.mode === 'set' ? Number(g.amount) : cash + Number(g.amount);
+      ClickerEngine.setCash(Math.max(0, Math.round(next)));
+      if (typeof showToast === 'function') {
+        const f = typeof ClickerEngine.formatCash === 'function' ? ClickerEngine.formatCash(Math.abs(g.amount)) : g.amount;
+        showToast(g.mode === 'set' ? `Ton solde a été fixé à ${f} € par l'administrateur.` : (g.amount >= 0 ? `L'administrateur t'a offert ${f} € !` : `L'administrateur a retiré ${f} € de ton solde.`) + (g.note ? ' ' + g.note : ''), 'gold');
+      }
+    });
+    push();
   }
 
   async function signOut() {
@@ -311,7 +330,7 @@ const Account = (() => {
   }
 
   return {
-    boot, onSignedIn, signOut, push,
+    boot, onSignedIn, signOut, push, applyGrants,
     get user() { return user; },
     get profile() { return profile; },
     setProfile(p) { profile = { ...(profile || {}), ...p }; },

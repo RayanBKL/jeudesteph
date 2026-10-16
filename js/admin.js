@@ -91,6 +91,22 @@
     bindOpen();
   }
 
+  function ask({ title, text, input, ok = 'OK', danger = false }) {
+    return new Promise(resolve => {
+      const el = document.createElement('div');
+      el.className = 'ad-modal'; el.style.zIndex = 40; el.style.alignItems = 'center';
+      el.innerHTML = `<div class="ad-sheet" style="max-width:420px"><h2>${esc(title)}</h2><p class="ad-sub">${esc(text || '')}</p>
+        ${input ? `<input class="ad-search" id="ask-in" placeholder="${esc(input)}" style="max-width:none" />` : ''}
+        <div class="ad-row" style="justify-content:flex-end"><button class="ad-btn" id="ask-no">Annuler</button><button class="ad-btn" id="ask-yes" style="${danger ? 'background:#b8211b' : 'background:#ffc43a;color:#120a04'}">${esc(ok)}</button></div></div>`;
+      document.body.appendChild(el);
+      const done = v => { el.remove(); resolve(v); };
+      el.querySelector('#ask-no').onclick = () => done(null);
+      el.querySelector('#ask-yes').onclick = () => done(input ? el.querySelector('#ask-in').value : true);
+      (el.querySelector('#ask-in') || el.querySelector('#ask-yes')).focus();
+    });
+  }
+  const parseAmount = v => { const n = Number(String(v).replace(/\s/g, '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
+
   async function openPlayer(id) {
     $('modal').hidden = false;
     $('modal').innerHTML = '<div class="ad-sheet"><p class="ad-msg">Chargement…</p></div>';
@@ -109,8 +125,36 @@
       </div>
       <div class="ad-card ad-scroll"><h3>Rangs par jeu</h3>${d.ratings.length ? `<table><thead><tr><th>Mois</th><th>Jeu</th><th>PL</th><th>V</th><th>D</th><th>N</th></tr></thead><tbody>${d.ratings.map(r => `<tr><td>${esc(r.season)}</td><td>${esc(GAME_NAMES[r.game] || r.game)}</td><td>${r.lp}</td><td>${r.wins}</td><td>${r.losses}</td><td>${r.draws}</td></tr>`).join('')}</tbody></table>` : '<p class="ad-sub">Aucune partie classée.</p>'}</div>
       <div class="ad-card ad-scroll" style="margin-top:14px"><h3>30 dernières parties classées</h3>${d.log.length ? `<table><thead><tr><th>Quand</th><th>Jeu</th><th>Résultat</th><th>Contre</th><th>PL</th></tr></thead><tbody>${d.log.map(l => `<tr style="cursor:default"><td>${ago(l.at)}</td><td>${esc(GAME_NAMES[l.game] || l.game)}</td><td>${l.result === 'win' ? '<span class="ad-ok">victoire</span>' : l.result === 'loss' ? 'défaite' : 'nul'}</td><td>${l.mode === 'pvp' ? 'un joueur' : 'l\'ordi'}</td><td>${l.delta > 0 ? '+' : ''}${l.delta}</td></tr>`).join('')}</tbody></table>` : '<p class="ad-sub">Aucune.</p>'}</div>
-      <div class="ad-row"><button class="ad-btn" id="flag">${d.flagged ? 'Retirer le signalement' : 'Signaler ce compte (le retire du classement collectionneurs)'}</button></div></div>`;
+      <div class="ad-card" style="margin-top:14px"><h3>Crédits (argent du joueur)</h3>
+        <p class="ad-sub">Solde enregistré : <b>${fmt(d.cash)} €</b>. Le changement est appliqué dans le jeu du joueur à sa prochaine connexion ou dans la minute s'il est en ligne.</p>
+        <div class="ad-row"><input class="ad-search" id="cash-amount" placeholder="Montant (ex. 50000)" style="margin:0;max-width:200px" /><input class="ad-search" id="cash-note" placeholder="Message au joueur (facultatif)" style="margin:0;max-width:260px" />
+        <button class="ad-btn" data-cash="add">Ajouter</button><button class="ad-btn" data-cash="sub">Retirer</button><button class="ad-btn" data-cash="set">Fixer le solde à</button></div></div>
+      <div class="ad-card ad-scroll" style="margin-top:14px"><h3>Journal des actions admin sur ce joueur</h3><div id="ad-log"><p class="ad-sub">Chargement…</p></div></div>
+      <div class="ad-row" style="justify-content:space-between;margin-top:18px"><button class="ad-btn" id="flag">${d.flagged ? 'Retirer le signalement' : 'Signaler ce compte (le retire du classement collectionneurs)'}</button>${d.is_admin ? '' : '<button class="ad-btn" id="del" style="background:#7a1812">Supprimer ce compte</button>'}</div></div>`;
     $('close').onclick = () => { $('modal').hidden = true; };
+    const renderLog = async () => {
+      const l = await sb.rpc('admin_log_list', { p_target: id, p_limit: 20 });
+      const rows = (l.data || []);
+      $('ad-log').innerHTML = rows.length ? `<table><tbody>${rows.map(x => `<tr style="cursor:default"><td>${ago(x.at)}</td><td>${esc(x.action)}</td><td>${esc(x.detail && x.detail.mode ? (x.detail.mode === 'set' ? 'fixé à ' : (x.detail.montant >= 0 ? '+' : '')) + fmt(x.detail.montant) + ' €' : '')} ${esc((x.detail && x.detail.note) || '')}</td></tr>`).join('')}</tbody></table>` : '<p class="ad-sub">Aucune action.</p>';
+    };
+    renderLog();
+    document.querySelectorAll('[data-cash]').forEach(b => b.addEventListener('click', async () => {
+      const amt = parseAmount($('cash-amount').value);
+      if (amt === null || amt < 0) { await ask({ title: 'Montant invalide', text: 'Entre un nombre positif, par exemple 50000.', ok: 'OK' }); return; }
+      const mode = b.dataset.cash === 'set' ? 'set' : 'add', value = b.dataset.cash === 'sub' ? -amt : amt;
+      const label = mode === 'set' ? `Fixer le solde de ${d.pseudo} à ${fmt(amt)} € ?` : `${value >= 0 ? 'Ajouter' : 'Retirer'} ${fmt(Math.abs(value))} € ${value >= 0 ? 'à' : 'de'} ${d.pseudo} ?`;
+      if (!(await ask({ title: 'Confirmer', text: label, ok: 'Confirmer' }))) return;
+      const r = await sb.rpc('admin_grant_cash', { p_id: id, p_mode: mode, p_amount: value, p_note: $('cash-note').value || null });
+      if (r.error) { await ask({ title: 'Erreur', text: r.error.message, ok: 'OK' }); return; }
+      $('cash-amount').value = ''; $('cash-note').value = ''; renderLog();
+    }));
+    $('del')?.addEventListener('click', async () => {
+      const typed = await ask({ title: 'Supprimer ce compte ?', text: `Définitif : le compte, la partie, les rangs, les amis. Pour confirmer, écris le pseudo « ${d.pseudo} ».`, input: 'Pseudo du joueur', ok: 'Supprimer', danger: true });
+      if (typed === null) return;
+      const r = await sb.rpc('admin_delete_user', { p_id: id, p_confirm: typed });
+      if (r.error) { await ask({ title: 'Suppression impossible', text: r.error.message, ok: 'OK' }); return; }
+      $('modal').hidden = true; await refresh();
+    });
     $('flag').onclick = async () => { await sb.rpc('admin_set_flag', { p_id: id, p_flagged: !d.flagged }); players = await load('admin_players', { p_search: search, p_limit: 300, p_offset: 0 }); openPlayer(id); if (tab !== 'overview') show(); };
   }
   function bindOpen() { document.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => openPlayer(el.dataset.open))); }
