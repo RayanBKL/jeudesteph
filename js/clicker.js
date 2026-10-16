@@ -410,6 +410,7 @@ const ClickerEngine = (() => {
       state.empireXP -= state.empireXPToNext;
       state.empireLevel++;
       state.empireXPToNext = xpForLevel(state.empireLevel);
+      try { if (typeof EmpireManager !== 'undefined' && EmpireManager.autoFillRooms) EmpireManager.autoFillRooms(); } catch (e) {}
       onEmpireLevelUp();
     }
   }
@@ -440,6 +441,13 @@ const ClickerEngine = (() => {
     if (!state.assignedPassiveCards.includes(itemId)) {
       state.assignedPassiveCards.push(itemId);
     }
+    recalcPassive();
+    saveToStorage();
+  }
+
+  // Remplace la liste complète des cartes qui rapportent (utilisé par l'Arrière-Boutique)
+  function setPassiveCards(ids) {
+    state.assignedPassiveCards = Array.from(new Set(ids || []));
     recalcPassive();
     saveToStorage();
   }
@@ -776,6 +784,7 @@ const ClickerEngine = (() => {
     unequipClickCard,
     assignPassiveCard,
     removePassiveCard,
+    setPassiveCards,
     recalcPassive,
     recalcClickPower,
     formatCash,

@@ -18,7 +18,7 @@
   <meta http-equiv="Expires" content="0" />
   <script>
     (function() {
-      const CURRENT_V = "68";
+      const CURRENT_V = "71";
       if (localStorage.getItem("app_asset_version") !== CURRENT_V) {
         localStorage.setItem("app_asset_version", CURRENT_V);
         if (!window.location.search.includes("t=")) {
@@ -27,11 +27,11 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=68" />
-  <link rel="stylesheet" href="css/empire.css?v=68" />
-  <link rel="stylesheet" href="css/theme.css?v=68" />
-  <link rel="stylesheet" href="css/packs.css?v=68" />
-  <link rel="stylesheet" href="css/games.css?v=68" />
+  <link rel="stylesheet" href="css/style.css?v=71" />
+  <link rel="stylesheet" href="css/empire.css?v=71" />
+  <link rel="stylesheet" href="css/theme.css?v=71" />
+  <link rel="stylesheet" href="css/packs.css?v=71" />
+  <link rel="stylesheet" href="css/games.css?v=71" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 </head>
@@ -697,6 +697,10 @@
             <button id="btn-toggle-2fa" class="btn-secondary btn-sm">Activer 2FA</button>
           </div>
         </div>
+        <div class="set-card hidden" id="set-admin">
+          <div><strong>Tableau de bord</strong><p class="sec-desc">Joueurs, évolution, signalements (réservé à l'admin).</p></div>
+          <a class="btn-secondary btn-sm" href="admin.html">Ouvrir</a>
+        </div>
         <div class="set-card set-danger">
           <div><strong>Recommencer à zéro</strong><p class="sec-desc">Efface ta progression sur ce compte. Définitif.</p></div>
           <button id="btn-reset-save-full" class="btn-secondary btn-sm">Réinitialiser</button>
@@ -743,6 +747,10 @@
   <button class="bottom-nav-btn" data-page="inventaire" aria-label="Collection">
     <span class="nav-icon">🎒</span>
     <span class="nav-label">Cartes</span>
+  </button>
+  <button class="bottom-nav-btn" data-page="empire" aria-label="Arrière-Boutique">
+    <span class="nav-icon">🏢</span>
+    <span class="nav-label">Empire</span>
   </button>
   <button class="bottom-nav-btn" data-page="talents" aria-label="Talents">
     <span class="nav-icon">⭐</span>
@@ -846,43 +854,43 @@
 </div>
 
 <!-- ═══ SCRIPTS ═══════════════════════════════════════════ -->
-<script src="js/dialog.js?v=68"></script>
-<script src="js/audio.js?v=68"></script>
-<script src="js/icons.js?v=68"></script>
-<script src="js/cigarettes_db.js?v=68"></script>
-<script src="js/data.js?v=68"></script>
-<script src="js/supabase.js?v=68"></script>
-<script src="js/account.js?v=68"></script>
-<script src="js/empire_db_expansion.js?v=68"></script>
-<script src="js/cards_extra.js?v=68"></script>
-<script src="js/empire_db.js?v=68"></script>
-<script src="js/balance.js?v=68"></script>
-<script src="js/clicker.js?v=68"></script>
-<script src="js/pack_art.js?v=68"></script>
-<script src="js/cards.js?v=68"></script>
-<script src="js/empire.js?v=68"></script>
-<script src="js/game.js?v=68"></script>
-<script src="js/race.js?v=68"></script>
-<script src="js/packs.js?v=68"></script>
-<script src="js/market.js?v=68"></script>
-<script src="js/casino.js?v=68"></script>
-<script src="js/friends.js?v=68"></script>
-<script src="js/talents.js?v=68"></script>
-<script src="js/multiplayer.js?v=68"></script>
-<script src="js/games/league.js?v=68"></script>
-<script src="js/games/prestige.js?v=68"></script>
-<script src="js/games/game_ui.js?v=68"></script>
-<script src="js/games/bataille.js?v=68"></script>
-<script src="js/games/des421.js?v=68"></script>
-<script src="js/games/pbc.js?v=68"></script>
-<script src="js/games/course.js?v=68"></script>
-<script src="js/games/ut.js?v=68"></script>
-<script src="js/games/quiz.js?v=68"></script>
-<script src="js/games/online.js?v=68"></script>
-<script src="js/social.js?v=68"></script>
-<script src="js/games/hub.js?v=68"></script>
-<script src="js/ui.js?v=68"></script>
-<script src="js/profile.js?v=68"></script>
-<script src="js/main.js?v=68"></script>
+<script src="js/dialog.js?v=71"></script>
+<script src="js/audio.js?v=71"></script>
+<script src="js/icons.js?v=71"></script>
+<script src="js/cigarettes_db.js?v=71"></script>
+<script src="js/data.js?v=71"></script>
+<script src="js/supabase.js?v=71"></script>
+<script src="js/account.js?v=71"></script>
+<script src="js/empire_db_expansion.js?v=71"></script>
+<script src="js/cards_extra.js?v=71"></script>
+<script src="js/empire_db.js?v=71"></script>
+<script src="js/balance.js?v=71"></script>
+<script src="js/clicker.js?v=71"></script>
+<script src="js/pack_art.js?v=71"></script>
+<script src="js/cards.js?v=71"></script>
+<script src="js/empire.js?v=71"></script>
+<script src="js/game.js?v=71"></script>
+<script src="js/race.js?v=71"></script>
+<script src="js/packs.js?v=71"></script>
+<script src="js/market.js?v=71"></script>
+<script src="js/casino.js?v=71"></script>
+<script src="js/friends.js?v=71"></script>
+<script src="js/talents.js?v=71"></script>
+<script src="js/multiplayer.js?v=71"></script>
+<script src="js/games/league.js?v=71"></script>
+<script src="js/games/prestige.js?v=71"></script>
+<script src="js/games/game_ui.js?v=71"></script>
+<script src="js/games/bataille.js?v=71"></script>
+<script src="js/games/des421.js?v=71"></script>
+<script src="js/games/pbc.js?v=71"></script>
+<script src="js/games/course.js?v=71"></script>
+<script src="js/games/ut.js?v=71"></script>
+<script src="js/games/quiz.js?v=71"></script>
+<script src="js/games/online.js?v=71"></script>
+<script src="js/social.js?v=71"></script>
+<script src="js/games/hub.js?v=71"></script>
+<script src="js/ui.js?v=71"></script>
+<script src="js/profile.js?v=71"></script>
+<script src="js/main.js?v=71"></script>
 </body>
 </html>
