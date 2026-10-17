@@ -294,7 +294,6 @@ function showGameUI() {
   updateHUD();
   startFreePackTimer();
   if (typeof TalentsEngine !== 'undefined' && TalentsEngine.init) TalentsEngine.init();
-  if (typeof MultiplayerEngine !== 'undefined' && MultiplayerEngine.init) MultiplayerEngine.init();
   if (typeof Casino !== 'undefined' && Casino.init) Casino.init();
   showPage('clicker');
 

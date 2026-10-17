@@ -123,7 +123,7 @@ const EmpireManager = (() => {
       if (typeof GameHub !== 'undefined') {
         if (GameHub.keepScreenOnce) GameHub.keepScreenOnce = false;
         else GameHub.render();
-      } else if (typeof MultiplayerEngine !== 'undefined') MultiplayerEngine.render();
+      }
     }
   }
 
@@ -881,9 +881,9 @@ const EmpireManager = (() => {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // BOURSE & MARCHÉ P2P (Enchères, Ventes & Argus Mondial)
+  // BOURSE & MARCHÉ P2P (ventes entre joueurs & Argus Mondial)
   // Règle stricte : Une carte ne peut être achetée QUE si elle est en circulation
-  // et qu'un joueur / collectionneur l'a mise en vente ou aux enchères !
+  // et qu'un joueur / collectionneur l'a mise en vente !
   // ═══════════════════════════════════════════════════════════
 
   let bourseTab = 'listings'; // 'listings' | 'catalog' | 'my_sales'
@@ -896,19 +896,6 @@ const EmpireManager = (() => {
   let boursePage = 1;
   const BOURSE_PAGE_SIZE = 32;
 
-  const COMMUNITY_SELLERS = [
-    'Stéphane_Le_Fumeur',
-    'Maxime_Puff_75',
-    'Baron_De_Belleville',
-    'CigaretteQueen_94',
-    'Mika_Vapote',
-    'Tonton_Gégé_69',
-    'Snoop_Lighter_13',
-    'Collectionneur_Pigalle',
-    'Chantal_Tabac_Presse',
-    'Dédé_Le_Brocanteur'
-  ];
-
   // Cartes de base initiales connues de la communauté (Communes & Peu Communes de départ)
   // Strictement aucune Mythique ni Légendaire pour préserver la règle absolue !
   const INITIAL_CIRCULATION_SEED = [
@@ -917,6 +904,26 @@ const EmpireManager = (() => {
     'bic-jetable', 'bic-mini', 'ricard', 'kronenbourg-1664', 'claquettes-chaussettes',
     'bond-street', 'marlboro-medium', 'pastis-51', 'joint-basics', 'shit-marocain'
   ];
+
+  // ── Vrai marché entre joueurs (serveur) ─────────────────────
+  // Plus aucun faux acheteur : les offres viennent uniquement des autres joueurs, et seuls de vrais joueurs achètent.
+  let marketFetchedAt = 0, marketFetching = false;
+  async function refreshMarket(force) {
+    if (marketFetching || !window.sb || !(window.Account && Account.user)) return false;
+    if (!force && Date.now() - marketFetchedAt < 8000) return false;
+    marketFetching = true;
+    try {
+      const { data, error } = await window.sb.rpc('market_open');
+      if (error || !Array.isArray(data)) return false;
+      const all = data.map(o => ({ id: o.id, itemId: o.card, seller: o.mine ? 'Vous' : o.seller, isPlayer: !!o.mine, type: 'sale', price: o.price, currentBid: o.price, minBid: o.price, created: Date.parse(o.at), server: true }))
+        .filter(l => getEmpireItemById(l.itemId));
+      const changed = JSON.stringify(all.map(l => l.id)) !== JSON.stringify((state.marketListings || []).map(l => l.id));
+      state.marketListings = all;
+      state.myListings = all.filter(l => l.isPlayer);
+      marketFetchedAt = Date.now();
+      return changed;
+    } finally { marketFetching = false; }
+  }
 
   function ensureCirculationAndMarket() {
     if (!state.circulatedItems) state.circulatedItems = {};
@@ -937,53 +944,12 @@ const EmpireManager = (() => {
       });
     }
 
-    // 3. Nettoyer les enchères terminées / expirées et ne conserver que les offres réelles
-    const now = Date.now();
-    state.marketListings = (state.marketListings || []).filter(l => (!l.endsAt || l.endsAt > now) && (l.isPlayer || l.seller === 'Vous' || l.isRealPlayer));
-    state.myListings = (state.myListings || []).filter(l => !l.endsAt || l.endsAt > now);
-
-    // 4. Marché Réel : Aucune injection de faux bots PNJ.
-    // Seuls les vrais joueurs et vos propres annonces sont visibles sur la Place de Marché.
-
-    // 5. Simuler les achats de collectionneurs sur les annonces mises en vente par le joueur si besoin
-    simulatePlayerSales();
-  }
-
-  function generateCommunityListings() {
-    const circulatedIds = Object.keys(state.circulatedItems || {}).filter(id => {
-      const item = getEmpireItemById(id);
-      return !!item;
-    });
-    if (circulatedIds.length === 0) return;
-
-    const now = Date.now();
-    const needed = Math.max(0, 16 - state.marketListings.length);
-
-    for (let i = 0; i < needed; i++) {
-      const randId = circulatedIds[Math.floor(Math.random() * circulatedIds.length)];
-      const item = getEmpireItemById(randId);
-      if (!item) continue;
-
-      const isAuction = Math.random() < 0.35;
-      const fluc = (Math.random() * 0.4) - 0.15; // -15% à +25%
-      const price = Math.max(10, Math.round(item.value * (1 + fluc)));
-      const startBid = Math.max(5, Math.round(price * 0.65));
-
-      const listing = {
-        id: 'lst_' + Math.random().toString(36).substr(2, 9),
-        itemId: item.id,
-        seller: COMMUNITY_SELLERS[Math.floor(Math.random() * COMMUNITY_SELLERS.length)],
-        isPlayer: false,
-        type: isAuction ? 'auction' : 'sale',
-        price: price,
-        currentBid: isAuction ? startBid : price,
-        minBid: isAuction ? Math.ceil(startBid * 1.1) : price,
-        highBidder: isAuction ? 'Collector_Anonyme' : null,
-        endsAt: now + (15 + Math.floor(Math.random() * 120)) * 60 * 1000,
-        created: now
-      };
-
-      state.marketListings.push(listing);
+    // 3. Anciennes annonces locales (avant le vrai marché) : les cartes mises « en vente » reviennent dans l'inventaire
+    if ((state.myListings || []).some(l => !l.server)) {
+      (state.myListings || []).forEach(l => { if (!l.server) state.inventory[l.itemId] = (state.inventory[l.itemId] || 0) + 1; });
+      state.myListings = [];
+      state.marketListings = [];
+      saveState();
     }
   }
 
@@ -1016,50 +982,6 @@ const EmpireManager = (() => {
     if (!rows.length) return 0;
     const avg = rows.reduce((a, it) => a + marketValue(it) / it.value, 0) / rows.length;
     return Math.round((avg - 1) * 1000) / 10;
-  }
-
-  function simulatePlayerSales() {
-    if (!state.myListings || state.myListings.length === 0) return;
-    const now = Date.now();
-    const remainingMyListings = [];
-
-    state.myListings.forEach(listing => {
-      const item = getEmpireItemById(listing.itemId);
-      const ratio = item ? (listing.price / Math.max(1, item.value)) : 1.5;
-
-      // Chance de vente selon le prix demandé par rapport à la cote actuelle :
-      // ×0,8 → 70 %, ×1 → 45 %, ×1,3 → 15 %, au-delà de ×1,5 → personne n'achète
-      const mv = item ? marketValue(item) : listing.price;
-      const r = listing.price / Math.max(1, mv);
-      const chance = r <= 0.8 ? 0.7 : r <= 1 ? 0.45 : r <= 1.3 ? 0.15 : r <= 1.5 ? 0.04 : 0;
-      void ratio;
-      if (Math.random() < chance) {
-        const buyer = COMMUNITY_SELLERS[Math.floor(Math.random() * COMMUNITY_SELLERS.length)];
-        const earnings = listing.price;
-        recordSale(listing.itemId, listing.price);
-
-        if (typeof earnMoney === 'function') {
-          earnMoney(earnings);
-        } else if (typeof ClickerEngine !== 'undefined' && ClickerEngine.addCash) {
-          ClickerEngine.addCash(earnings);
-        }
-
-        // Retirer aussi du grand marché
-        state.marketListings = state.marketListings.filter(l => l.id !== listing.id);
-
-        setTimeout(() => {
-          if (typeof ClickerEngine !== 'undefined' && ClickerEngine.showToast) {
-            ClickerEngine.showToast(`🎉 Votre carte "${item?.name}" a été vendue à ${buyer} pour ${formatCash(earnings)} € !`, 'gold');
-          } else if (typeof showToast === 'function') {
-            showToast(`Votre carte "${item?.name}" a été vendue pour ${formatCash(earnings)} € !`, 'info');
-          }
-        }, 600);
-      } else {
-        remainingMyListings.push(listing);
-      }
-    });
-
-    state.myListings = remainingMyListings;
   }
 
   // ── MOTEUR ÉCONOMIQUE BOURSE : OFFRE & DEMANDE RÉALISTE ──────
@@ -1132,6 +1054,7 @@ const EmpireManager = (() => {
     if (!container) return;
 
     ensureCirculationAndMarket();
+    refreshMarket().then(changed => { if (changed && currentPage === 'bourse') renderBourse(); });
 
     // Indices calculés à partir des vraies ventes (0 % tant que rien ne s'est échangé)
     const indices = [
@@ -1287,7 +1210,7 @@ const EmpireManager = (() => {
               Toutes les Offres Actives (${metrics.supply})
             </h4>
             <span style="font-size:0.7rem;color:var(--text-muted)">
-              ${metrics.directSales.length} Vente(s) Directe(s) &bull; ${metrics.auctions.length} Enchère(s)
+              ${metrics.directSales.length} offre(s) en vente
             </span>
           </div>
 
@@ -1394,14 +1317,6 @@ const EmpireManager = (() => {
       });
     });
 
-    modal.querySelectorAll('.btn-ob-bid').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        modal.remove();
-        bidOnAuction(id);
-      });
-    });
-
     modal.querySelectorAll('.btn-ob-cancel').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
@@ -1441,18 +1356,13 @@ const EmpireManager = (() => {
     container.innerHTML = `
       <div class="bourse-info-banner" style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:0.8rem;color:#fde047;line-height:1.4">
         ⚡ <strong>Place de Marché Entre Joueurs & Collectionneurs</strong> :
-        Seules les cartes trouvées dans des boosters et mises en vente ou aux enchères par des personnes apparaissent ici.
+        Ici, uniquement des cartes mises en vente par de vrais joueurs, à prix fixe. Tu paies, tu reçois la carte ; le vendeur touche le prix moins 5 % de commission.
       </div>
 
       <!-- Filtres et Recherche -->
       <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <input type="text" id="bourse-listings-search" class="game-input" style="flex:2;min-width:180px;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid var(--border-lit);color:#fff;font-size:0.8rem"
                placeholder="Rechercher une offre, un vendeur ou une carte..." value="${bourseSearchQuery}" />
-        <select id="bourse-listing-type-select" class="game-input" style="flex:1;min-width:130px;padding:8px;font-size:0.75rem;background:#111;color:#fff;border-radius:8px">
-          <option value="all" ${bourseListingTypeFilter === 'all' ? 'selected' : ''}>Toutes les offres</option>
-          <option value="sale" ${bourseListingTypeFilter === 'sale' ? 'selected' : ''}>Ventes Directes</option>
-          <option value="auction" ${bourseListingTypeFilter === 'auction' ? 'selected' : ''}>Enchères</option>
-        </select>
       </div>
 
       <!-- Onglets Catégories -->
@@ -1594,13 +1504,6 @@ const EmpireManager = (() => {
       });
     });
 
-    grid.querySelectorAll('.btn-bid-auction').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.id;
-        bidOnAuction(id);
-      });
-    });
 
     grid.querySelectorAll('.btn-cancel-listing').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1912,7 +1815,7 @@ const EmpireManager = (() => {
     container.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:12px 16px;margin-bottom:14px;flex-wrap:wrap;gap:10px">
         <div>
-          <h3 style="font-family:var(--font-title);color:var(--empire-gold);font-size:1.2rem">🏷️ Votre Boutique & Enchères</h3>
+          <h3 style="font-family:var(--font-title);color:var(--empire-gold);font-size:1.2rem">🏷️ Ta boutique</h3>
           <p style="font-size:0.78rem;color:var(--text-muted)">Vous avez <strong>${myListings.length}</strong> annonce(s) en ligne sur la Bourse.</p>
         </div>
         <button id="btn-open-new-sale-modal" class="btn-empire btn-empire-primary" style="padding:8px 18px;font-size:0.8rem">
@@ -2010,97 +1913,52 @@ const EmpireManager = (() => {
   }
 
   // ── 4. ACTIONS : ACHETER UNE ANNONCE DU MARCHÉ ──────────────
-  function buyMarketListing(listingId) {
+  async function buyMarketListing(listingId) {
     const listing = state.marketListings.find(l => l.id === listingId);
     if (!listing) return showToast('Cette offre n\'est plus disponible !', 'warning');
-
-    if (listing.isPlayer || listing.seller === 'Vous') {
-      return showToast('Vous ne pouvez pas acheter votre propre annonce !', 'warning');
-    }
-
-    const price = listing.type === 'auction' ? (listing.price || listing.currentBid) : listing.price;
-
-    if (typeof spendMoney === 'function') {
-      if (!spendMoney(price)) {
-        return showToast('Pas assez d\'argent pour acquérir cette carte !', 'error');
+    if (listing.isPlayer || listing.seller === 'Vous') return showToast('Vous ne pouvez pas acheter votre propre annonce !', 'warning');
+    const price = listing.price;
+    if (ClickerEngine.getCash() < price) return showToast('Pas assez d\'argent pour acquérir cette carte !', 'error');
+    if (buying) return;
+    buying = true;
+    try {
+      // 1) le serveur doit connaître ta sauvegarde à jour (solde)  2) on débite  3) le serveur valide l'achat  4) la carte arrive
+      if (window.Account && Account.push) await Account.push();
+      if (typeof spendMoney === 'function') { if (!spendMoney(price)) return showToast('Pas assez d\'argent pour acquérir cette carte !', 'error'); }
+      else ClickerEngine.setCash(ClickerEngine.getCash() - price);
+      const { data, error } = await window.sb.rpc('market_buy', { p_id: listingId });
+      if (error) {
+        if (typeof earnMoney === 'function') earnMoney(price); else ClickerEngine.setCash(ClickerEngine.getCash() + price);   // remboursement
+        await refreshMarket(true);
+        showToast((error.message || 'Achat impossible').replace(/^.*?:\s*/, ''), 'warning');
+        return renderBourse();
       }
-    } else {
-      const cash = ClickerEngine.getCash();
-      if (cash < price) {
-        return showToast('Pas assez d\'argent pour acquérir cette carte !', 'error');
-      }
-      ClickerEngine.setCash(cash - price);
-    }
-
-    // Retirer l'offre du marché
-    state.marketListings = state.marketListings.filter(l => l.id !== listingId);
-    recordSale(listing.itemId, price);
-
-    // Ajouter la carte à l'inventaire du joueur
-    addToInventory(listing.itemId);
-    saveState();
-    recalcAllPassives();
-
-    const item = getEmpireItemById(listing.itemId);
-    if (window.SoundFX && SoundFX.gold) SoundFX.gold();
-
-    showToast(`🎉 Félicitations ! Vous avez acheté ${item?.name} à ${listing.seller} pour ${formatCash(price)} € !`, 'success');
-    renderBourse();
+      recordSale(listing.itemId, price);
+      addToInventory(listing.itemId);
+      state.marketListings = state.marketListings.filter(l => l.id !== listingId);
+      saveState();
+      autoFillRooms();
+      recalcAllPassives();
+      if (window.Account && Account.push) Account.push();
+      const item = getEmpireItemById(listing.itemId);
+      if (window.SoundFX && SoundFX.gold) SoundFX.gold();
+      showToast(`Achat réussi : ${item?.name} à ${listing.seller} pour ${formatCash(price)} € !`, 'success');
+      renderBourse();
+    } finally { buying = false; }
   }
+  let buying = false;
 
-  function bidOnAuction(listingId) {
-    const listing = state.marketListings.find(l => l.id === listingId);
-    if (!listing) return showToast('Cette enchère est terminée !', 'warning');
-
-    if (listing.isPlayer || listing.seller === 'Vous') {
-      return showToast('Vous ne pouvez pas enchérir sur votre propre carte !', 'warning');
-    }
-
-    const bidAmount = listing.minBid || Math.ceil(listing.currentBid * 1.1);
-
-    if (typeof spendMoney === 'function') {
-      if (!spendMoney(bidAmount)) {
-        return showToast('Fonds insuffisants pour placer cette enchère !', 'error');
-      }
-    } else {
-      const cash = ClickerEngine.getCash();
-      if (cash < bidAmount) {
-        return showToast('Fonds insuffisants pour placer cette enchère !', 'error');
-      }
-      ClickerEngine.setCash(cash - bidAmount);
-    }
-
-    listing.currentBid = bidAmount;
-    listing.minBid = Math.ceil(bidAmount * 1.1);
-    listing.highBidder = 'Vous';
-
-    // Raccourcir le temps restant pour plus de fun
-    const now = Date.now();
-    if (listing.endsAt - now > 600000) {
-      listing.endsAt = now + 300000; // 5 min
-    }
-
-    saveState();
-    if (window.SoundFX) SoundFX.click();
-
-    showToast(`🔨 Enchère placée à ${formatCash(bidAmount)} € ! Vous menez l'enchère.`, 'info');
-    renderBourse();
-  }
-
-  function cancelPlayerListing(listingId) {
-    const myL = (state.myListings || []).find(l => l.id === listingId);
-    const mktL = (state.marketListings || []).find(l => l.id === listingId);
-    const listing = myL || mktL;
-    if (!listing) return;
-
-    // Rendre la carte à l'inventaire
-    addToInventory(listing.itemId);
-
+  async function cancelPlayerListing(listingId) {
+    const { data, error } = await window.sb.rpc('market_cancel', { p_id: listingId });
+    if (error) { await refreshMarket(true); showToast((error.message || 'Annulation impossible').replace(/^.*?:\s*/, ''), 'warning'); return renderBourse(); }
+    state.inventory[data] = (state.inventory[data] || 0) + 1;     // la carte revient dans l'inventaire
     state.myListings = (state.myListings || []).filter(l => l.id !== listingId);
     state.marketListings = (state.marketListings || []).filter(l => l.id !== listingId);
-
     saveState();
-    showToast('Annonce retirée : Votre carte a été remise dans votre inventaire.', 'info');
+    autoFillRooms();
+    recalcAllPassives();
+    if (window.Account && Account.push) Account.push();
+    showToast('Annonce retirée : ta carte est revenue dans ton inventaire.', 'info');
     renderBourse();
   }
 
@@ -2133,18 +1991,6 @@ const EmpireManager = (() => {
         </div>
 
         <div>
-          <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px">Type de vente :</label>
-          <div style="display:flex;gap:8px">
-            <button type="button" id="btn-sell-type-sale" class="btn-empire btn-empire-primary" style="flex:1;font-size:0.78rem">
-              🏷️ Vente Directe
-            </button>
-            <button type="button" id="btn-sell-type-auction" class="btn-empire btn-empire-secondary" style="flex:1;font-size:0.78rem">
-              🔨 Enchère
-            </button>
-          </div>
-        </div>
-
-        <div>
           <label id="sell-price-label" style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:6px">
             Prix de vente souhaité (€) :
           </label>
@@ -2171,67 +2017,31 @@ const EmpireManager = (() => {
       prevBox.appendChild(CardsRenderer.buildCard(item, { compact: true }));
     }
 
-    let selectedType = 'sale';
-    const btnSale = modal.querySelector('#btn-sell-type-sale');
-    const btnAuction = modal.querySelector('#btn-sell-type-auction');
-    const priceLabel = modal.querySelector('#sell-price-label');
     const priceInput = modal.querySelector('#sell-price-input');
-
-    btnSale?.addEventListener('click', () => {
-      selectedType = 'sale';
-      btnSale.className = 'btn-empire btn-empire-primary';
-      btnAuction.className = 'btn-empire btn-empire-secondary';
-      if (priceLabel) priceLabel.textContent = 'Prix de vente fixe (€) :';
-    });
-
-    btnAuction?.addEventListener('click', () => {
-      selectedType = 'auction';
-      btnAuction.className = 'btn-empire btn-empire-primary';
-      btnSale.className = 'btn-empire btn-empire-secondary';
-      if (priceLabel) priceLabel.textContent = 'Mise à prix de départ (€) :';
-      if (priceInput) priceInput.value = Math.max(5, Math.round(item.value * 0.7));
-    });
 
     modal.querySelectorAll('.btn-close-sell-modal').forEach(b => {
       b.onclick = () => modal.remove();
     });
 
-    modal.querySelector('#btn-confirm-post-listing')?.addEventListener('click', () => {
+    modal.querySelector('#btn-confirm-post-listing')?.addEventListener('click', async () => {
       const priceVal = parseInt(priceInput?.value || '0');
       if (isNaN(priceVal) || priceVal <= 0) return showToast('Veuillez entrer un montant valide supérieur à 0.', 'warning');
-
-      if ((state.inventory[itemId] || 0) <= 0) {
-        modal.remove();
-        return showToast('Vous ne possédez plus cette carte.', 'error');
-      }
-
-      // Réserver 1 exemplaire depuis l'inventaire
+      if ((state.inventory[itemId] || 0) <= 0) { modal.remove(); return showToast('Vous ne possédez plus cette carte.', 'error'); }
+      const btn = modal.querySelector('#btn-confirm-post-listing'); btn.disabled = true;
+      // la sauvegarde en ligne (qui contient encore la carte) part d'abord, puis le serveur ouvre l'annonce
+      if (window.Account && Account.push) await Account.push();
+      const { error } = await window.sb.rpc('market_list', { p_card: itemId, p_price: priceVal });
+      if (error) { btn.disabled = false; return showToast((error.message || 'Mise en vente impossible').replace(/^.*?:\s*/, ''), 'warning'); }
+      // la carte est mise de côté jusqu'à la vente ou l'annulation
       state.inventory[itemId]--;
       if (state.inventory[itemId] <= 0) delete state.inventory[itemId];
-
-      const now = Date.now();
-      const listing = {
-        id: 'lst_' + Math.random().toString(36).substr(2, 9),
-        itemId: itemId,
-        seller: 'Vous',
-        isPlayer: true,
-        type: selectedType,
-        price: priceVal,
-        currentBid: selectedType === 'auction' ? priceVal : priceVal,
-        minBid: selectedType === 'auction' ? Math.ceil(priceVal * 1.1) : priceVal,
-        highBidder: null,
-        endsAt: now + (selectedType === 'auction' ? 3600000 : 7200000), // 1h à 2h
-        created: now
-      };
-
-      state.marketListings.unshift(listing);
-      state.myListings.unshift(listing);
-
       saveState();
+      autoFillRooms();
       recalcAllPassives();
+      if (window.Account && Account.push) Account.push();
       modal.remove();
-
-      showToast(`🏷️ Votre carte "${item.name}" est désormais en vente sur la Bourse pour ${formatCash(priceVal)} € !`, 'success');
+      await refreshMarket(true);
+      showToast(`Ta carte "${item.name}" est en vente pour ${formatCash(priceVal)} €. Tu recevras l'argent quand un joueur l'achète.`, 'success');
       bourseTab = 'my_sales';
       renderBourse();
     });
