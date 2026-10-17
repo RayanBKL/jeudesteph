@@ -9,6 +9,7 @@ const Social = (() => {
   let clanView = 'mon';
   let inviteShown = null;
   let waiting = null;
+  let unread = { clan: 0, dm: {} };
   let started = false;
 
   const sb = () => window.sb;
@@ -33,12 +34,14 @@ const Social = (() => {
 
   async function refreshBadge() {
     if (!online()) return;
-    const { data } = await sb().rpc('friends_list');
-    const n = (data || []).filter(f => f.rel === 'recue').length;
-    ['badge-friends', 'top-friends-badge'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.textContent = n; el.classList.toggle('hidden', !n); }
-    });
+    const [{ data }, un] = await Promise.all([sb().rpc('friends_list'), sb().rpc('chat_unread')]);
+    const requests = (data || []).filter(f => f.rel === 'recue').length;
+    unread = (un && un.data) ? { clan: un.data.clan || 0, dm: un.data.dm || {} } : unread;
+    const msgs = (unread.clan || 0) + Object.values(unread.dm).reduce((a, b) => a + (+b || 0), 0);
+    const n = requests + msgs;
+    const el1 = document.getElementById('badge-friends'), el2 = document.getElementById('top-friends-badge');
+    if (el1) { el1.textContent = requests + Object.values(unread.dm).reduce((a, b) => a + (+b || 0), 0); el1.classList.toggle('hidden', !el1.textContent || el1.textContent === '0'); }
+    if (el2) { el2.textContent = n; el2.classList.toggle('hidden', !n); }
   }
 
   // ── Onglets du profil ──
@@ -54,6 +57,8 @@ const Social = (() => {
     const host = document.getElementById('prof-pane-amis');
     if (!host) return;
     if (!online()) { host.innerHTML = '<p class="soc-empty">Connecte-toi pour ajouter des amis.</p>'; return; }
+    const un = await sb().rpc('chat_unread');
+    if (un && un.data) unread = { clan: un.data.clan || 0, dm: un.data.dm || {} };
     const { data, error } = await sb().rpc('friends_list');
     if (error) { host.innerHTML = `<p class="soc-empty">${esc(msg(error))}</p>`; return; }
     const list = data || [];
@@ -70,7 +75,7 @@ const Social = (() => {
       <div class="soc-list">
         ${received.length ? `<h4>Demandes reçues</h4>${received.map(f => row(f, `<button class="btn-empire btn-empire-primary soc-btn" data-accept="${f.user_id}">Accepter</button><button class="btn-empire btn-empire-secondary soc-btn" data-refuse="${f.user_id}">✕</button>`)).join('')}` : ''}
         <h4>Mes amis (${friends.length})</h4>
-        ${friends.length ? friends.map(f => row(f, `<button class="btn-empire btn-empire-primary soc-btn" data-duel="${f.user_id}" data-name="${esc(f.pseudo)}">Défier</button><button class="btn-empire btn-empire-secondary soc-btn" data-del="${f.user_id}" aria-label="Retirer">✕</button>`)).join('') : '<p class="soc-empty">Personne pour l\'instant. Ajoute quelqu\'un avec son pseudo ou son code ami.</p>'}
+        ${friends.length ? friends.map(f => row(f, `<button class="btn-empire btn-empire-secondary soc-btn" data-msg="${f.user_id}" data-name="${esc(f.pseudo)}">Message${(unread.dm[f.user_id] || 0) ? ` <b class="chat-dot">${unread.dm[f.user_id]}</b>` : ''}</button><button class="btn-empire btn-empire-primary soc-btn" data-duel="${f.user_id}" data-name="${esc(f.pseudo)}">Défier</button><button class="btn-empire btn-empire-secondary soc-btn" data-del="${f.user_id}" aria-label="Retirer">✕</button>`)).join('') : '<p class="soc-empty">Personne pour l\'instant. Ajoute quelqu\'un avec son pseudo ou son code ami.</p>'}
         ${sent.length ? `<h4>Demandes envoyées</h4>${sent.map(f => row(f, `<button class="btn-empire btn-empire-secondary soc-btn" data-del="${f.user_id}">Annuler</button>`)).join('')}` : ''}
       </div>`;
     const note = (t, bad) => { const m = host.querySelector('#soc-msg'); m.textContent = t; m.className = 'soc-msg' + (bad ? ' is-error' : ''); };
@@ -92,6 +97,7 @@ const Social = (() => {
       await sb().rpc('friend_remove', { p_other: b.dataset.del }); renderFriends();
     }));
     host.querySelectorAll('[data-duel]').forEach(b => b.addEventListener('click', () => chooseGame(b.dataset.duel, b.dataset.name)));
+    host.querySelectorAll('[data-msg]').forEach(b => b.addEventListener('click', () => Chat.open({ scope: 'dm', target: b.dataset.msg, title: b.dataset.name })));
   }
 
   // ── Défier un ami ──
@@ -160,6 +166,8 @@ const Social = (() => {
     const host = document.getElementById('prof-pane-clan');
     if (!host) return;
     if (!online()) { host.innerHTML = '<p class="soc-empty">Connecte-toi pour rejoindre un clan.</p>'; return; }
+    const un = await sb().rpc('chat_unread');
+    if (un && un.data) unread = { clan: un.data.clan || 0, dm: un.data.dm || {} };
     const { data: mine } = await sb().rpc('clan_mine');
     const bar = `<div class="cat-tabs hub-tabs"><button class="cat-tab ${clanView === 'mon' ? 'active' : ''}" data-cv="mon">${mine ? 'Mon clan' : 'Rejoindre'}</button><button class="cat-tab ${clanView === 'top' ? 'active' : ''}" data-cv="top">Classement</button></div>`;
     let body = '';
@@ -200,6 +208,7 @@ const Social = (() => {
       ${c.me_leader ? `<form class="soc-add" id="clan-set"><input class="game-input" id="cl-descr" maxlength="140" placeholder="Description" value="${esc(c.descr)}" />
         <button class="btn-empire btn-empire-secondary" type="submit">OK</button>
         <button class="btn-empire btn-empire-secondary" type="button" id="cl-open">${c.open ? 'Ouvert' : 'Fermé'}</button></form>` : ''}
+      <button class="btn-empire btn-empire-primary soc-wide" id="clan-chat" style="margin:0 0 8px">Discussion du clan${(unread.clan || 0) ? ` <b class="chat-dot">${unread.clan}</b>` : ''}</button>
       <h4>Membres</h4>
       ${c.members.map(m => `<div class="soc-row">${avatar(m)}<span class="soc-name"><strong>${m.leader ? '★ ' : ''}${esc(m.pseudo)}</strong><em><i class="soc-dot ${m.online ? 'on' : ''}"></i>Niv. ${m.level} · ${m.lp} PL</em></span>
         ${c.me_leader && !m.leader ? `<button class="btn-empire btn-empire-secondary soc-btn" data-kick="${m.user_id}">Virer</button>` : ''}</div>`).join('')}
@@ -225,6 +234,7 @@ const Social = (() => {
       if (error) return note(msg(error));
       renderClan();
     }));
+    host.querySelector('#clan-chat')?.addEventListener('click', () => Chat.open({ scope: 'clan', title: 'Clan ' + (mine ? mine.name : '') }));
     host.querySelector('#clan-leave')?.addEventListener('click', async () => {
       if (!(await GameDialog.confirm('Tu pourras en rejoindre un autre quand tu veux.', { title: 'Quitter le clan ?', ok: 'Quitter', danger: true }))) return;
       await sb().rpc('clan_leave'); clanView = 'mon'; renderClan();

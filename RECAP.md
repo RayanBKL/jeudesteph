@@ -86,6 +86,7 @@ Reste à faire côté design : remplacer les emojis (navigation, titres, paquets
 - **Économie** : clic de base 1 €, paquets ×12, cotes ×12, cartes rares et + réduites (`js/balance.js`, version 3, simulation `scripts/simulate_economy.js`). Les emplacements de l'Empire étaient écrasés (CSS) : corrigé, c'est eux qui donnent le revenu passif.
 - **Sauvegarde automatique chaque nuit** dans la base (`006_sauvegarde_auto.sql`, 7 jours) + `python3 scripts/backup_db.py` (copie locale).
 - **Tableau de bord admin** (`admin.html`) : joueurs, évolution, signalements, crédits, suppression de compte. Entrée « Empire » dans la barre du bas. Revenu passif des pièces réparé (copie d'état).
+- **Chat** de clan et entre amis (avec signalement et modération admin), **textes légaux** (CGU, confidentialité, mentions légales, case à cocher), **nettoyage** du code ancien (`friends.js`, ancien système de comptes en localStorage avec mots de passe en clair, méthodes `CloudSync` inutilisées, `supabase_schema.sql`). Gardés volontairement : `multiplayer.js` (« Duels de cartes ») et l'ancien `Market`.
 - Conflits de sauvegarde entre deux appareils : la partie la plus avancée est gardée sans poser de question.
 
 ### 8e passe (13/10/2026)

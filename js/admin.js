@@ -9,7 +9,7 @@
   const fmt = n => { n = Number(n) || 0; if (n >= 1e9) return (n / 1e9).toFixed(1).replace('.', ',') + ' Md'; if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'; if (n >= 1e4) return Math.round(n / 1e3) + ' k'; return Math.round(n).toLocaleString('fr-FR'); };
   const GAME_NAMES = { ut: 'Ultimate Comptoir', bataille: 'Bataille', des421: '421', pbc: 'Pierre-Briquet-Clope', quiz: 'Quiz', course: 'Course' };
   const COLORS = { ut: '#4fe08c', bataille: '#ffc43a', des421: '#ff8a4f', pbc: '#e2322b', quiz: '#6aa8ff', course: '#c58bff' };
-  let tab = 'overview', overview = null, players = null, sortKey = 'last_seen', sortDir = -1, search = '';
+  let tab = 'overview', overview = null, reports = null, players = null, sortKey = 'last_seen', sortDir = -1, search = '';
 
   function ago(t) {
     if (!t) return '—';
@@ -166,11 +166,28 @@
     return data;
   }
 
+  function viewMessages() {
+    const rows = reports || [];
+    const open = rows.filter(r => !r.handled && !r.deleted);
+    $('msg-count').textContent = open.length ? `(${open.length})` : '';
+    $('app').innerHTML = `<p class="ad-sub">${open.length} signalement${open.length > 1 ? 's' : ''} à traiter. Un message supprimé disparaît du chat des deux côtés. Les messages sont de toute façon effacés après 30 jours.</p>
+      <div class="ad-card ad-scroll">${rows.length ? `<table><thead><tr><th>Quand</th><th>Auteur</th><th>Message</th><th>Salon</th><th>Signalé par</th><th></th></tr></thead><tbody>${rows.map(r => `<tr style="cursor:default${r.handled || r.deleted ? ';opacity:.5' : ''}">
+        <td>${ago(r.at)}</td><td><a href="#" data-open="${esc(r.sender)}">${esc(r.sender_pseudo)}</a></td><td style="white-space:normal;max-width:380px">${esc(r.body)}</td><td>${r.scope === 'clan' ? 'clan' : 'privé'}</td><td>${esc(r.reporter_pseudo)}</td>
+        <td>${r.deleted ? 'supprimé' : r.handled ? 'traité' : `<button class="ad-btn" data-del-msg="${r.message_id}">Supprimer</button> <button class="ad-btn" data-dismiss="${r.id}">Ignorer</button>`}</td></tr>`).join('')}</tbody></table>` : '<p class="ad-sub">Aucun signalement.</p>'}</div>`;
+    document.querySelectorAll('[data-del-msg]').forEach(b => b.addEventListener('click', async () => {
+      if (!(await ask({ title: 'Supprimer ce message ?', text: 'Il disparaît du chat.', ok: 'Supprimer', danger: true }))) return;
+      await sb.rpc('admin_chat_delete', { p_message: +b.dataset.delMsg, p_handled: true }); reports = await load('admin_chat_reports'); viewMessages();
+    }));
+    document.querySelectorAll('[data-dismiss]').forEach(b => b.addEventListener('click', async () => { await sb.rpc('admin_chat_dismiss', { p_report: +b.dataset.dismiss }); reports = await load('admin_chat_reports'); viewMessages(); }));
+    document.querySelectorAll('a[data-open]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openPlayer(a.dataset.open); }));
+  }
+
   function show() {
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('is-on', b.dataset.tab === tab));
     if (tab === 'overview' && overview) viewOverview();
     else if (tab === 'players' && players) viewPlayers(false);
     else if (tab === 'flagged' && players) viewPlayers(true);
+    else if (tab === 'messages' && reports) viewMessages();
   }
 
   async function boot() {
@@ -185,6 +202,7 @@
     $('app').innerHTML = '<p class="ad-msg">Chargement…</p>';
     overview = await load('admin_overview'); if (!overview) return;
     players = await load('admin_players', { p_search: search, p_limit: 300, p_offset: 0 }); if (!players) return;
+    reports = await load('admin_chat_reports') || []; $('msg-count').textContent = reports.filter(r => !r.handled && !r.deleted).length ? `(${reports.filter(r => !r.handled && !r.deleted).length})` : '';
     show();
   }
   document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; show(); }));

@@ -19,7 +19,7 @@
   <meta http-equiv="Expires" content="0" />
   <script>
     (function() {
-      const CURRENT_V = "73";
+      const CURRENT_V = "75";
       if (localStorage.getItem("app_asset_version") !== CURRENT_V) {
         localStorage.setItem("app_asset_version", CURRENT_V);
         if (!window.location.search.includes("t=")) {
@@ -28,11 +28,11 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=73" />
-  <link rel="stylesheet" href="css/empire.css?v=73" />
-  <link rel="stylesheet" href="css/theme.css?v=73" />
-  <link rel="stylesheet" href="css/packs.css?v=73" />
-  <link rel="stylesheet" href="css/games.css?v=73" />
+  <link rel="stylesheet" href="css/style.css?v=75" />
+  <link rel="stylesheet" href="css/empire.css?v=75" />
+  <link rel="stylesheet" href="css/theme.css?v=75" />
+  <link rel="stylesheet" href="css/packs.css?v=75" />
+  <link rel="stylesheet" href="css/games.css?v=75" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 </head>
@@ -56,7 +56,7 @@
       <button id="btn-age-ok" class="btn-primary btn-huge">J'ai 18 ans ou plus</button>
       <button id="btn-age-no" class="btn-secondary">J'ai moins de 18 ans</button>
     </div>
-    <p class="age-legal">Le tabac est dangereux pour la santé. Ce jeu est une satire fictive et ne promeut pas l'usage du tabac. Argent virtuel uniquement.</p>
+    <p class="age-legal">Le tabac est dangereux pour la santé. Ce jeu est une satire fictive et ne promeut pas l'usage du tabac. Argent virtuel uniquement. <a href="cgu.html" target="_blank" rel="noopener">Conditions</a> · <a href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a></p>
   </div>
 </div>
 
@@ -74,6 +74,7 @@
       <input type="text" id="auth-pseudo" class="game-input" placeholder="Pseudo (max 20 caractères)" maxlength="20" />
       <input type="email" id="auth-email" class="game-input" placeholder="Ton adresse e-mail" />
       <input type="password" id="auth-password" class="game-input" placeholder="Mot de passe (8 car. : maj, min, chiffre)" />
+      <label class="auth-accept"><input type="checkbox" id="auth-accept" /> <span>J'ai 18 ans ou plus et j'accepte les <a href="cgu.html" target="_blank" rel="noopener">conditions d'utilisation</a> et la <a href="confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a>.</span></label>
       <div id="ts-register" class="ts-box"></div>
       <button id="btn-register" class="btn-primary btn-full">Créer mon compte</button>
       <p class="auth-hint">Un e-mail de confirmation va t'être envoyé : pense à regarder tes spams.</p>
@@ -96,7 +97,7 @@
       <button id="btn-cancel-mfa" class="btn-secondary btn-full" style="margin-top:8px">Annuler</button>
     </div>
 
-    <p class="auth-legal">Ta progression est sauvegardée en ligne · Jeu 18+ · Argent virtuel uniquement.</p>
+    <p class="auth-legal">Ta progression est sauvegardée en ligne · Jeu 18+ · Argent virtuel uniquement.<br><a href="cgu.html" target="_blank" rel="noopener">Conditions</a> · <a href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a> · <a href="mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a></p>
   </div>
 </div>
 
@@ -584,27 +585,6 @@
       </div>
     </section>
 
-    <!-- ══════════════════════════════════════════════════════
-         PAGE: AMIS (gardé pour futur mode duo clicker)
-         ══════════════════════════════════════════════════════ -->
-    <section class="page" id="page-amis">
-      <div class="page-inner">
-        <h2 class="page-title"><span class="title-icon" id="icon-page-amis"></span> Amis &amp; Défis</h2>
-        <div class="friend-code-section">
-          <span>Mon code : </span>
-          <strong class="friend-code" id="my-code">---</strong>
-          <button id="btn-copy-code" class="btn-secondary btn-sm">Copier</button>
-        </div>
-        <div class="add-friend-row">
-          <input type="text" id="add-friend-input" class="game-input" placeholder="Code ou pseudo d'un ami" />
-          <button id="btn-add-friend" class="btn-primary">Ajouter</button>
-        </div>
-        <div id="friends-list"></div>
-        <h3>Défis en cours</h3>
-        <div id="active-challenges"></div>
-      </div>
-    </section>
-
     <!-- CLASSEMENTS -->
     <section class="page hidden" id="page-classements">
       <div class="page-inner">
@@ -706,7 +686,7 @@
           <div><strong>Recommencer à zéro</strong><p class="sec-desc">Efface ta progression sur ce compte. Définitif.</p></div>
           <button id="btn-reset-save-full" class="btn-secondary btn-sm">Réinitialiser</button>
         </div>
-        <p class="set-legal">The Ashtray King v1.0 · Jeu satirique réservé aux 18 ans et plus · Argent virtuel uniquement, aucun achat réel. Le tabac est dangereux pour la santé.</p>
+        <p class="set-legal"><a href="cgu.html" target="_blank" rel="noopener">Conditions d'utilisation</a> · <a href="confidentialite.html" target="_blank" rel="noopener">Confidentialité</a> · <a href="mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a><br>The Ashtray King v1.0 · Jeu satirique réservé aux 18 ans et plus · Argent virtuel uniquement, aucun achat réel. Le tabac est dangereux pour la santé.</p>
       </div>
     </section>
 
@@ -855,43 +835,43 @@
 </div>
 
 <!-- ═══ SCRIPTS ═══════════════════════════════════════════ -->
-<script src="js/dialog.js?v=73"></script>
-<script src="js/audio.js?v=73"></script>
-<script src="js/icons.js?v=73"></script>
-<script src="js/cigarettes_db.js?v=73"></script>
-<script src="js/data.js?v=73"></script>
-<script src="js/supabase.js?v=73"></script>
-<script src="js/account.js?v=73"></script>
-<script src="js/empire_db_expansion.js?v=73"></script>
-<script src="js/cards_extra.js?v=73"></script>
-<script src="js/empire_db.js?v=73"></script>
-<script src="js/balance.js?v=73"></script>
-<script src="js/clicker.js?v=73"></script>
-<script src="js/pack_art.js?v=73"></script>
-<script src="js/cards.js?v=73"></script>
-<script src="js/empire.js?v=73"></script>
-<script src="js/game.js?v=73"></script>
-<script src="js/race.js?v=73"></script>
-<script src="js/packs.js?v=73"></script>
-<script src="js/market.js?v=73"></script>
-<script src="js/casino.js?v=73"></script>
-<script src="js/friends.js?v=73"></script>
-<script src="js/talents.js?v=73"></script>
-<script src="js/multiplayer.js?v=73"></script>
-<script src="js/games/league.js?v=73"></script>
-<script src="js/games/prestige.js?v=73"></script>
-<script src="js/games/game_ui.js?v=73"></script>
-<script src="js/games/bataille.js?v=73"></script>
-<script src="js/games/des421.js?v=73"></script>
-<script src="js/games/pbc.js?v=73"></script>
-<script src="js/games/course.js?v=73"></script>
-<script src="js/games/ut.js?v=73"></script>
-<script src="js/games/quiz.js?v=73"></script>
-<script src="js/games/online.js?v=73"></script>
-<script src="js/social.js?v=73"></script>
-<script src="js/games/hub.js?v=73"></script>
-<script src="js/ui.js?v=73"></script>
-<script src="js/profile.js?v=73"></script>
-<script src="js/main.js?v=73"></script>
+<script src="js/dialog.js?v=75"></script>
+<script src="js/audio.js?v=75"></script>
+<script src="js/icons.js?v=75"></script>
+<script src="js/cigarettes_db.js?v=75"></script>
+<script src="js/data.js?v=75"></script>
+<script src="js/supabase.js?v=75"></script>
+<script src="js/account.js?v=75"></script>
+<script src="js/empire_db_expansion.js?v=75"></script>
+<script src="js/cards_extra.js?v=75"></script>
+<script src="js/empire_db.js?v=75"></script>
+<script src="js/balance.js?v=75"></script>
+<script src="js/clicker.js?v=75"></script>
+<script src="js/pack_art.js?v=75"></script>
+<script src="js/cards.js?v=75"></script>
+<script src="js/empire.js?v=75"></script>
+<script src="js/game.js?v=75"></script>
+<script src="js/race.js?v=75"></script>
+<script src="js/packs.js?v=75"></script>
+<script src="js/market.js?v=75"></script>
+<script src="js/casino.js?v=75"></script>
+<script src="js/talents.js?v=75"></script>
+<script src="js/multiplayer.js?v=75"></script>
+<script src="js/games/league.js?v=75"></script>
+<script src="js/games/prestige.js?v=75"></script>
+<script src="js/games/game_ui.js?v=75"></script>
+<script src="js/games/bataille.js?v=75"></script>
+<script src="js/games/des421.js?v=75"></script>
+<script src="js/games/pbc.js?v=75"></script>
+<script src="js/games/course.js?v=75"></script>
+<script src="js/games/ut.js?v=75"></script>
+<script src="js/games/quiz.js?v=75"></script>
+<script src="js/games/online.js?v=75"></script>
+<script src="js/chat.js?v=75"></script>
+<script src="js/social.js?v=75"></script>
+<script src="js/games/hub.js?v=75"></script>
+<script src="js/ui.js?v=75"></script>
+<script src="js/profile.js?v=75"></script>
+<script src="js/main.js?v=75"></script>
 </body>
 </html>

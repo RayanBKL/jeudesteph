@@ -112,7 +112,6 @@ function onPageEnter(pageId) {
     case 'marche':     Market.renderMarket(); break;
     case 'bourse':     Bourse.render(); break;
     case 'casino':     Casino.render(); break;
-    case 'amis':       Friends.render(); break;
     case 'classements':Leaderboard.render(); break;
     case 'profil':     renderProfile(); break;
   }

@@ -223,25 +223,6 @@ const CloudSync = {
   // PROFIL & STATS SYNC
   // ============================================================
 
-  async loadProfile() {
-    if (!sb || !this.currentUser) return null;
-    try {
-      const { data, error } = await sb
-        .from('profiles')
-        .select('*')
-        .eq('id', this.currentUser.id)
-        .single();
-
-      if (error) {
-        console.warn('Erreur chargement profil (table existe-t-elle ?):', error.message);
-        return null;
-      }
-      return data;
-    } catch (e) {
-      console.warn('loadProfile error', e);
-      return null;
-    }
-  },
 
   // Changement de pseudo (unique en base) : renvoie { ok, msg }
   async updatePseudo(pseudo) {
@@ -261,102 +242,22 @@ const CloudSync = {
 
   // Ancien envoi du profil : désactivé. Le serveur refuse désormais que le navigateur écrive l'argent,
   // le niveau ou les rangs. La progression passe par Account (sauvegarde en ligne).
-  async saveProfile() { return true; },
-
-  // Photo de profil (grande pour le profil, petite pour les classements)
-  async updateAvatar(avatar, small) {
-    if (!sb || !this.currentUser) return { ok: false };
-    const { error } = await sb.from('profiles').update({ avatar, avatar_small: small }).eq('id', this.currentUser.id);
-    return { ok: !error, msg: error && error.message };
-  },
 
   // ============================================================
   // INVENTAIRE
   // ============================================================
 
-  async loadInventory() {
-    if (!sb || !this.currentUser) return null;
-    try {
-      const { data, error } = await sb
-        .from('user_inventory')
-        .select('*')
-        .eq('user_id', this.currentUser.id);
 
-      if (error) {
-        console.warn('Erreur chargement inventaire cloud:', error.message);
-        return null;
-      }
-      return data;
-    } catch (e) {
-      console.warn('loadInventory error', e);
-      return null;
-    }
-  },
-
-  async saveInventoryItem(cigId, count, equipped, isForSale, salePrice) {
-    if (!sb || !this.currentUser) return;
-    try {
-      await sb.from('user_inventory').upsert({
-        user_id: this.currentUser.id,
-        cig_id: cigId,
-        count: count,
-        equipped: equipped,
-        is_for_sale: isForSale || false,
-        sale_price: salePrice || null
-      }, { onConflict: 'user_id,cig_id' });
-    } catch (e) {
-      console.warn('saveInventoryItem error', e);
-    }
-  },
 
   // ============================================================
   // COURSES (Logs & Anti-triche)
   // ============================================================
 
-  async recordRace(raceData) {
-    if (!sb || !this.currentUser) return;
-    try {
-      await sb.from('race_history').insert({
-        user_id: this.currentUser.id,
-        track: raceData.track,
-        race_time: raceData.time,
-        medal: raceData.medal,
-        coughs: raceData.coughs || 0,
-        combos: raceData.combos || {},
-        reward_money: raceData.rewardMoney || 0,
-        reward_xp: raceData.rewardXp || 0
-      });
-    } catch (e) {
-      console.warn('recordRace cloud log failed', e);
-    }
-  },
 
   // ============================================================
   // CLASSEMENTS EN LIGNE
   // ============================================================
 
-  async fetchTopPlayers(limit = 20) {
-    if (!sb) return [];
-    try {
-      const { data, error } = await sb
-        .from('profiles')
-        .select('pseudo, friend_code, money, level, stats')
-        .order('money', { ascending: false })
-        .limit(limit);
-
-      if (error || !data) return [];
-      return data.map((p, idx) => ({
-        rank: idx + 1,
-        pseudo: p.pseudo,
-        code: p.friend_code,
-        money: p.money,
-        level: p.level,
-        wins: p.stats?.totalWins || 0
-      }));
-    } catch (e) {
-      return [];
-    }
-  }
 };
 
 window.CloudSync = CloudSync;
