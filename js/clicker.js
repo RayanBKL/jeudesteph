@@ -290,7 +290,7 @@ const ClickerEngine = (() => {
 
   function triggerClick(spawnVisual = false) {
     // 1. Ne rien compter si l'onglet du navigateur est masqué / inactif
-    if (document.hidden || document.visibilityState !== 'visible') return;
+    if (!isPlayerActive()) return;   // auto-clic : seulement si le joueur utilise la fenêtre
 
     // 2. Ne rien compter si le joueur n'est pas sur la page du Cendrier / Clicker
     const clickerPage = document.getElementById('page-clicker');
@@ -315,11 +315,25 @@ const ClickerEngine = (() => {
     state.comboMultiplier = 1.0;
   }
 
+  // ── Joueur présent ? ───────────────────────────────────────
+  // Le revenu passif et l'auto-clic ne tournent que si le jeu est affiché, la fenêtre active (au premier plan)
+  // et que le joueur a bougé la souris / touché l'écran / tapé au clavier dans les 2 dernières minutes.
+  const IDLE_LIMIT_MS = 120000;
+  let lastActivity = Date.now();
+  ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel', 'click'].forEach(ev =>
+    window.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true, capture: true }));
+  function isPlayerActive() {
+    return document.visibilityState === 'visible' && document.hasFocus() && (Date.now() - lastActivity) < IDLE_LIMIT_MS;
+  }
+
   // ── Passive Income ─────────────────────────────────────────
   function startPassiveTick() {
     clearInterval(state.passiveTick);
     state.passiveTick = setInterval(() => {
-      if (state.passivePerSec > 0) {
+      const active = isPlayerActive();
+      const pill = document.getElementById('clicker-cps')?.parentElement;
+      if (pill) { pill.classList.toggle('is-paused', !active); pill.title = active ? 'Placer mes cartes (Arrière-Boutique)' : 'En pause : le revenu tombe seulement quand tu utilises la fenêtre'; }
+      if (active && state.passivePerSec > 0) {
         const earned = state.passivePerSec;
         state.cash += earned;
         state.earnedFromPassive = (state.earnedFromPassive || 0) + earned;
@@ -806,6 +820,7 @@ const ClickerEngine = (() => {
     isReady: () => ready,
     gainXP: (xp) => { gainEmpireXP(xp); render(); saveToStorage(); },
     triggerClick,
+    isPlayerActive,
   };
 })();
 
