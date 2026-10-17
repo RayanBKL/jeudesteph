@@ -270,8 +270,21 @@ const Account = (() => {
         return;
       }
     } else {
-      // Aucune sauvegarde en ligne : si les données de ce navigateur sont à ce joueur (ou à personne), on les envoie
-      if (owner && owner !== u.id) wipeAccountData();
+      // Aucune sauvegarde en ligne : un NOUVEAU compte repart à zéro. Une partie présente dans ce navigateur n'est reprise
+      // que si elle n'appartient à aucun autre compte ET que le joueur le demande (sinon on copiait la partie d'un autre compte).
+      let adopt = false;
+      if (hasLocal && (!owner || owner === u.id)) {
+        let lvl = 1, cards = 0;
+        try { lvl = JSON.parse(ls.get('empire_clicker') || '{}').empireLevel || 1; cards = Object.values(JSON.parse(ls.get('empire_state') || '{}').inventory || {}).filter(v => +v > 0).length; } catch (e) {}
+        if (owner === u.id) adopt = true;
+        else if (lvl > 1 || cards > 3) {
+          adopt = await GameDialog.confirm(`Une partie existe déjà dans ce navigateur (niveau ${lvl}, ${cards} cartes). La reprendre sur ce compte ? Sinon, ce compte démarre à neuf.`, { title: 'Reprendre la partie de ce navigateur ?', ok: 'La reprendre', cancel: 'Démarrer à neuf' });
+        }
+      }
+      if (!adopt && hasLocal) {
+        // Le jeu a déjà chargé l'ancienne partie en mémoire : on efface puis on recharge la page (le compte est marqué propriétaire)
+        wipeAccountData(); ls.set(OWNER, u.id); location.reload(); return;
+      }
       stamp = null;
       ls.set(OWNER, u.id);
       live = true;
