@@ -397,7 +397,7 @@ const Casino = {
           <div class="bj-hand-section bj-dealer-area">
             <div class="bj-dealer-header">
               <span class="bj-dealer-title">Banque</span>
-              <span class="bj-hand-score" id="bj-dealer-score">
+              <span class="bj-hand-score ${this.bj.dealerHand.length === 0 ? 'is-empty' : ''}" id="bj-dealer-score">
                 ${this.bj.dealerHand.length > 0 ? (isFinished || isDealer ? this.bj.dealerScore : this.bj.dealerHand[0].val) : ''}
               </span>
             </div>
@@ -420,7 +420,7 @@ const Casino = {
                 <div class="bj-spot ${spot.active ? '' : 'is-inactive'} ${isCurrentPlaying ? 'is-playing' : ''}" data-spot-idx="${idx}">
                   <div class="bj-spot-header">
                     <span class="bj-spot-title">
-                      ${spot.name}
+                      ${String(spot.name).replace(/\s*\((.*?)\)/, ' <small class="bj-spot-pos">($1)</small>')}
                       ${isCurrentPlaying ? '<span class="bj-active-hand-indicator">En cours</span>' : ''}
                     </span>
                     ${spot.active ? `

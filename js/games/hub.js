@@ -85,7 +85,7 @@ const GameHub = (() => {
           <button class="btn-empire btn-empire-primary" data-friends>Jouer avec des amis</button>
           <button class="btn-empire btn-empire-secondary" data-view="rangs">Les 26 rangs</button>
         </div>
-        <p class="hub-note">Classements remis à zéro chaque mois (saison ${League.seasonLabel()}). Tous les matchs se jouent contre de vrais joueurs : pas de bots.</p>
+        <p class="hub-note">Classements remis à zéro tous les 30 jours (saison ${League.seasonLabel()}). Tous les matchs se jouent contre de vrais joueurs : pas de bots.</p>
       </div>`;
 
     c.querySelectorAll('[data-game]').forEach(b => b.addEventListener('click', (e) => {
@@ -182,7 +182,7 @@ const GameHub = (() => {
       <div class="hub hub-boards">
         <div class="mg-header">
           <button class="mg-back" data-home aria-label="Retour">‹</button>
-          <div class="mg-header-title"><strong>Classements</strong><span>Saison ${League.seasonLabel()} · remise à zéro le 1er du mois</span></div>
+          <div class="mg-header-title"><strong>Classements</strong><span>Saison ${League.seasonLabel()} · remise à zéro tous les 30 jours</span></div>
         </div>
         <div class="cat-tabs hub-tabs">${tabs.map(([id, name]) => `<button class="cat-tab ${boardTab === id ? 'active' : ''}" data-btab="${id}">${name}</button>`).join('')}</div>
         <div class="bd-list" id="bd-list"><p class="hub-note">Chargement…</p></div>
@@ -200,20 +200,21 @@ const GameHub = (() => {
     else res = await sb.rpc('get_leaderboard', { p_game: boardTab, p_limit: 50 });
     if (res.error) { list.innerHTML = `<p class="hub-note">Impossible de charger le classement : ${res.error.message}</p>`; return; }
     const rows = res.data || [];
-    if (!rows.length) { list.innerHTML = '<p class="hub-note">Personne n\'est encore classé ce mois-ci. Joue une partie pour ouvrir le bal !</p>'; return; }
+    if (!rows.length) { list.innerHTML = '<p class="hub-note">Personne n\'est encore classé cette saison. Joue une partie pour ouvrir le bal !</p>'; return; }
     const medal = p => p === 1 ? 'bd-gold' : p === 2 ? 'bd-silver' : p === 3 ? 'bd-bronze' : '';
     list.innerHTML = rows.map(r => {
       const val = boardTab === 'collectors' ? `${r.cards.toLocaleString('fr-FR')} cartes`
         : boardTab === 'all' ? `${Number(r.lp).toLocaleString('fr-FR')} PL`
         : `${League.badge(Math.min(25, Math.floor(r.lp / 100)), 'sm')}<span>${r.lp} PL</span>`;
       return `
-        <div class="bd-row ${r.user_id === meId ? 'is-me' : ''}">
+        <div class="bd-row ${r.user_id === meId ? 'is-me' : ''}" data-profile="${r.user_id}" role="button" tabindex="0" style="cursor:pointer">
           <span class="bd-pos ${medal(Number(r.pos))}">${r.pos}</span>
           <span class="bd-avatar">${r.avatar_small && /^data:image\//.test(r.avatar_small) ? `<img src="${esc(r.avatar_small)}" alt="">` : `<b>${esc((r.pseudo || '?').slice(0, 1).toUpperCase())}</b>`}</span>
           <span class="bd-name"><strong>${esc(r.pseudo)}</strong><em>Niv. ${r.level}${r.wins !== undefined ? ` · ${r.wins} V · ${r.losses} D` : ''}</em></span>
           <span class="bd-val">${val}</span>
         </div>`;
     }).join('');
+    if (window.Social) list.querySelectorAll('[data-profile]').forEach(el => el.addEventListener('click', () => Social.openProfile(el.dataset.profile)));
   }
 
   function renderRanks(c) {

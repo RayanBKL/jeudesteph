@@ -716,3 +716,74 @@
 .auth-accept { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 0.78rem; line-height: 1.35; color: var(--text-muted); text-align: left; cursor: pointer; }
 .auth-accept input { margin-top: 2px; flex-shrink: 0; }
 .auth-accept a, .auth-legal a, .set-legal a, .age-legal a { color: var(--gold); }
+
+/* ── Casino sur téléphone : en-tête compact, mains lisibles, roulette sans coupure ── */
+@media (max-width: 640px) {
+  #page-casino .casino-header-dashboard { padding: 4px 8px !important; min-height: 0 !important; }
+  #page-casino .casino-balance-val { font-size: 1rem !important; }
+  #page-casino .casino-tabs-european .cas-tab { padding: 6px 4px !important; }
+  .bj-hand-score.is-empty { display: none; }
+  .bj-spot-pos { display: none; }
+  /* avant la donne : mains compactes (pas de grande zone vide), on garde mises et side bets */
+  #page-casino .bj-spots-container:not(.is-dealing) .bj-spot-cards-zone { display: none !important; }
+  #page-casino .bj-spots-container:not(.is-dealing) { flex: 0 0 auto; align-content: start; margin-top: 8px !important; }
+  #page-casino .bj-spots-container:not(.is-dealing) .bj-spot { min-height: 0; }
+  #page-casino .bj-spot-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  #page-casino .bj-dealer-area .bj-cards-row { min-height: 56px; }
+  /* pendant la donne : cartes plus grandes quand il y a peu de mains */
+  #page-casino .bj-spots-container.is-dealing[style*="--n:1"] .bj-card { width: 54px !important; height: 78px !important; }
+  #page-casino .bj-spots-container.is-dealing[style*="--n:1"] .bj-cards-row.bj-cards-fan .bj-card { margin-left: -26px; }
+  /* roulette : roue plus petite, tapis qui occupe la place */
+  #page-casino .roulette-wheel-box, #page-casino #roulette-wheel-canvas { width: 76px !important; height: 76px !important; }
+  #page-casino .roulette-top-stage { gap: 10px; }
+  #page-casino .roulette-special-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  #page-casino .roulette-special-bar::-webkit-scrollbar { display: none; }
+  #page-casino .roulette-special-bar .btn-empire { flex: 0 0 auto; padding: 4px 10px !important; font-size: 0.72rem !important; }
+}
+/* Petits téléphones (hauteur ≤ 700 px) : on gagne de la place pour voir tout le tapis / toute la table */
+@media (max-width: 640px) and (max-height: 700px) {
+  #page-casino .roulette-wheel-box, #page-casino #roulette-wheel-canvas { width: 46px !important; height: 46px !important; }
+  #page-casino .roulette-wheel-box .wheel-pointer { transform: scale(0.6); }
+  #page-casino .roulette-top-stage { min-height: 0 !important; }
+  #page-casino .roulette-history .text-dim, #page-casino .roulette-history > span { display: none; }
+  #page-casino .casino-chip { width: 34px !important; height: 34px !important; font-size: 0.55rem !important; }
+  #page-casino .bj-dealer-area .bj-card-placeholder { display: none; }
+  #page-casino .bj-dealer-area .bj-cards-row { min-height: 0; }
+  #page-casino .bj-spots-container:not(.is-dealing) { margin-top: 2px !important; }
+}
+@media (max-width: 640px) {
+  #page-casino .bj-spots-container:not(.is-dealing) { align-content: center; }
+}
+
+/* ── Profil public, vitrine, demandes de clan ── */
+.soc-click{cursor:pointer}
+.pp-card{max-height:86vh;overflow-y:auto;width:min(460px,94vw)}
+.pp-head{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.pp-avatar{width:64px;height:64px;border-radius:50%;border:3px solid var(--outline);object-fit:cover;flex:none;background:var(--cream)}
+.pp-avatar-letter{display:flex;align-items:center;justify-content:center;font-family:'Cendrier',sans-serif;font-size:1.8rem;color:var(--outline)}
+.pp-id h3{margin:0;font-family:'Cendrier',sans-serif}
+.pp-id p{margin:2px 0;font-size:.85rem}
+.pp-since{opacity:.7}
+.pp-bio{font-style:italic;margin:6px 0;word-break:break-word}
+.pp-ranks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pp-rank{display:flex;flex-direction:column;border:2px solid var(--outline);border-radius:8px;padding:5px 8px;background:var(--cream);color:var(--outline);font-size:.8rem}
+.pp-rank em{opacity:.7;font-style:normal}
+.pp-actions{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+.sc-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.sc-tile{width:calc(33.3% - 4px);max-width:96px;border:2px solid var(--outline);border-radius:8px;background:var(--cream);overflow:hidden;display:flex;flex-direction:column}
+.sc-tile.is-small{width:56px}
+.sc-img{display:block;height:84px;background:#0002}
+.sc-tile.is-small .sc-img{height:60px}
+.sc-img img{width:100%;height:100%;object-fit:cover;display:block}
+.sc-name{font-size:.62rem;line-height:1.1;padding:2px 3px;color:var(--outline);overflow:hidden;max-height:2.4em}
+.sc-tile.is-small .sc-name{display:none}
+.sc-head{display:flex;justify-content:space-between;align-items:center}
+.sc-bio{font-style:italic;margin:4px 0;word-break:break-word}
+.sc-list{max-height:30vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin:6px 0}
+.sc-opt,.sc-pick{display:flex;gap:8px;align-items:center;text-align:left;background:transparent;border:2px solid var(--outline);border-radius:8px;padding:3px;cursor:pointer;color:inherit}
+.sc-pick{padding:0;border:0}
+.sc-opt.is-on{background:#e9c46a55;border-color:var(--gold)}
+.sc-opt em{display:block;font-size:.7rem;opacity:.7;font-style:normal}
+.sc-count{font-size:.8rem;opacity:.8}
+.prof-showcase{border:3px solid var(--outline);border-radius:10px;background:var(--cream);color:var(--outline);padding:8px 10px;margin-bottom:8px}
+@media (max-height:700px){.prof-showcase .sc-img{height:56px}.prof-showcase .sc-tile{max-width:64px}}

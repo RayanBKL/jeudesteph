@@ -64,7 +64,7 @@ const Social = (() => {
     const list = data || [];
     const received = list.filter(f => f.rel === 'recue'), friends = list.filter(f => f.rel === 'ami'), sent = list.filter(f => f.rel === 'envoyee');
     const code = (Account.profile && Account.profile.friend_code) || '';
-    const row = (f, actions) => `<div class="soc-row">${avatar(f)}<span class="soc-name"><strong>${esc(f.pseudo)}</strong><em>${f.rel === 'ami' ? `<i class="soc-dot ${f.online ? 'on' : ''}"></i>${f.online ? 'En ligne' : 'Hors ligne'} · ` : ''}Niv. ${f.level}</em></span>${actions}</div>`;
+    const row = (f, actions) => `<div class="soc-row"><span class="soc-click" data-profile="${f.user_id}" role="button" tabindex="0">${avatar(f)}</span><span class="soc-name soc-click" data-profile="${f.user_id}" role="button" tabindex="0"><strong>${esc(f.pseudo)}</strong><em>${f.rel === 'ami' ? `<i class="soc-dot ${f.online ? 'on' : ''}"></i>${f.online ? 'En ligne' : 'Hors ligne'} · ` : ''}Niv. ${f.level}</em></span>${actions}</div>`;
     host.innerHTML = `
       <form class="soc-add" id="soc-add">
         <input class="game-input" id="soc-add-input" maxlength="24" placeholder="Pseudo ou code ami" autocomplete="off" />
@@ -98,6 +98,7 @@ const Social = (() => {
     }));
     host.querySelectorAll('[data-duel]').forEach(b => b.addEventListener('click', () => chooseGame(b.dataset.duel, b.dataset.name)));
     host.querySelectorAll('[data-msg]').forEach(b => b.addEventListener('click', () => Chat.open({ scope: 'dm', target: b.dataset.msg, title: b.dataset.name })));
+    bindProfileLinks(host);
   }
 
   // ── Défier un ami ──
@@ -196,7 +197,9 @@ const Social = (() => {
     if (!list.length) return '<p class="soc-empty">Aucun clan pour l\'instant. Crée le premier.</p>';
     return list.map(c => `<div class="soc-row"><span class="soc-pos">${c.pos}</span><span class="soc-tagbadge">${esc(c.tag)}</span>
       <span class="soc-name"><strong>${esc(c.name)}</strong><em>${c.members}/30 membres · ${c.lp} PL${c.open ? '' : ' · fermé'}</em></span>
-      ${!mine && c.open ? `<button class="btn-empire btn-empire-primary soc-btn" data-join="${c.id}">Rejoindre</button>` : ''}</div>`).join('');
+      ${!mine ? (c.open ? `<button class="btn-empire btn-empire-primary soc-btn" data-join="${c.id}">Rejoindre</button>`
+        : c.requested ? `<button class="btn-empire btn-empire-secondary soc-btn" data-req-cancel="${c.id}">Demande envoyée ✕</button>`
+        : `<button class="btn-empire btn-empire-primary soc-btn" data-request="${c.id}">Demander</button>`) : ''}</div>`).join('');
   }
 
   function clanMine(c) {
@@ -207,10 +210,11 @@ const Social = (() => {
       ${c.descr ? `<p class="soc-descr">${esc(c.descr)}</p>` : ''}
       ${c.me_leader ? `<form class="soc-add" id="clan-set"><input class="game-input" id="cl-descr" maxlength="140" placeholder="Description" value="${esc(c.descr)}" />
         <button class="btn-empire btn-empire-secondary" type="submit">OK</button>
-        <button class="btn-empire btn-empire-secondary" type="button" id="cl-open">${c.open ? 'Ouvert' : 'Fermé'}</button></form>` : ''}
+        <button class="btn-empire btn-empire-secondary" type="button" id="cl-open" title="Change qui peut entrer">${c.open ? 'Ouvert à tous' : 'Sur demande'}</button></form>` : ''}
+      ${c.me_leader && c.requests ? `<div id="clan-requests"><h4>Demandes pour rejoindre (${c.requests})</h4><p class="soc-empty">Chargement…</p></div>` : ''}
       <button class="btn-empire btn-empire-primary soc-wide" id="clan-chat" style="margin:0 0 8px">Discussion du clan${(unread.clan || 0) ? ` <b class="chat-dot">${unread.clan}</b>` : ''}</button>
       <h4>Membres</h4>
-      ${c.members.map(m => `<div class="soc-row">${avatar(m)}<span class="soc-name"><strong>${m.leader ? '★ ' : ''}${esc(m.pseudo)}</strong><em><i class="soc-dot ${m.online ? 'on' : ''}"></i>Niv. ${m.level} · ${m.lp} PL</em></span>
+      ${c.members.map(m => `<div class="soc-row"><span class="soc-click" data-profile="${m.user_id}" role="button" tabindex="0">${avatar(m)}</span><span class="soc-name soc-click" data-profile="${m.user_id}" role="button" tabindex="0"><strong>${m.leader ? '★ ' : ''}${esc(m.pseudo)}</strong><em><i class="soc-dot ${m.online ? 'on' : ''}"></i>Niv. ${m.level} · ${m.lp} PL</em></span>
         ${c.me_leader && !m.leader ? `<button class="btn-empire btn-empire-secondary soc-btn" data-kick="${m.user_id}">Virer</button>` : ''}</div>`).join('')}
       <button class="btn-empire btn-empire-secondary soc-wide" id="clan-leave">Quitter le clan</button>`;
   }
@@ -234,6 +238,14 @@ const Social = (() => {
       if (error) return note(msg(error));
       renderClan();
     }));
+    host.querySelectorAll('[data-request]').forEach(b => b.addEventListener('click', async () => {
+      const { error } = await sb().rpc('clan_request', { p_clan: b.dataset.request });
+      if (error) return note(msg(error));
+      renderClan();
+    }));
+    host.querySelectorAll('[data-req-cancel]').forEach(b => b.addEventListener('click', async () => { await sb().rpc('clan_request_cancel', { p_clan: b.dataset.reqCancel }); renderClan(); }));
+    bindProfileLinks(host);
+    if (mine && mine.me_leader && mine.requests) loadClanRequests(host);
     host.querySelector('#clan-chat')?.addEventListener('click', () => Chat.open({ scope: 'clan', title: 'Clan ' + (mine ? mine.name : '') }));
     host.querySelector('#clan-leave')?.addEventListener('click', async () => {
       if (!(await GameDialog.confirm('Tu pourras en rejoindre un autre quand tu veux.', { title: 'Quitter le clan ?', ok: 'Quitter', danger: true }))) return;
@@ -252,13 +264,134 @@ const Social = (() => {
     });
   }
 
+  async function loadClanRequests(host) {
+    const box = host.querySelector('#clan-requests'); if (!box) return;
+    const { data } = await sb().rpc('clan_requests_list');
+    const list = data || [];
+    box.innerHTML = `<h4>Demandes pour rejoindre (${list.length})</h4>` + (list.length ? list.map(r => `<div class="soc-row"><span class="soc-click" data-profile="${r.user_id}">${avatar(r)}</span><span class="soc-name soc-click" data-profile="${r.user_id}"><strong>${esc(r.pseudo)}</strong><em>Niv. ${r.level}</em></span>
+      <button class="btn-empire btn-empire-primary soc-btn" data-accept-req="${r.user_id}">Accepter</button><button class="btn-empire btn-empire-secondary soc-btn" data-refuse-req="${r.user_id}">✕</button></div>`).join('') : '<p class="soc-empty">Aucune demande.</p>');
+    box.querySelectorAll('[data-accept-req]').forEach(b => b.addEventListener('click', async () => { const { error } = await sb().rpc('clan_respond', { p_user: b.dataset.acceptReq, p_accept: true }); if (error) GameDialog.alert(msg(error), { title: 'Impossible' }); renderClan(); }));
+    box.querySelectorAll('[data-refuse-req]').forEach(b => b.addEventListener('click', async () => { await sb().rpc('clan_respond', { p_user: b.dataset.refuseReq, p_accept: false }); renderClan(); }));
+    bindProfileLinks(box);
+  }
+
+  // ── Profil public ──
+  const GAME_LABEL = { ut: 'Ultimate Comptoir', bataille: 'Bataille', des421: '421', pbc: 'Pierre-Briquet-Clope', quiz: 'Quiz', course: 'Course' };
+  function tile(id, small) {
+    const it = (typeof getEmpireItemById === 'function') ? getEmpireItemById(id) : null;
+    if (!it) return '';
+    const img = (typeof CardsRenderer !== 'undefined') ? CardsRenderer.resolveCardPhoto(it) : '';
+    return `<div class="sc-tile rv-r-${esc(it.rarity)} ${small ? 'is-small' : ''}" title="${esc(it.name)}"><span class="sc-img"><img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()"></span><span class="sc-name">${esc(it.name)}</span></div>`;
+  }
+  function bindProfileLinks(host) {
+    host.querySelectorAll('[data-profile]').forEach(el => {
+      el.addEventListener('click', () => openProfile(el.dataset.profile));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') openProfile(el.dataset.profile); });
+    });
+  }
+
+  async function openProfile(id) {
+    if (!online() || !id) return;
+    const { data: p, error } = await sb().rpc('player_profile', { p_id: id });
+    if (error || !p) return GameDialog.alert(msg(error), { title: 'Profil introuvable' });
+    const av = p.avatar && /^data:image\//.test(p.avatar) ? `<img class="pp-avatar" src="${esc(p.avatar)}" alt="">` : `<span class="pp-avatar pp-avatar-letter">${esc((p.pseudo || '?').slice(0, 1).toUpperCase())}</span>`;
+    const ratings = (p.ratings || []).map(r => {
+      const rk = (typeof League !== 'undefined') ? League.rankFromLp(r.lp) : { name: r.lp + ' PL', index: 0 };
+      return `<div class="pp-rank"><span>${esc(GAME_LABEL[r.game] || r.game)}</span><strong>${esc(rk.name)}</strong><em>${r.wins} V · ${r.losses} D</em></div>`;
+    }).join('');
+    const since = new Date(p.since).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const el = modal(`
+      <div class="pp-head">${av}<div class="pp-id"><h3>${esc(p.pseudo)}</h3>
+        <p><i class="soc-dot ${p.online ? 'on' : ''}"></i>${p.online ? 'En ligne' : 'Hors ligne'} · Niv. ${p.level} · ${p.cards} cartes</p>
+        ${p.clan ? `<p><span class="soc-tagbadge">${esc(p.clan.tag)}</span> ${esc(p.clan.name)}</p>` : ''}<p class="pp-since">Joue depuis ${esc(since)}</p></div></div>
+      ${p.bio ? `<p class="pp-bio"></p>` : ''}
+      ${(p.showcase || []).length ? `<h4>Vitrine</h4><div class="sc-row">${p.showcase.map(c => tile(c)).join('')}</div>` : (p.rel === 'self' ? '<p class="soc-empty">Ta vitrine est vide : choisis jusqu\'à 6 cartes à montrer.</p>' : '')}
+      ${ratings ? `<h4>Rangs de la saison</h4><div class="pp-ranks">${ratings}</div>` : ''}
+      <div class="pp-actions"></div>
+      <button class="btn-empire btn-empire-secondary soc-wide" data-x>Fermer</button>`);
+    el.querySelector('.soc-modal-card').classList.add('pp-card');
+    const bio = el.querySelector('.pp-bio'); if (bio) bio.textContent = p.bio;
+    const act = el.querySelector('.pp-actions');
+    const add = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn-empire ' + cls + ' soc-wide'; b.textContent = label; b.addEventListener('click', fn); act.appendChild(b); };
+    if (p.rel === 'self') add('Modifier ma vitrine', 'btn-empire-primary', () => { closeModal(); openShowcaseEditor(p); });
+    else if (p.rel === 'ami') {
+      add('Envoyer un message', 'btn-empire-primary', () => { closeModal(); Chat.open({ scope: 'dm', target: p.id, title: p.pseudo }); });
+      add('Défier', 'btn-empire-secondary', () => { closeModal(); chooseGame(p.id, p.pseudo); });
+    } else if (p.rel === 'aucune') {
+      add('Ajouter en ami', 'btn-empire-primary', async () => {
+        const { error: e2, data } = await sb().rpc('friend_request', { p_who: p.friend_code });
+        closeModal();
+        if (e2) return GameDialog.alert(msg(e2), { title: 'Demande impossible' });
+        showToast(data && data.status === 'accepted' ? 'Vous êtes maintenant amis.' : 'Demande d\'ami envoyée.', 'success');
+        refreshBadge();
+      });
+    } else if (p.rel === 'envoyee') { const b = document.createElement('p'); b.className = 'soc-empty'; b.textContent = 'Demande d\'ami envoyée.'; act.appendChild(b); }
+    else if (p.rel === 'recue') add('Accepter sa demande d\'ami', 'btn-empire-primary', async () => { await sb().rpc('friend_respond', { p_other: p.id, p_accept: true }); closeModal(); showToast('Vous êtes amis.', 'success'); refreshBadge(); });
+    el.querySelector('[data-x]').addEventListener('click', closeModal);
+  }
+
+  // ── Ma vitrine (présentation + 6 cartes) ──
+  async function renderMyShowcase() {
+    const host = document.getElementById('prof-showcase');
+    if (!host || !online()) return;
+    const { data: p } = await sb().rpc('player_profile', { p_id: Account.user.id });
+    if (!p) return;
+    host.innerHTML = `<div class="sc-head"><strong>Ma vitrine</strong><button class="btn-empire btn-empire-secondary soc-btn" id="sc-edit">Modifier</button></div>
+      <p class="sc-bio"></p>
+      ${(p.showcase || []).length ? `<div class="sc-row">${p.showcase.map(c => tile(c)).join('')}</div>` : '<p class="soc-empty">Montre tes plus belles cartes aux autres joueurs : touche « Modifier ».</p>'}`;
+    host.querySelector('.sc-bio').textContent = p.bio || '';
+    host.querySelector('#sc-edit').addEventListener('click', () => openShowcaseEditor(p));
+  }
+
+  function openShowcaseEditor(p) {
+    const inv = (typeof EmpireManager !== 'undefined' && EmpireManager.getInventory) ? EmpireManager.getInventory() : {};
+    const owned = Object.keys(inv).filter(id => (inv[id] || 0) > 0).map(id => getEmpireItemById(id)).filter(Boolean).sort((a, b) => (b.value || 0) - (a.value || 0));
+    let chosen = (p.showcase || []).filter(id => owned.some(o => o.id === id));
+    const el = modal(`
+      <h3>Ma vitrine</h3>
+      <textarea class="game-input sc-bio-in" maxlength="140" rows="2" placeholder="Une phrase pour te présenter (140 caractères)"></textarea>
+      <div class="sc-count"></div>
+      <div class="sc-row sc-chosen"></div>
+      <input class="game-input sc-search" placeholder="Chercher dans mes cartes" />
+      <div class="sc-list"></div>
+      <p class="soc-msg is-error hidden" id="sc-err"></p>
+      <div class="dlg-actions"><button class="btn-empire btn-empire-secondary" data-x>Annuler</button><button class="btn-empire btn-empire-primary" data-save>Enregistrer</button></div>`);
+    el.querySelector('.soc-modal-card').classList.add('pp-card');
+    const bio = el.querySelector('.sc-bio-in'); bio.value = p.bio || '';
+    const draw = () => {
+      el.querySelector('.sc-count').textContent = `${chosen.length}/6 cartes dans la vitrine`;
+      el.querySelector('.sc-chosen').innerHTML = chosen.map(id => `<button type="button" class="sc-pick" data-rm="${esc(id)}">${tile(id, true)}</button>`).join('');
+      el.querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', () => { chosen = chosen.filter(x => x !== b.dataset.rm); draw(); list(); }));
+    };
+    const list = () => {
+      const q = el.querySelector('.sc-search').value.trim().toLowerCase();
+      const rows = owned.filter(o => !q || o.name.toLowerCase().includes(q)).slice(0, 40);
+      el.querySelector('.sc-list').innerHTML = rows.map(o => `<button type="button" class="sc-opt ${chosen.includes(o.id) ? 'is-on' : ''}" data-add="${esc(o.id)}">${tile(o.id, true)}<span><strong>${esc(o.name)}</strong><em>${esc(o.rarity)}</em></span></button>`).join('') || '<p class="soc-empty">Aucune carte.</p>';
+      el.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+        const id = b.dataset.add;
+        if (chosen.includes(id)) chosen = chosen.filter(x => x !== id); else if (chosen.length < 6) chosen.push(id);
+        draw(); list();
+      }));
+    };
+    el.querySelector('.sc-search').addEventListener('input', list);
+    draw(); list();
+    el.querySelector('[data-x]').addEventListener('click', closeModal);
+    el.querySelector('[data-save]').addEventListener('click', async () => {
+      const err = el.querySelector('#sc-err'); err.classList.add('hidden');
+      if (window.Account && Account.push) await Account.push();     // le serveur vérifie que tu possèdes ces cartes
+      const { error } = await sb().rpc('profile_customize', { p_bio: bio.value, p_showcase: chosen });
+      if (error) { err.textContent = msg(error); err.classList.remove('hidden'); return; }
+      closeModal(); showToast('Vitrine enregistrée.', 'success'); renderMyShowcase();
+    });
+  }
+
   // Appelé à l'ouverture de la page Profil
-  function onProfileOpen() { start(); renderTabs(); }
+  function onProfileOpen() { start(); renderTabs(); renderMyShowcase(); }
 
   // Ouvre directement un onglet (amis, clan) depuis n'importe où
   function openTab(t) { tab = t; showPage('profil'); }
 
-  return { start, onProfileOpen, openTab, refreshBadge };
+  return { start, onProfileOpen, openTab, refreshBadge, openProfile };
 })();
 
 if (typeof window !== 'undefined') window.Social = Social;
