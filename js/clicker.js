@@ -141,16 +141,37 @@ const ClickerEngine = (() => {
   let recentManualClicks = [];
   let botCooldownUntil = 0;
 
+  // Détection de robot : un humain a une cadence irrégulière (écart-type de plusieurs ms entre deux clics) ;
+  // un logiciel de clic automatique clique à intervalle fixe. On regarde les 30 derniers écarts.
+  let clickGaps = [];
+  let lastClickAt = 0;
+  let botStrikes = [];
+  const MAX_CPS = 80;           // limite absolue (clics par seconde)
+  const MIN_GAP_MS = 7;         // écart minimum entre deux clics
+  function looksAutomated(gaps) {
+    if (!gaps || gaps.length < 30) return false;
+    const g = gaps.slice(-30);
+    const mean = g.reduce((a, b) => a + b, 0) / g.length;
+    if (mean > 250) return false;                       // clics lents : rien à détecter
+    const sd = Math.sqrt(g.reduce((a, b) => a + (b - mean) * (b - mean), 0) / g.length);
+    return sd < Math.max(1.5, mean * 0.025);            // quasi aucune variation = robot
+  }
+
   function triggerBotLockout(reason) {
-    botCooldownUntil = performance.now() + 2000;
+    // Récidive : 3 alertes en 10 minutes = pause de 30 secondes au lieu de 2
+    const t = Date.now();
+    botStrikes = botStrikes.filter(x => t - x < 600000); botStrikes.push(t);
+    const long = botStrikes.length >= 3;
+    botCooldownUntil = performance.now() + (long ? 30000 : 2000);
+    clickGaps = []; lastClickAt = 0;
     recentManualClicks = [];
     if (els.clickTarget) {
       els.clickTarget.classList.add('bot-locked');
       setTimeout(() => {
         if (els.clickTarget) els.clickTarget.classList.remove('bot-locked');
-      }, 2000);
+      }, long ? 30000 : 2000);
     }
-    showToast(`🚨 ${reason} Prends ton souffle (Pause 2s) !`, 'danger');
+    showToast(`${reason} Pause de ${long ? 30 : 2} secondes.`, 'danger');
   }
 
   // ── Click Handler ──────────────────────────────────────────
@@ -173,9 +194,17 @@ const ClickerEngine = (() => {
     recentManualClicks = recentManualClicks.filter(t => now - t < 1000);
     const lastClickTime = recentManualClicks[recentManualClicks.length - 1] || 0;
 
-    // Moins de 15ms d'écart ou plus de 40 clics sur la dernière seconde = bot
-    if ((lastClickTime > 0 && now - lastClickTime < 15) || recentManualClicks.length >= 40) {
-      triggerBotLockout('Toux suspecte : Tu cliques trop vite pour un fumeur (max 40 clics/s) !');
+    // Trop vite : moins de 7 ms d'écart ou plus de 80 clics sur la dernière seconde
+    if ((lastClickTime > 0 && now - lastClickTime < MIN_GAP_MS) || recentManualClicks.length >= MAX_CPS) {
+      triggerBotLockout('Toux suspecte : tu cliques trop vite pour un fumeur (max 80 clics/s).');
+      return;
+    }
+    // Trop régulier : cadence de machine
+    if (lastClickAt && now - lastClickAt < 1500) clickGaps.push(now - lastClickAt); else clickGaps = [];
+    lastClickAt = now;
+    if (clickGaps.length > 60) clickGaps.shift();
+    if (looksAutomated(clickGaps)) {
+      triggerBotLockout('Cadence de robot détectée : un vrai fumeur ne clique pas au millième de seconde.');
       return;
     }
 
@@ -820,6 +849,7 @@ const ClickerEngine = (() => {
     isReady: () => ready,
     gainXP: (xp) => { gainEmpireXP(xp); render(); saveToStorage(); },
     triggerClick,
+    looksAutomated,
     isPlayerActive,
   };
 })();
