@@ -125,6 +125,7 @@ document.getElementById('btn-register').addEventListener('click', async () => {
   if (!pseudo || pseudo.length < 2) { showToast('Pseudo trop court (min 2 caractères)', 'error'); return; }
   if (pseudo.length > 20 || !/^[\p{L}\p{N} _.\-']+$/u.test(pseudo)) { showToast('Pseudo : 20 caractères max, lettres, chiffres, espaces et - _ . \' uniquement', 'error'); return; }
   if (!email || !email.includes('@')) { showToast('Email invalide', 'error'); return; }
+  if (!document.getElementById('auth-accept')?.checked) { showToast('Coche la case : 18 ans ou plus et acceptation des conditions', 'error'); return; }
   if (!password || password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) { showToast('Mot de passe : 8 caractères minimum avec une minuscule, une majuscule et un chiffre', 'error'); return; }
 
   const btn = document.getElementById('btn-register');
@@ -293,7 +294,6 @@ function showGameUI() {
   updateHUD();
   startFreePackTimer();
   if (typeof TalentsEngine !== 'undefined' && TalentsEngine.init) TalentsEngine.init();
-  if (typeof MultiplayerEngine !== 'undefined' && MultiplayerEngine.init) MultiplayerEngine.init();
   if (typeof Casino !== 'undefined' && Casino.init) Casino.init();
   showPage('clicker');
 
@@ -378,15 +378,6 @@ document.getElementById('btn-start-solo')?.addEventListener('click', () => {
   }
 
   RaceEngine.start(track);
-});
-
-document.getElementById('btn-start-duel')?.addEventListener('click', () => {
-  if (!GameState.friends.length) {
-    showToast('Ajoutez des amis pour les défier !', 'error');
-    showPage('amis');
-    return;
-  }
-  showPage('amis');
 });
 
 // ============================================================
@@ -530,25 +521,7 @@ document.querySelectorAll('.cas-tab').forEach(tab => {
 // ============================================================
 // AMIS PAGE
 // ============================================================
-document.getElementById('btn-copy-code')?.addEventListener('click', () => {
-  const code = GameState.friendCode;
-  if (!code) return;
-  navigator.clipboard.writeText(code).then(() => showToast('Code copié !', 'success'));
-});
 
-document.getElementById('btn-add-friend')?.addEventListener('click', () => {
-  const val = document.getElementById('add-friend-input')?.value.trim();
-  if (!val) return;
-  const result = addFriend(val);
-  if (!result.ok) { showToast(result.msg, 'error'); return; }
-  showToast('Ami ajouté !', 'success');
-  document.getElementById('add-friend-input').value = '';
-  Friends.renderFriendsList();
-});
-
-document.getElementById('add-friend-input')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btn-add-friend').click();
-});
 
 // ============================================================
 // CLASSEMENTS PAGE

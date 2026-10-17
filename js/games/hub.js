@@ -8,8 +8,8 @@ const GameHub = (() => {
     { id: 'ut',       name: 'Ultimate Comptoir',    desc: 'Ton onze de légende, tes liens, ta cohésion. Un match pour tout prouver.', engine: () => UltimateTeam, art: 'pitch' },
     { id: 'bataille', name: 'Bataille de Comptoir', desc: 'Tes cartes contre les siennes, stat par stat.', engine: () => Bataille, art: 'cards' },
     { id: 'des421',   name: '421',                  desc: 'Trois dés, trois lancers, une seule combinaison.', engine: () => Des421, art: 'dice' },
-    { id: 'pbc',      name: 'Pierre-Briquet-Clope', desc: 'Le shifumi du comptoir. L\'ordi lit tes habitudes.', engine: () => PBC, art: 'pbc' },
-    { id: 'quiz',     name: 'Quiz du Comptoir',     desc: 'Une photo, quatre noms, huit secondes. Plus vite que l\'ordi ?', engine: () => QuizComptoir, art: 'quiz' },
+    { id: 'pbc',      name: 'Pierre-Briquet-Clope', desc: 'Le shifumi du comptoir. Pierre, briquet, clope : devine le coup de l\'autre.', engine: () => PBC, art: 'pbc' },
+    { id: 'quiz',     name: 'Quiz du Comptoir',     desc: 'Une photo, quatre noms, dix secondes. Plus vite que ton adversaire ?', engine: () => QuizComptoir, art: 'quiz' },
     { id: 'course',   name: 'Course Clandestine',   desc: 'Quatre fumeurs, un trottoir, un seul vainqueur.', engine: () => CourseClandestine, art: 'race' },
   ];
   let view = 'home';          // home | prestiges | rangs
@@ -84,9 +84,8 @@ const GameHub = (() => {
           <button class="btn-empire btn-empire-secondary" data-view="classements">Classements</button>
           <button class="btn-empire btn-empire-primary" data-friends>Jouer avec des amis</button>
           <button class="btn-empire btn-empire-secondary" data-view="rangs">Les 26 rangs</button>
-          <button class="btn-empire btn-empire-secondary" data-legacy>Duels de cartes</button>
         </div>
-        <p class="hub-note">Classements remis à zéro chaque mois (saison ${League.seasonLabel()}). Baron, Parrain et Roi du Comptoir : uniquement en battant de vrais joueurs.</p>
+        <p class="hub-note">Classements remis à zéro chaque mois (saison ${League.seasonLabel()}). Tous les matchs se jouent contre de vrais joueurs : pas de bots.</p>
       </div>`;
 
     c.querySelectorAll('[data-game]').forEach(b => b.addEventListener('click', (e) => {
@@ -98,7 +97,6 @@ const GameHub = (() => {
       GameUI.showRules(h.dataset.help);
     }));
     c.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { view = b.dataset.view; render(); }));
-    c.querySelector('[data-legacy]')?.addEventListener('click', openLegacy);
     c.querySelector('[data-friends]')?.addEventListener('click', () => window.Social && Social.openTab('amis'));
     countdownTimer = setInterval(() => {
       const el = document.getElementById('hub-reset');
@@ -117,8 +115,8 @@ const GameHub = (() => {
       if (!c.querySelector('.mg-screen')) g.engine().start(c);
       return;
     }
-    if (window.Online && (Online.GAME_IDS.includes(id) || id === 'ut')) Online.chooser(c, id, () => g.engine().start(c), id === 'ut' ? () => g.engine().start(c, { online: true }) : undefined);
-    else g.engine().start(c);
+    if (id === 'ut') g.engine().start(c, { online: true });      // éditeur d'équipe, puis match contre l'équipe d'un vrai joueur
+    else Online.go(c, id);
     // Première partie : on explique les règles
     try {
       if (!localStorage.getItem('rules_seen_' + id)) {
@@ -126,17 +124,6 @@ const GameHub = (() => {
         GameUI.showRules(id);
       }
     } catch (e) {}
-  }
-
-  function openLegacy() {
-    if (typeof MultiplayerEngine === 'undefined') return;
-    MultiplayerEngine.render();
-    const c = container();
-    const back = document.createElement('button');
-    back.className = 'btn-empire btn-empire-secondary hub-legacy-back';
-    back.textContent = '‹ Salle de jeux';
-    back.addEventListener('click', () => { view = 'home'; render(); });
-    c.prepend(back);
   }
 
   function renderPrestiges(c) {

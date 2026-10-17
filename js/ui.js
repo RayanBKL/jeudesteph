@@ -108,11 +108,10 @@ function onPageEnter(pageId) {
     case 'paquets':    renderFreePackBanner(); break;
     case 'inventaire': renderInventory(); break;
     case 'talents':    if (typeof TalentsEngine !== 'undefined') TalentsEngine.render(); else renderSkillTree(); break;
-    case 'multi':      if (typeof MultiplayerEngine !== 'undefined') MultiplayerEngine.render(); break;
+    case 'multi':      if (typeof GameHub !== 'undefined') GameHub.render(); break;
     case 'marche':     Market.renderMarket(); break;
     case 'bourse':     Bourse.render(); break;
     case 'casino':     Casino.render(); break;
-    case 'amis':       Friends.render(); break;
     case 'classements':Leaderboard.render(); break;
     case 'profil':     renderProfile(); break;
   }

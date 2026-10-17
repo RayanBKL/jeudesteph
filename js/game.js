@@ -85,13 +85,6 @@ function saveGame() {
     localStorage.setItem(SAVE_KEY, JSON.stringify(GameState));
   } catch(e) { console.warn('Save failed', e); }
 
-  // Debounced cloud sync to avoid spamming the DB
-  if (window.CloudSync && CloudSync.currentUser) {
-    if (cloudSaveTimeout) clearTimeout(cloudSaveTimeout);
-    cloudSaveTimeout = setTimeout(() => {
-      CloudSync.saveProfile(GameState);
-    }, 1500);
-  }
 }
 
 function loadGame() {
@@ -107,123 +100,13 @@ function loadGame() {
   }
 }
 
-function syncFromCloudProfile(profile, inventoryList) {
-  if (!profile) return;
-  GameState.isLoggedIn = true;
-  GameState.pseudo = profile.pseudo || GameState.pseudo;
-  GameState.friendCode = profile.friend_code || GameState.friendCode;
-  GameState.money = profile.money !== undefined ? profile.money : GameState.money;
-  GameState.xp = profile.xp !== undefined ? profile.xp : GameState.xp;
-  GameState.level = profile.level !== undefined ? profile.level : GameState.level;
-  GameState.skillPoints = profile.skill_points !== undefined ? profile.skill_points : GameState.skillPoints;
-
-  if (profile.skills && typeof profile.skills === 'object') {
-    GameState.skills = GameState.skills || { slots: 0, energy: 0, cough: 0, recovery: 0, market: 0 };
-    Object.assign(GameState.skills, profile.skills);
-  }
-
-  if (profile.stats && typeof profile.stats === 'object') {
-    GameState.stats = GameState.stats || {};
-    Object.assign(GameState.stats, profile.stats);
-    if (profile.stats.totalRaces !== undefined) GameState.totalRaces = profile.stats.totalRaces;
-    if (profile.stats.totalWins !== undefined) GameState.totalWins = profile.stats.totalWins;
-    if (profile.stats.totalMoney !== undefined) GameState.totalMoney = profile.stats.totalMoney;
-    if (profile.stats.goldStreak !== undefined) GameState.goldStreak = profile.stats.goldStreak;
-    if (profile.stats.bestTimes) {
-      GameState.bestTimes = { ...(GameState.bestTimes || {}), ...profile.stats.bestTimes };
-    }
-  }
-
-  if (profile.equipped_slots && Array.isArray(profile.equipped_slots)) {
-    GameState.equippedSlots = profile.equipped_slots;
-  }
-
-  if (profile.pity_counters && typeof profile.pity_counters === 'object') {
-    GameState.pityCounters = GameState.pityCounters || { tabac_epic: 0, duty_legendary: 0, contre_mythic: 0 };
-    Object.assign(GameState.pityCounters, profile.pity_counters);
-  }
-
-  if (profile.free_packs !== undefined) GameState.freePacks = profile.free_packs;
-
-  GameState.inventory = GameState.inventory || {};
-  if (inventoryList && Array.isArray(inventoryList)) {
-    inventoryList.forEach(item => {
-      const cigData = CIGARETTES.find(c => c.id === item.cig_id);
-      if (cigData) {
-        GameState.inventory[item.cig_id] = {
-          cig: cigData,
-          count: item.count,
-          equipped: item.equipped,
-          forSale: item.is_for_sale ? { price: item.sale_price } : null
-        };
-      }
-    });
-  }
-
-  saveGame();
-}
 
 
 // ============================================================
 // AUTH
 // ============================================================
-function registerUser(pseudo, email, password) {
-  if (!pseudo || pseudo.length < 2) return { ok: false, msg: 'Pseudo trop court (min 2 caractères)' };
-  if (!email.includes('@')) return { ok: false, msg: 'Email invalide' };
-  if (!password || password.length < 4) return { ok: false, msg: 'Mot de passe trop court (min 4 caractères)' };
 
-  // Check if user already exists
-  const users = JSON.parse(localStorage.getItem('stephane_users') || '[]');
-  if (users.find(u => u.email === email)) return { ok: false, msg: 'Email déjà utilisé' };
 
-  const code = genCode(pseudo);
-  users.push({ pseudo, email, password, code });
-  localStorage.setItem('stephane_users', JSON.stringify(users));
-
-  // Initialize game
-  Object.assign(GameState, getDefaultState());
-  GameState.isLoggedIn = true;
-  GameState.pseudo = pseudo;
-  GameState.email = email;
-  GameState.friendCode = code;
-  GameState.nextFreePackAt = Date.now() + GAME_CONST.FREE_PACK_INTERVAL_MS;
-
-  // Give a starter free pack
-  GameState.freePacks = 1;
-
-  // Populate leaderboard with fake entries for fun
-  generateFakeLB();
-
-  saveGame();
-  return { ok: true };
-}
-
-function loginUser(email, password) {
-  const users = JSON.parse(localStorage.getItem('stephane_users') || '[]');
-  const user = users.find(u => u.email === email && u.password === password);
-  if (!user) return { ok: false, msg: 'Email ou mot de passe incorrect' };
-
-  const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
-  if (saved.email === email) {
-    Object.assign(GameState, saved);
-    GameState.isLoggedIn = true;
-  } else {
-    Object.assign(GameState, getDefaultState());
-    GameState.isLoggedIn = true;
-    GameState.pseudo = user.pseudo;
-    GameState.email = email;
-    GameState.friendCode = user.code;
-    GameState.freePacks = 1;
-    generateFakeLB();
-  }
-  saveGame();
-  return { ok: true };
-}
-
-function logoutUser() {
-  saveGame();
-  GameState.isLoggedIn = false;
-}
 
 function getDefaultState() {
   return {
@@ -456,20 +339,6 @@ function checkSeriesCompletion() {
 // ============================================================
 // FAKE LEADERBOARD
 // ============================================================
-function generateFakeLB() {
-  const fakeNames = [
-    'GauloisGuy', 'TabacTonton', 'NicotinKing', 'LeRouillé', 'PatriceSmoke',
-    'BernardPuff', 'JacquesBlue', 'MimosaCig', 'FumeurFou', 'CendreRoyal',
-  ];
-  GameState.globalLB = fakeNames.map((name, i) => ({
-    pseudo: name,
-    fortune: Math.floor(50000 * Math.random() + 5000),
-    bestTime: { trottoir: (35 + Math.random() * 20).toFixed(1) },
-    wins: Math.floor(Math.random() * 50),
-    rarity: ['commune','peu-commune','rare','epique','legendaire'][Math.min(i, 4)],
-  }));
-  saveGame();
-}
 
 // ============================================================
 // SKILLS & TALENT TREE
@@ -608,37 +477,5 @@ function updateHUD() {
 // ============================================================
 // FRIENDS & DUELS
 // ============================================================
-function addFriend(codeOrPseudo) {
-  const users = JSON.parse(localStorage.getItem('stephane_users') || '[]');
-  const target = users.find(u => u.code === codeOrPseudo || u.pseudo.toLowerCase() === codeOrPseudo.toLowerCase());
-  if (!target) return { ok: false, msg: 'Joueur introuvable' };
-  if (target.email === GameState.email) return { ok: false, msg: 'C\'est vous-même !' };
-  if (GameState.friends.find(f => f.code === target.code)) return { ok: false, msg: 'Déjà ami' };
-  GameState.friends.push({ code: target.code, pseudo: target.pseudo, online: false });
-  saveGame();
-  return { ok: true };
-}
 
-function sendChallenge(friendCode, trackId, mise) {
-  if (GameState.money < mise) return { ok: false, msg: 'Pas assez d\'argent' };
-  const dailyCount = GameState.sentChallenges.filter(c => c.friendCode === friendCode && isSameDay(c.createdAt)).length;
-  if (dailyCount >= GAME_CONST.MAX_DAILY_DUEL) return { ok: false, msg: 'Limite de 10 défis/jour avec cet ami' };
-  spendMoney(mise);
-  const challenge = {
-    id: Date.now().toString(),
-    friendCode, track: trackId, mise,
-    myTime: null, friendTime: null,
-    status: 'pending_friend',
-    createdAt: Date.now(),
-    deadline: Date.now() + 86400000,
-  };
-  GameState.sentChallenges.push(challenge);
-  saveGame();
-  return { ok: true, challenge };
-}
 
-function isSameDay(ts) {
-  const d1 = new Date(ts);
-  const d2 = new Date();
-  return d1.toDateString() === d2.toDateString();
-}

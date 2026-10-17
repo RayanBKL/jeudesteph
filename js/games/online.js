@@ -28,32 +28,21 @@ const Online = (() => {
     if (run) { clearInterval(run.poll); clearInterval(run.tick); run = null; }
   }
 
-  // ── Choix du mode (ordi / vrai joueur) ─────────────────────
-  async function chooser(container, game, localStart, onlineStart) {
+  // ── Entrée dans un jeu : reprise d'une partie en cours, sinon recherche d'un vrai joueur (il n'y a plus de mode « ordi ») ──
+  async function go(container, game) {
     stopAll();
-    const name = League.GAMES[game].name;
-    let resume = null;
-    if (available() && !onlineStart) {
-      const { data } = await sb().rpc('my_active_match', { p_game: game });
-      resume = data || null;
+    if (!available()) {
+      container.innerHTML = `<div class="mg-screen">${GameUI.header(game, 'Connexion requise')}<p class="mg-hint">Connecte-toi pour jouer contre de vrais joueurs.</p></div>`;
+      GameUI.bindBack(container);
+      return;
     }
-    container.innerHTML = `
-      <div class="mg-screen">
-        ${GameUI.header(game, 'Choisis ton adversaire')}
-        <div class="on-modes">
-          ${resume ? `<button class="on-mode on-mode-resume" data-resume><strong>Reprendre ma partie en cours</strong><span>Un adversaire t'attend</span></button>` : ''}
-          <button class="on-mode" data-online ${available() ? '' : 'disabled'}><strong>Contre un vrai joueur</strong><span>${onlineStart ? 'Ton équipe est enregistrée et affronte celle d\'un autre joueur (le match est simulé par le serveur). Victoire ×1,5.' : 'Victoire ×1,5 : le seul moyen de monter jusqu\'au sommet.'}</span></button>
-          <button class="on-mode" data-local><strong>Contre l'ordinateur</strong><span>Plafonné au rang Buraliste I. Parfait pour s'entraîner.</span></button>
-        </div>
-      </div>`;
-    GameUI.bindBack(container);
-    container.querySelector('[data-local]').addEventListener('click', localStart);
-    container.querySelector('[data-online]').addEventListener('click', () => onlineStart ? onlineStart() : search(container, game, localStart));
-    container.querySelector('[data-resume]')?.addEventListener('click', () => watch(container, resume, game, localStart));
+    const { data } = await sb().rpc('my_active_match', { p_game: game });
+    if (data) return watch(container, data, game);
+    search(container, game);
   }
 
   // ── Recherche d'un adversaire ──────────────────────────────
-  function search(container, game, localStart) {
+  function search(container, game) {
     stopAll();
     const t0 = Date.now();
     container.innerHTML = `
@@ -66,36 +55,39 @@ const Online = (() => {
           <p class="mg-hint" id="on-hint">Un autre joueur doit lancer la même recherche en même temps.</p>
           <div class="mg-actions">
             <button class="btn-empire btn-empire-secondary" id="on-cancel">Annuler</button>
-            <button class="btn-empire btn-empire-primary hidden" id="on-vs-ai">Jouer contre l'ordi</button>
+            <button class="btn-empire btn-empire-primary hidden" id="on-invite">Inviter un ami</button>
           </div>
         </div>
       </div>`;
     GameUI.bindBack(container);
     const leave = async () => { clearInterval(searchTimer); searchTimer = null; try { await sb().rpc('mm_cancel'); } catch (e) {} };
-    container.querySelector('#on-cancel').addEventListener('click', async () => { await leave(); chooser(container, game, localStart); });
-    container.querySelector('#on-vs-ai').addEventListener('click', async () => { await leave(); localStart(); });
+    container.querySelector('#on-cancel').addEventListener('click', async () => { await leave(); GameHub.render(); });
+    container.querySelector('#on-invite').addEventListener('click', async () => { await leave(); if (window.Social) Social.openTab('amis'); });
     container.querySelector('[data-mg-back]').addEventListener('click', leave);
 
     const step = async () => {
       if (!container.querySelector('.mg-search')) { await leave(); return; }
       const secs = Math.floor((Date.now() - t0) / 1000);
       const w = container.querySelector('#on-wait'); if (w) w.textContent = `${secs} s`;
-      if (secs >= 20) container.querySelector('#on-vs-ai')?.classList.remove('hidden');
+      if (secs >= 20) {
+        container.querySelector('#on-invite')?.classList.remove('hidden');
+        const h = container.querySelector('#on-hint'); if (h && !h.dataset.late) { h.dataset.late = '1'; h.textContent = 'Peu de monde en ligne pour l\'instant. On continue de chercher : tu peux aussi inviter un ami pour jouer tout de suite.'; }
+      }
       const { data, error } = await sb().rpc('mm_join', { p_game: game });
       if (error) {
         const h = container.querySelector('#on-hint'); if (h) h.textContent = 'Connexion au serveur impossible, on réessaie…';
         return;
       }
-      if (data && data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, data.match_id, game, localStart); }
+      if (data && data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, data.match_id, game); }
     };
     step();
     searchTimer = setInterval(step, 2000);
   }
 
   // ── Partie en direct ───────────────────────────────────────
-  async function watch(container, matchId, game, localStart) {
+  async function watch(container, matchId, game) {
     stopAll();
-    run = { container, id: matchId, game, localStart, sig: '', data: null, offset: 0, held: [false, false, false], myChoice: null, prevQ: null, prevI: -1, notice: '', over: false, checking: false, pending: false };
+    run = { container, id: matchId, game, sig: '', data: null, offset: 0, held: [false, false, false], myChoice: null, prevQ: null, prevI: -1, notice: '', over: false, checking: false, pending: false };
     await refresh();
     run.poll = setInterval(refresh, 1000);
     run.tick = setInterval(tick, 250);
@@ -419,7 +411,7 @@ const Online = (() => {
     r.container.innerHTML = `<div class="mg-screen mg-online mg-${d.game === 'des421' ? '421' : d.game}">${head(r, 'Partie terminée')}</div>`;
     const screen = r.container.querySelector('.mg-screen');
     const lp = s.lp && s.lp[me === 0 ? 'p1' : 'p2'];
-    const again = () => search(r.container, r.game, r.localStart);
+    const again = () => search(r.container, r.game);
     const detail = reason === 'forfait' ? (result === 'win' ? `${esc(r.opp.pseudo)} a quitté la partie` : 'Tu as quitté la partie')
       : reason === 'abandon' ? 'Plus personne ne jouait'
       : d.game === 'course' ? `${fmtT(s.times[me])} contre ${fmtT(s.times[opp])} pour ${esc(r.opp.pseudo)}`
@@ -433,7 +425,7 @@ const Online = (() => {
     stopAll();
   }
 
-  return { chooser, search, watch, available, stopAll, abandonRace, GAME_IDS };
+  return { go, search, watch, available, stopAll, abandonRace, GAME_IDS };
 })();
 
 if (typeof window !== 'undefined') window.Online = Online;

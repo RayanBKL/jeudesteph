@@ -11,45 +11,38 @@ const GameUI = (() => {
       'Chaque joueur a 0 à 3 points de cohésion selon ses liens. Hors de son poste, il en perd 2.',
       'La puissance de l\'équipe = les notes des joueurs × leur cohésion. Le milieu décide qui a le ballon, l\'attaque contre la défense décide des buts.',
       'Pas assez de footballeurs ? Les trous sont bouchés par des joueurs du quartier (note 50, aucun lien). Ouvre des « Album du Ballon d\'Or ».',
-      'En ligne : ton équipe est enregistrée et affronte celle d\'un vrai joueur (match simulé par le serveur). Tes cartes doivent être sauvegardées en ligne.',
+      'Ton équipe est enregistrée et affronte celle d\'un vrai joueur : le serveur simule le match. Tes cartes doivent être sauvegardées en ligne.',
     ],
     bataille: [
-      'Tu reçois 5 cartes de ta collection, l\'ordi aussi.',
-      'Chaque manche se joue sur une stat tirée au sort : Passif, Clic ou Cote.',
-      'Chacun pose une carte : la plus forte sur cette stat gagne la manche.',
-      'Premier à 3 manches. Astuce : garde tes meilleures cartes pour les manches où elles comptent.',
+      'Chacun reçoit 5 cartes tirées de sa collection sauvegardée.',
+      'Chaque manche se joue sur une stat tirée au sort par le serveur : Passif, Clic ou Cote.',
+      'Chacun pose une carte en secret : la plus forte sur cette stat gagne la manche. Premier à 3 manches.',
+      'Astuce : garde tes meilleures cartes pour les manches où elles comptent. Si tu laisses filer les 30 secondes, une carte est posée au hasard.',
     ],
     des421: [
-      'Tu as 3 lancers de 3 dés. Après un lancer, touche les dés que tu veux garder (ils montent et deviennent dorés), puis relance les autres.',
-      '« Je garde » arrête ton tour. Ensuite l\'ordi joue avec autant de lancers que toi.',
+      'Tu as 3 lancers de 3 dés. Après un lancer, touche les dés que tu veux garder (ils montent et deviennent dorés), puis relance les autres. C\'est le serveur qui lance les dés.',
+      '« Je garde » arrête ton tour. Vous jouez en même temps, 45 secondes par tour.',
       'Les combinaisons, de la meilleure à la moins bonne : <b>4-2-1</b> · <b>Mac</b> (trois 1) · <b>Brelan</b> (trois dés pareils) · <b>Deux as + un dé</b> · <b>Suite</b> (ex. 3-4-5) · puis les points (le plus grand nombre formé gagne : 6-5-3 bat 6-4-4).',
       'La <b>Nénette</b> (2-2-1) est la pire main du jeu.',
       'La meilleure combinaison gagne la manche. Premier à 2 manches.',
     ],
     pbc: [
       'La <b>pierre</b> casse le briquet, le <b>briquet</b> allume la clope, la <b>clope</b> enfume la pierre.',
-      'Choisis ton coup, l\'ordi choisit le sien en même temps. Premier à 3 points.',
-      'Plus tu montes en ligue, plus l\'ordi repère tes habitudes : varie tes coups.',
+      'Chacun choisit son coup en secret (25 secondes) : les deux coups sont révélés en même temps. Premier à 3 points.',
+      'Varie tes coups : un joueur qui rejoue toujours pareil se fait lire.',
     ],
     quiz: [
-      '10 questions : une photo de carte, 4 noms proposés.',
-      '8 secondes par question. Bonne réponse = 100 points + jusqu\'à 50 points de rapidité.',
-      'L\'ordi répond en même temps. Plus tu montes, plus il est rapide et juste.',
+      '10 questions : une photo de carte, 4 noms proposés, les mêmes pour les deux joueurs.',
+      '10 secondes par question. Bonne réponse = 100 points + jusqu\'à 50 points de rapidité.',
+      'Celui qui a le plus de points à la fin gagne.',
     ],
     course: [
-      'Appuie sur « Sprint » (ou la barre espace) pour tirer sur ta clope : ton énergie remonte et tu accélères.',
+      'Duel à deux sur 500 m. Appuie sur « Sprint » (ou la barre espace) pour tirer sur ta clope : ton énergie remonte et tu accélères.',
       'Chaque sprint fait monter la toux. À 100, Stéphane tousse et s\'arrête net pendant 3 secondes.',
       'Astuce : sprinte quand ton énergie est entre 10 et 25, c\'est le timing parfait (+50 % et presque pas de toux).',
-      '1er : tu gagnes des points de ligue. 2e : rien ne bouge. 3e ou 4e : tu en perds.',
+      'Même énergie pour tous (pas de bonus de cartes). Le serveur rejoue tes sprints : le chrono ne peut pas être truqué. Le plus rapide gagne.',
     ],
   };
-
-  // Versions en ligne
-  RULES.bataille.push('En ligne : chacun reçoit 5 cartes tirées de sa collection sauvegardée, la stat de la manche est tirée par le serveur. Si tu laisses filer les 30 secondes, une carte est posée au hasard.');
-  RULES.course.push('En ligne : duel à 2 sur 500 m. Même énergie pour tous (pas de bonus de cartes) et c\'est le serveur qui rejoue tes sprints : le chrono ne peut pas être truqué. Le plus rapide gagne.');
-  RULES.pbc.push('En ligne : les deux coups restent secrets jusqu\'à ce que tout le monde ait joué. 25 secondes par coup.');
-  RULES.des421.push('En ligne : c\'est le serveur qui lance les dés. 45 secondes par tour.');
-  RULES.quiz.push('En ligne : les mêmes 10 photos pour les deux joueurs, 10 secondes par question, bonus de rapidité.');
 
   function showRules(game) {
     const host = document.querySelector('#multi-content .mg-screen') || document.getElementById('multi-content');
@@ -73,7 +66,7 @@ const GameUI = (() => {
         <button class="mg-back" data-mg-back aria-label="Retour à la salle de jeux">‹</button>
         <div class="mg-header-title">
           <strong>${League.GAMES[game].name}</strong>
-          <span>${subtitle || 'Partie classée contre l\'ordinateur'}</span>
+          <span>${subtitle || 'Partie classée contre un vrai joueur'}</span>
         </div>
         <div class="mg-header-rank">${League.badge(r.index, 'sm')}<span>${r.name}</span></div>
         <button class="mg-help" data-mg-help="${game}" aria-label="Règles du jeu">?</button>
@@ -120,7 +113,6 @@ const GameUI = (() => {
         ${res.promoted ? `<div class="mg-promo">Promotion : ${res.after.name} !</div>` : ''}
         ${res.demoted ? `<div class="mg-demo">Rétrogradé en ${res.after.name}</div>` : ''}
         ${res.streak >= 3 ? `<div class="mg-streak">${res.streak} victoires d'affilée</div>` : ''}
-        ${res.capped ? `<p class="mg-unranked">Plafond contre l'ordinateur atteint (Buraliste I). Pour monter plus haut, il faut battre de vrais joueurs.</p>` : ''}
         ${actions}`;
     }
     if (window.SoundFX) {
