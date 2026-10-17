@@ -138,10 +138,16 @@ const League = (() => {
     </span>`;
   }
 
-  // « octobre 2026 » : saison en cours (même fuseau que le serveur)
-  function seasonLabel() {
+  // Saison de 30 jours depuis le 1er octobre 2026 (même calcul que le serveur)
+  function seasonInfo() {
     const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-    return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    const day = Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(2026, 9, 1)) / 86400000);
+    const n = Math.max(0, Math.floor(day / 30));
+    return { n: n + 1, left: 30 - (day - n * 30) };
+  }
+  function seasonLabel() {
+    const s = seasonInfo();
+    return `${s.n} · ${s.left} j restants`;
   }
 
   return { seasonLabel, TIERS, RANKS, GAMES, LP_PER_RANK, getRank, rankFromLp, difficulty, record, applyResult, syncFromServer, stats, badge };
