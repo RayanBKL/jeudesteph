@@ -908,6 +908,11 @@ const EmpireManager = (() => {
   // ── Vrai marché entre joueurs (serveur) ─────────────────────
   // Plus aucun faux acheteur : les offres viennent uniquement des autres joueurs, et seuls de vrais joueurs achètent.
   let marketFetchedAt = 0, marketFetching = false;
+  // Tant que la Bourse est ouverte, les offres des autres joueurs se mettent à jour toutes les 15 secondes
+  setInterval(() => {
+    if (currentPage !== 'bourse' || document.hidden) return;
+    refreshMarket(true).then(changed => { if (changed && currentPage === 'bourse' && bourseTab !== 'catalog') renderBourse(); });
+  }, 15000);
   async function refreshMarket(force) {
     if (marketFetching || !window.sb || !(window.Account && Account.user)) return false;
     if (!force && Date.now() - marketFetchedAt < 8000) return false;
@@ -1361,6 +1366,7 @@ const EmpireManager = (() => {
 
       <!-- Filtres et Recherche -->
       <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <button type="button" class="btn-empire btn-empire-secondary" id="btn-bourse-refresh" style="padding:8px 12px;font-size:0.75rem">Actualiser</button>
         <input type="text" id="bourse-listings-search" class="game-input" style="flex:2;min-width:180px;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid var(--border-lit);color:#fff;font-size:0.8rem"
                placeholder="Rechercher une offre, un vendeur ou une carte..." value="${bourseSearchQuery}" />
       </div>
@@ -1382,6 +1388,13 @@ const EmpireManager = (() => {
       <!-- Grille des Offres Actives -->
       <div id="bourse-listings-grid" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center"></div>
     `;
+
+    container.querySelector('#btn-bourse-refresh')?.addEventListener('click', async () => {
+      await refreshMarket(true);
+      renderBourseListings(container);
+      const count = (state.marketListings || []).length;
+      showToast(count ? `${count} offre${count > 1 ? 's' : ''} en vente.` : 'Aucune offre pour le moment.', 'info');
+    });
 
     const searchInp = container.querySelector('#bourse-listings-search');
     searchInp?.addEventListener('input', (e) => {
