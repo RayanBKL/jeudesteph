@@ -689,3 +689,5 @@
 .empire-auto-bar > div { min-width: 0; }
 .empire-auto-bar strong { font-size: 1.15rem; white-space: nowrap; }
 @media (max-width: 480px) { .empire-auto-bar span { display: none; } .empire-auto-bar { padding: 8px 12px; } }
+
+.clicker-income-pill.is-paused { opacity: 0.55; }
