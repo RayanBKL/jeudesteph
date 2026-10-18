@@ -312,6 +312,8 @@ const EmpireManager = (() => {
     items.forEach(it => Prestige.emit('card_drawn', { rarity: it.rarity }));
   }
 
+  const escHtml = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
   function addToInventory(itemId) {
     state.inventory[itemId] = (state.inventory[itemId] || 0) + 1;
     if (!state.circulatedItems) state.circulatedItems = {};
@@ -320,6 +322,19 @@ const EmpireManager = (() => {
       if (ClickerEngine.recalcPassive) ClickerEngine.recalcPassive();
       if (ClickerEngine.recalcClickPower) ClickerEngine.recalcClickPower();
     }
+  }
+
+  // Échanges entre joueurs : une carte part ou arrive hors paquet
+  function takeCard(itemId) {
+    if (!(state.inventory[itemId] > 0)) return false;
+    state.inventory[itemId]--;
+    if (state.inventory[itemId] <= 0) delete state.inventory[itemId];
+    saveState(); autoFillRooms(); recalcAllPassives();
+    return true;
+  }
+  function giveCard(itemId) {
+    addToInventory(itemId);
+    saveState(); autoFillRooms(); recalcAllPassives();
   }
 
   // ── Ouverture de paquet ────────────────────────────────────
@@ -1240,7 +1255,7 @@ const EmpireManager = (() => {
                 <div class="ob-offer-row">
                   <div class="ob-offer-info">
                     <div class="ob-offer-seller">
-                      ${isSelf ? '<span style="color:#fbbf24">★ Vous</span>' : l.seller}
+                      ${isSelf ? '<span style="color:#fbbf24">★ Vous</span>' : escHtml(l.seller)}
                       <span class="listing-type-badge ${l.type === 'auction' ? 'listing-type-auction' : 'listing-type-sale'}" style="font-size:0.6rem;padding:2px 6px">
                         ${l.type === 'auction' ? 'Enchère' : 'Vente directe'}
                       </span>
@@ -1458,7 +1473,7 @@ const EmpireManager = (() => {
             ${listing.type === 'auction' ? 'Enchère' : 'Vente directe'}
           </span>
           <span class="listing-seller-tag ${isSelf ? 'listing-seller-self' : ''}">
-            ${isSelf ? '★ Vous' : listing.seller}
+            ${isSelf ? '★ Vous' : escHtml(listing.seller)}
           </span>
         </div>
 
@@ -2227,6 +2242,8 @@ const EmpireManager = (() => {
     recordSale,
     categoryIndex,
     addToInventory,
+    takeCard,
+    giveCard,
     saveState,
     resetEntireGame,
     autoFillRooms,

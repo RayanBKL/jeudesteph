@@ -313,6 +313,12 @@ const Account = (() => {
     const { data, error } = await sb.rpc('my_grants');
     if (error || !data || !data.length) return;
     data.forEach(g => {
+      if (g.card) {
+        if (typeof EmpireManager !== 'undefined' && EmpireManager.giveCard) EmpireManager.giveCard(g.card);
+        const it = typeof getEmpireItemById === 'function' ? getEmpireItemById(g.card) : null;
+        if (typeof showToast === 'function') showToast(`${g.note || 'Échange'} : « ${it ? it.name : 'une carte'} » est dans ta collection.`, 'gold');
+        return;
+      }
       const cash = ClickerEngine.getCash();
       const next = g.mode === 'set' ? Number(g.amount) : cash + Number(g.amount);
       ClickerEngine.setCash(Math.max(0, Math.round(next)));

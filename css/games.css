@@ -787,3 +787,16 @@
 .sc-count{font-size:.8rem;opacity:.8}
 .prof-showcase{border:3px solid var(--outline);border-radius:10px;background:var(--cream);color:var(--outline);padding:8px 10px;margin-bottom:8px}
 @media (max-height:700px){.prof-showcase .sc-img{height:56px}.prof-showcase .sc-tile{max-width:64px}}
+
+/* ── Rôles de clan et échanges ── */
+.soc-role{font-family:var(--font-title);font-size:.72rem;padding:2px 7px;border-radius:8px;border:2px solid var(--outline);background:var(--cream);color:var(--outline);white-space:nowrap}
+.soc-role-chef{background:var(--gold)}
+.soc-role-colead{background:#e9a35b}
+.soc-trade .soc-name em{white-space:normal}
+.tr-pick{display:flex;gap:8px;margin:6px 0}
+.tr-pick>div{flex:1;text-align:center;font-size:.8rem}
+.tr-slot{min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:2px dashed var(--outline);border-radius:8px;padding:4px}
+.tr-name{font-size:.65rem;line-height:1.1}
+
+/* Grille de cartes vide : le message prend toute la largeur */
+.empty-state{grid-column:1/-1;width:100%;text-align:center;padding:24px 12px}
