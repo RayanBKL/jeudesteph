@@ -73,6 +73,7 @@ const Social = (() => {
       <p class="soc-msg hidden" id="soc-msg"></p>
       ${code ? `<p class="soc-code">Ton code ami : <strong>${esc(code)}</strong></p>` : ''}
       <div class="soc-list">
+        <div id="trades"></div>
         ${received.length ? `<h4>Demandes reçues</h4>${received.map(f => row(f, `<button class="btn-empire btn-empire-primary soc-btn" data-accept="${f.user_id}">Accepter</button><button class="btn-empire btn-empire-secondary soc-btn" data-refuse="${f.user_id}">✕</button>`)).join('')}` : ''}
         <h4>Mes amis (${friends.length})</h4>
         ${friends.length ? friends.map(f => row(f, `<button class="btn-empire btn-empire-secondary soc-btn" data-msg="${f.user_id}" data-name="${esc(f.pseudo)}">Message${(unread.dm[f.user_id] || 0) ? ` <b class="chat-dot">${unread.dm[f.user_id]}</b>` : ''}</button><button class="btn-empire btn-empire-primary soc-btn" data-duel="${f.user_id}" data-name="${esc(f.pseudo)}">Défier</button><button class="btn-empire btn-empire-secondary soc-btn" data-del="${f.user_id}" aria-label="Retirer">✕</button>`)).join('') : '<p class="soc-empty">Personne pour l\'instant. Ajoute quelqu\'un avec son pseudo ou son code ami.</p>'}
@@ -99,6 +100,7 @@ const Social = (() => {
     host.querySelectorAll('[data-duel]').forEach(b => b.addEventListener('click', () => chooseGame(b.dataset.duel, b.dataset.name)));
     host.querySelectorAll('[data-msg]').forEach(b => b.addEventListener('click', () => Chat.open({ scope: 'dm', target: b.dataset.msg, title: b.dataset.name })));
     bindProfileLinks(host);
+    loadTrades(host);
   }
 
   // ── Défier un ami ──
@@ -202,21 +204,53 @@ const Social = (() => {
         : `<button class="btn-empire btn-empire-primary soc-btn" data-request="${c.id}">Demander</button>`) : ''}</div>`).join('');
   }
 
+  const ROLE_LABEL = { chef: 'Chef', colead: 'Co-chef', ancien: 'Ancien', membre: '' };
+  const RANK = { chef: 3, colead: 2, ancien: 1, membre: 0 };
+
   function clanMine(c) {
     const total = c.members.reduce((a, m) => a + Number(m.lp), 0);
+    const me = c.me_role || (c.me_leader ? 'chef' : 'membre');
+    const canSet = RANK[me] >= 2;
+    const canManage = m => m.user_id !== (Account.user && Account.user.id) && (me === 'chef' || (me === 'colead' && RANK[m.role || 'membre'] < 2));
     return `
       <div class="soc-clan-head"><span class="soc-tagbadge soc-tagbadge-lg">${esc(c.tag)}</span>
         <div><strong>${esc(c.name)}</strong><em>${c.rank ? `n°${c.rank} · ` : ''}${c.members.length}/30 membres · ${total} PL cette saison</em></div></div>
-      ${c.descr ? `<p class="soc-descr">${esc(c.descr)}</p>` : ''}
-      ${c.me_leader ? `<form class="soc-add" id="clan-set"><input class="game-input" id="cl-descr" maxlength="140" placeholder="Description" value="${esc(c.descr)}" />
+      ${c.descr && !canSet ? `<p class="soc-descr">${esc(c.descr)}</p>` : ''}
+      ${canSet ? `<form class="soc-add" id="clan-set"><input class="game-input" id="cl-descr" maxlength="140" placeholder="Description du clan" value="${esc(c.descr)}" />
         <button class="btn-empire btn-empire-secondary" type="submit">OK</button>
         <button class="btn-empire btn-empire-secondary" type="button" id="cl-open" title="Change qui peut entrer">${c.open ? 'Ouvert à tous' : 'Sur demande'}</button></form>` : ''}
-      ${c.me_leader && c.requests ? `<div id="clan-requests"><h4>Demandes pour rejoindre (${c.requests})</h4><p class="soc-empty">Chargement…</p></div>` : ''}
+      ${c.requests ? `<div id="clan-requests"><h4>Demandes pour rejoindre (${c.requests})</h4><p class="soc-empty">Chargement…</p></div>` : ''}
       <button class="btn-empire btn-empire-primary soc-wide" id="clan-chat" style="margin:0 0 8px">Discussion du clan${(unread.clan || 0) ? ` <b class="chat-dot">${unread.clan}</b>` : ''}</button>
       <h4>Membres</h4>
-      ${c.members.map(m => `<div class="soc-row"><span class="soc-click" data-profile="${m.user_id}" role="button" tabindex="0">${avatar(m)}</span><span class="soc-name soc-click" data-profile="${m.user_id}" role="button" tabindex="0"><strong>${m.leader ? '★ ' : ''}${esc(m.pseudo)}</strong><em><i class="soc-dot ${m.online ? 'on' : ''}"></i>Niv. ${m.level} · ${m.lp} PL</em></span>
-        ${c.me_leader && !m.leader ? `<button class="btn-empire btn-empire-secondary soc-btn" data-kick="${m.user_id}">Virer</button>` : ''}</div>`).join('')}
+      ${c.members.map(m => { const r = m.role || (m.leader ? 'chef' : 'membre'); return `<div class="soc-row"><span class="soc-click" data-profile="${m.user_id}" role="button" tabindex="0">${avatar(m)}</span><span class="soc-name soc-click" data-profile="${m.user_id}" role="button" tabindex="0"><strong>${esc(m.pseudo)}</strong><em><i class="soc-dot ${m.online ? 'on' : ''}"></i>Niv. ${m.level} · ${m.lp} PL</em></span>
+        ${ROLE_LABEL[r] ? `<span class="soc-role soc-role-${r}">${ROLE_LABEL[r]}</span>` : ''}
+        ${canManage(m) ? `<button class="btn-empire btn-empire-secondary soc-btn" data-manage="${m.user_id}">Gérer</button>` : ''}</div>`; }).join('')}
       <button class="btn-empire btn-empire-secondary soc-wide" id="clan-leave">Quitter le clan</button>`;
+  }
+
+  // Gérer un membre : rôle, passer la main, exclure
+  function openManage(c, m) {
+    const me = c.me_role || (c.me_leader ? 'chef' : 'membre');
+    const cur = m.role || 'membre';
+    const roleBtn = (r, label) => me === 'chef' ? `<button class="btn-empire ${cur === r ? 'btn-empire-primary' : 'btn-empire-secondary'} soc-wide" data-role="${r}" ${cur === r ? 'disabled' : ''}>${label}${cur === r ? ' (actuel)' : ''}</button>` : '';
+    const el = modal(`<h3>${esc(m.pseudo)}</h3><p class="soc-empty">${ROLE_LABEL[cur] || 'Membre'}</p>
+      ${me === 'chef' ? '<p class="soc-empty">Rôle dans le clan</p>' : ''}
+      ${roleBtn('membre', 'Membre')}${roleBtn('ancien', 'Ancien · traite les demandes')}${roleBtn('colead', 'Co-chef · gère le clan et exclut')}
+      ${me === 'chef' ? '<button class="btn-empire btn-empire-secondary soc-wide" data-transfer>Passer la main (il devient chef)</button>' : ''}
+      <button class="btn-empire btn-empire-secondary soc-wide" data-kick>Exclure du clan</button>
+      <button class="btn-empire btn-empire-secondary soc-wide" data-x>Fermer</button>`);
+    const done = () => { closeModal(); renderClan(); };
+    const run = async (fn, args) => { const { error } = await sb().rpc(fn, args); if (error) { closeModal(); return GameDialog.alert(msg(error), { title: 'Impossible' }); } done(); };
+    el.querySelectorAll('[data-role]').forEach(b => b.addEventListener('click', () => run('clan_set_role', { p_user: m.user_id, p_role: b.dataset.role })));
+    el.querySelector('[data-transfer]')?.addEventListener('click', async () => {
+      closeModal();
+      if (await GameDialog.confirm(`${m.pseudo} devient le chef du clan et tu passes co-chef.`, { title: 'Passer la main ?', ok: 'Passer la main', danger: true })) run('clan_transfer', { p_user: m.user_id });
+    });
+    el.querySelector('[data-kick]').addEventListener('click', async () => {
+      closeModal();
+      if (await GameDialog.confirm('Il ne fera plus partie du clan.', { title: 'Exclure ce joueur ?', ok: 'Exclure', danger: true })) run('clan_kick', { p_user: m.user_id });
+    });
+    el.querySelector('[data-x]').addEventListener('click', closeModal);
   }
 
   function bindClan(host, mine) {
@@ -245,16 +279,13 @@ const Social = (() => {
     }));
     host.querySelectorAll('[data-req-cancel]').forEach(b => b.addEventListener('click', async () => { await sb().rpc('clan_request_cancel', { p_clan: b.dataset.reqCancel }); renderClan(); }));
     bindProfileLinks(host);
-    if (mine && mine.me_leader && mine.requests) loadClanRequests(host);
+    if (mine && mine.requests) loadClanRequests(host);
+    host.querySelectorAll('[data-manage]').forEach(b => b.addEventListener('click', () => openManage(mine, mine.members.find(x => x.user_id === b.dataset.manage))));
     host.querySelector('#clan-chat')?.addEventListener('click', () => Chat.open({ scope: 'clan', title: 'Clan ' + (mine ? mine.name : '') }));
     host.querySelector('#clan-leave')?.addEventListener('click', async () => {
       if (!(await GameDialog.confirm('Tu pourras en rejoindre un autre quand tu veux.', { title: 'Quitter le clan ?', ok: 'Quitter', danger: true }))) return;
       await sb().rpc('clan_leave'); clanView = 'mon'; renderClan();
     });
-    host.querySelectorAll('[data-kick]').forEach(b => b.addEventListener('click', async () => {
-      if (!(await GameDialog.confirm('Il ne fera plus partie du clan.', { title: 'Virer ce joueur ?', ok: 'Virer', danger: true }))) return;
-      await sb().rpc('clan_kick', { p_user: b.dataset.kick }); renderClan();
-    }));
     host.querySelector('#clan-set')?.addEventListener('submit', async e => {
       e.preventDefault();
       await sb().rpc('clan_set', { p_descr: host.querySelector('#cl-descr').value, p_open: mine.open }); renderClan();
@@ -273,6 +304,93 @@ const Social = (() => {
     box.querySelectorAll('[data-accept-req]').forEach(b => b.addEventListener('click', async () => { const { error } = await sb().rpc('clan_respond', { p_user: b.dataset.acceptReq, p_accept: true }); if (error) GameDialog.alert(msg(error), { title: 'Impossible' }); renderClan(); }));
     box.querySelectorAll('[data-refuse-req]').forEach(b => b.addEventListener('click', async () => { await sb().rpc('clan_respond', { p_user: b.dataset.refuseReq, p_accept: false }); renderClan(); }));
     bindProfileLinks(box);
+  }
+
+  // ── Échanges de cartes entre amis ──
+  async function loadTrades(host) {
+    const box = host.querySelector('#trades'); if (!box) return;
+    const { data } = await sb().rpc('trade_list');
+    const list = data || [];
+    if (!list.length) { box.innerHTML = ''; return; }
+    const nm = id => { const it = getEmpireItemById(id); return it ? esc(it.name) : 'Carte'; };
+    box.innerHTML = `<h4>Échanges en cours (${list.length})</h4>` + list.map(t => `<div class="soc-row soc-trade">
+      <span class="soc-name"><strong>${t.mine ? `Pour ${esc(t.other)}` : `De ${esc(t.other)}`}</strong>
+        <em>${t.mine ? 'Tu donnes' : 'Il te donne'} « ${nm(t.give)} » · ${t.mine ? 'tu veux' : 'il veut'} « ${nm(t.want)} »</em></span>
+      ${t.mine ? `<button class="btn-empire btn-empire-secondary soc-btn" data-t-cancel="${t.id}">Annuler</button>`
+        : `<button class="btn-empire btn-empire-primary soc-btn" data-t-ok="${t.id}" data-want="${esc(t.want)}">Accepter</button><button class="btn-empire btn-empire-secondary soc-btn" data-t-no="${t.id}">✕</button>`}</div>`).join('');
+    const refresh = () => { loadTrades(host); };
+    box.querySelectorAll('[data-t-cancel]').forEach(b => b.addEventListener('click', async () => {
+      const { data: card, error } = await sb().rpc('trade_cancel', { p_id: b.dataset.tCancel });
+      if (error) { GameDialog.alert(msg(error), { title: 'Impossible' }); return refresh(); }
+      EmpireManager.giveCard(card);
+      if (window.Account && Account.push) Account.push();
+      showToast('Échange annulé, ta carte est revenue.', 'info'); refresh();
+    }));
+    box.querySelectorAll('[data-t-no]').forEach(b => b.addEventListener('click', async () => {
+      const { error } = await sb().rpc('trade_decline', { p_id: b.dataset.tNo });
+      if (error) GameDialog.alert(msg(error), { title: 'Impossible' }); refresh();
+    }));
+    box.querySelectorAll('[data-t-ok]').forEach(b => b.addEventListener('click', async () => {
+      b.disabled = true;
+      if (!(EmpireManager.getInventory()[b.dataset.want] > 0)) { b.disabled = false; return GameDialog.alert('Tu n\'as pas la carte demandée.', { title: 'Échange impossible' }); }
+      if (window.Account && Account.push) await Account.push();
+      const { data: r, error } = await sb().rpc('trade_accept', { p_id: b.dataset.tOk });
+      if (error) { b.disabled = false; GameDialog.alert(msg(error), { title: 'Impossible' }); return refresh(); }
+      EmpireManager.takeCard(r.give); EmpireManager.giveCard(r.get);
+      if (window.Account && Account.push) Account.push();
+      showToast('Échange fait : la carte est dans ta collection.', 'gold'); refresh();
+    }));
+  }
+
+  function openTradeEditor(friendId, friendName) {
+    const inv = EmpireManager.getInventory();
+    const owned = Object.keys(inv).filter(id => inv[id] > 0).map(id => getEmpireItemById(id)).filter(Boolean).sort((a, b) => (b.value || 0) - (a.value || 0));
+    const all = (typeof getAllBaseItemsList === 'function') ? getAllBaseItemsList() : [];
+    let give = null, want = null;
+    const el = modal(`
+      <h3>Échange avec ${esc(friendName)}</h3>
+      <p class="soc-empty">Ta carte est mise de côté en attendant sa réponse (7 jours max).</p>
+      <div class="tr-pick"><div><strong>Tu donnes</strong><div class="tr-slot" id="tr-give">—</div></div><div><strong>Tu veux</strong><div class="tr-slot" id="tr-want">—</div></div></div>
+      <div class="cat-tabs hub-tabs"><button class="cat-tab active" data-tt="give">Ma carte</button><button class="cat-tab" data-tt="want">Sa carte</button></div>
+      <input class="game-input sc-search" placeholder="Chercher une carte" />
+      <div class="sc-list"></div>
+      <p class="soc-msg is-error hidden" id="tr-err"></p>
+      <div class="dlg-actions"><button class="btn-empire btn-empire-secondary" data-x>Annuler</button><button class="btn-empire btn-empire-primary" data-send disabled>Proposer</button></div>`);
+    el.querySelector('.soc-modal-card').classList.add('pp-card');
+    let mode = 'give';
+    const slot = (id, it) => { el.querySelector(id).innerHTML = it ? tile(it.id, true) + `<span class="tr-name">${esc(it.name)}</span>` : '—'; };
+    const list = () => {
+      const q = el.querySelector('.sc-search').value.trim().toLowerCase();
+      let rows;
+      if (mode === 'give') rows = owned.filter(o => !q || o.name.toLowerCase().includes(q)).slice(0, 40);
+      else rows = q.length < 2 ? [] : all.filter(o => o.name.toLowerCase().includes(q)).slice(0, 40);
+      const chosen = mode === 'give' ? give : want;
+      el.querySelector('.sc-list').innerHTML = rows.map(o => `<button type="button" class="sc-opt ${chosen && chosen.id === o.id ? 'is-on' : ''}" data-id="${esc(o.id)}">${tile(o.id, true)}<span><strong>${esc(o.name)}</strong><em>${esc(o.rarity)}</em></span></button>`).join('')
+        || `<p class="soc-empty">${mode === 'want' ? 'Tape au moins 2 lettres du nom de la carte.' : 'Aucune carte.'}</p>`;
+      el.querySelectorAll('[data-id]').forEach(b => b.addEventListener('click', () => {
+        const it = getEmpireItemById(b.dataset.id);
+        if (mode === 'give') { give = it; slot('#tr-give', it); } else { want = it; slot('#tr-want', it); }
+        el.querySelector('[data-send]').disabled = !(give && want);
+        list();
+      }));
+    };
+    el.querySelectorAll('[data-tt]').forEach(b => b.addEventListener('click', () => {
+      mode = b.dataset.tt; el.querySelectorAll('[data-tt]').forEach(x => x.classList.toggle('active', x === b)); el.querySelector('.sc-search').value = ''; list();
+    }));
+    el.querySelector('.sc-search').addEventListener('input', list);
+    list();
+    el.querySelector('[data-x]').addEventListener('click', closeModal);
+    el.querySelector('[data-send]').addEventListener('click', async () => {
+      const err = el.querySelector('#tr-err'); err.classList.add('hidden');
+      const btn = el.querySelector('[data-send]'); btn.disabled = true;
+      if (window.Account && Account.push) await Account.push();     // le serveur vérifie que la carte est bien dans ta sauvegarde
+      const { error } = await sb().rpc('trade_propose', { p_to: friendId, p_give: give.id, p_want: want.id });
+      if (error) { btn.disabled = false; err.textContent = msg(error); err.classList.remove('hidden'); return; }
+      EmpireManager.takeCard(give.id);
+      if (window.Account && Account.push) Account.push();
+      closeModal(); showToast(`Proposition envoyée à ${friendName}.`, 'success');
+      if (tab === 'amis') renderFriends();
+    });
   }
 
   // ── Profil public ──
@@ -312,12 +430,15 @@ const Social = (() => {
     el.querySelector('.soc-modal-card').classList.add('pp-card');
     const bio = el.querySelector('.pp-bio'); if (bio) bio.textContent = p.bio;
     const act = el.querySelector('.pp-actions');
+    const mate = p.rel !== 'self' && !!p.clan && await sb().rpc('clan_mine').then(r => !!(r.data && r.data.members.some(x => x.user_id === p.id)));
     const add = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn-empire ' + cls + ' soc-wide'; b.textContent = label; b.addEventListener('click', fn); act.appendChild(b); };
     if (p.rel === 'self') add('Modifier ma vitrine', 'btn-empire-primary', () => { closeModal(); openShowcaseEditor(p); });
     else if (p.rel === 'ami') {
       add('Envoyer un message', 'btn-empire-primary', () => { closeModal(); Chat.open({ scope: 'dm', target: p.id, title: p.pseudo }); });
       add('Défier', 'btn-empire-secondary', () => { closeModal(); chooseGame(p.id, p.pseudo); });
+      add('Proposer un échange de cartes', 'btn-empire-secondary', () => { closeModal(); openTradeEditor(p.id, p.pseudo, p.showcase || []); });
     } else if (p.rel === 'aucune') {
+      if (mate) add('Défier (même clan)', 'btn-empire-secondary', () => { closeModal(); chooseGame(p.id, p.pseudo); });
       add('Ajouter en ami', 'btn-empire-primary', async () => {
         const { error: e2, data } = await sb().rpc('friend_request', { p_who: p.friend_code });
         closeModal();
