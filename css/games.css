@@ -797,3 +797,6 @@
 .tr-pick>div{flex:1;text-align:center;font-size:.8rem}
 .tr-slot{min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:2px dashed var(--outline);border-radius:8px;padding:4px}
 .tr-name{font-size:.65rem;line-height:1.1}
+
+/* Grille de cartes vide : le message prend toute la largeur */
+.empty-state{grid-column:1/-1;width:100%;text-align:center;padding:24px 12px}
