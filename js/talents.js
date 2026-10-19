@@ -84,6 +84,7 @@ const TalentsEngine = (() => {
   };
 
   let autoClickTimer = null;
+  let lastTap = { id: null, t: 0 };
 
   function init() {
     loadState();
@@ -425,8 +426,14 @@ const TalentsEngine = (() => {
     container.querySelector('#btn-gow-reset')?.addEventListener('click', reset);
 
     container.querySelectorAll('.gow-node').forEach(el => {
+      // Un tap : voir la capacité. Double tap (ou double clic) sur le même talent : le forger s'il est disponible.
       el.addEventListener('click', () => {
-        state.selectedNodeId = el.dataset.nodeId;
+        const id = el.dataset.nodeId, now = Date.now();
+        const second = lastTap.id === id && now - lastTap.t < 450;
+        lastTap = { id, t: second ? 0 : now };
+        state.selectedNodeId = id;
+        const node = NODES.find(n => n.id === id);
+        if (second && node && canUnlock(node)) { unlockNode(id); return; }
         render();
       });
     });
