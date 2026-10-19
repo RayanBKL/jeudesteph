@@ -8,18 +8,22 @@
   <title>The Ashtray King</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@700;900&family=Dela+Gothic+One&family=Space+Grotesk:wght@500;600;700&family=Syne:wght@700;800;900&family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="preload" href="assets/fonts/cendrier.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" href="assets/favicon-32.png" type="image/png" sizes="32x32" />
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Ashtray King" />
     <meta name="monetag" content="36610066b1b002c92b5f54683aa5fbe0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <script>
     (function() {
-      const CURRENT_V = "92";
+      const CURRENT_V = "95";
       if (localStorage.getItem("app_asset_version") !== CURRENT_V) {
         localStorage.setItem("app_asset_version", CURRENT_V);
         if (!window.location.search.includes("t=")) {
@@ -28,11 +32,11 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=92" />
-  <link rel="stylesheet" href="css/empire.css?v=92" />
-  <link rel="stylesheet" href="css/theme.css?v=92" />
-  <link rel="stylesheet" href="css/packs.css?v=92" />
-  <link rel="stylesheet" href="css/games.css?v=92" />
+  <link rel="stylesheet" href="css/style.css?v=95" />
+  <link rel="stylesheet" href="css/empire.css?v=95" />
+  <link rel="stylesheet" href="css/theme.css?v=95" />
+  <link rel="stylesheet" href="css/packs.css?v=95" />
+  <link rel="stylesheet" href="css/games.css?v=95" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 </head>
@@ -489,18 +493,23 @@
           <button class="cat-tab" data-cat="refs">📱 Mèmes</button>
           <button class="cat-tab" data-cat="chanteur">🎤 Musique</button>
           <button class="cat-tab" data-cat="culte">🎬 Culte</button>
+          <button class="cat-tab" data-cat="saison">🏆 Saison</button>
         </div>
 
         <!-- Filter bar -->
         <div class="inv-filter-bar" style="padding:0 12px">
           <select id="inv-view-empire" class="game-select-empire" aria-label="Affichage">
             <option value="owned">Mes cartes</option>
+            <option value="doubles">Mes doubles (à vendre)</option>
             <option value="catalog">Catalogue complet</option>
           </select>
+          <input type="search" id="inv-search-empire" class="game-input inv-search" placeholder="Chercher une carte" autocomplete="off" />
           <select id="inv-sort-empire" class="game-select-empire">
             <option value="rarity">Par rareté</option>
-            <option value="value">Par valeur</option>
-            <option value="name">Par nom</option>
+            <option value="value">Valeur décroissante</option>
+            <option value="value_asc">Valeur croissante</option>
+            <option value="name">Nom (A-Z)</option>
+            <option value="name_desc">Nom (Z-A)</option>
             <option value="owned">Possédés d'abord</option>
           </select>
         </div>
@@ -664,6 +673,14 @@
         <div class="set-card">
           <div><strong>Son</strong><p class="sec-desc">Bruitages et ambiance du bar.</p></div>
           <button id="set-audio" class="btn-secondary btn-sm">Activé</button>
+        </div>
+        <div class="set-card">
+          <div><strong>Rond du clic</strong><p class="sec-desc">L'image sur laquelle tu cliques : <span id="set-skin-label">Stéphane</span>.</p></div>
+          <button id="set-skin" class="btn-secondary btn-sm">Changer</button>
+        </div>
+        <div class="set-card" id="set-install-card">
+          <div><strong>Raccourci sur ton téléphone</strong><p class="sec-desc">Ajoute le jeu à ton écran d'accueil pour l'ouvrir en un tap, comme une appli.</p></div>
+          <button id="set-install" class="btn-secondary btn-sm">Ajouter</button>
         </div>
         <div class="set-card">
           <div><strong>Compte</strong><p class="sec-desc" id="set-email">Connecté</p></div>
@@ -836,42 +853,44 @@
 </div>
 
 <!-- ═══ SCRIPTS ═══════════════════════════════════════════ -->
-<script src="js/dialog.js?v=92"></script>
-<script src="js/audio.js?v=92"></script>
-<script src="js/icons.js?v=92"></script>
-<script src="js/cigarettes_db.js?v=92"></script>
-<script src="js/data.js?v=92"></script>
-<script src="js/supabase.js?v=92"></script>
-<script src="js/account.js?v=92"></script>
-<script src="js/empire_db_expansion.js?v=92"></script>
-<script src="js/cards_extra.js?v=92"></script>
-<script src="js/empire_db.js?v=92"></script>
-<script src="js/balance.js?v=92"></script>
-<script src="js/clicker.js?v=92"></script>
-<script src="js/pack_art.js?v=92"></script>
-<script src="js/cards.js?v=92"></script>
-<script src="js/empire.js?v=92"></script>
-<script src="js/game.js?v=92"></script>
-<script src="js/race.js?v=92"></script>
-<script src="js/packs.js?v=92"></script>
-<script src="js/market.js?v=92"></script>
-<script src="js/casino.js?v=92"></script>
-<script src="js/talents.js?v=92"></script>
-<script src="js/games/league.js?v=92"></script>
-<script src="js/games/prestige.js?v=92"></script>
-<script src="js/games/game_ui.js?v=92"></script>
-<script src="js/games/bataille.js?v=92"></script>
-<script src="js/games/des421.js?v=92"></script>
-<script src="js/games/pbc.js?v=92"></script>
-<script src="js/games/course.js?v=92"></script>
-<script src="js/games/ut.js?v=92"></script>
-<script src="js/games/quiz.js?v=92"></script>
-<script src="js/games/online.js?v=92"></script>
-<script src="js/chat.js?v=92"></script>
-<script src="js/social.js?v=92"></script>
-<script src="js/games/hub.js?v=92"></script>
-<script src="js/ui.js?v=92"></script>
-<script src="js/profile.js?v=92"></script>
-<script src="js/main.js?v=92"></script>
+<script src="js/dialog.js?v=95"></script>
+<script src="js/audio.js?v=95"></script>
+<script src="js/icons.js?v=95"></script>
+<script src="js/cigarettes_db.js?v=95"></script>
+<script src="js/data.js?v=95"></script>
+<script src="js/supabase.js?v=95"></script>
+<script src="js/account.js?v=95"></script>
+<script src="js/empire_db_expansion.js?v=95"></script>
+<script src="js/cards_extra.js?v=95"></script>
+<script src="js/cards_season.js?v=95"></script>
+<script src="js/empire_db.js?v=95"></script>
+<script src="js/balance.js?v=95"></script>
+<script src="js/clicker.js?v=95"></script>
+<script src="js/pack_art.js?v=95"></script>
+<script src="js/cards.js?v=95"></script>
+<script src="js/empire.js?v=95"></script>
+<script src="js/game.js?v=95"></script>
+<script src="js/race.js?v=95"></script>
+<script src="js/packs.js?v=95"></script>
+<script src="js/market.js?v=95"></script>
+<script src="js/casino.js?v=95"></script>
+<script src="js/talents.js?v=95"></script>
+<script src="js/games/league.js?v=95"></script>
+<script src="js/games/prestige.js?v=95"></script>
+<script src="js/games/game_ui.js?v=95"></script>
+<script src="js/games/bataille.js?v=95"></script>
+<script src="js/games/des421.js?v=95"></script>
+<script src="js/games/pbc.js?v=95"></script>
+<script src="js/games/course.js?v=95"></script>
+<script src="js/games/ut.js?v=95"></script>
+<script src="js/games/quiz.js?v=95"></script>
+<script src="js/games/online.js?v=95"></script>
+<script src="js/chat.js?v=95"></script>
+<script src="js/social.js?v=95"></script>
+<script src="js/games/hub.js?v=95"></script>
+<script src="js/ui.js?v=95"></script>
+<script src="js/profile.js?v=95"></script>
+<script src="js/personalize.js?v=95"></script>
+<script src="js/main.js?v=95"></script>
 </body>
 </html>

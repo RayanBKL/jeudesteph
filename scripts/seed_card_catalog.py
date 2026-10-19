@@ -7,7 +7,7 @@ import json, os, subprocess
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JS = """
 const fs=require('fs'),vm=require('vm');const ctx={console:{log(){}}};ctx.window=ctx;ctx.globalThis=ctx;vm.createContext(ctx);
-for(const f of ['js/cigarettes_db.js','js/empire_db_expansion.js','js/cards_extra.js','js/empire_db.js','js/balance.js'])vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
+for(const f of ['js/cigarettes_db.js','js/empire_db_expansion.js','js/cards_extra.js','js/cards_season.js','js/empire_db.js','js/balance.js'])vm.runInContext(fs.readFileSync(f,'utf8'),ctx);
 const P={cigarette:'cig',alcool:'alc',briquet:'acc',beauf:'ter',actrice:'act',foot:'fbl',refs:'ref',chanteur:'mus',culte:'cul'};
 console.log(JSON.stringify(ctx.getAllBaseItemsList().map(c=>({id:c.id,name:c.name,cat:c.cat,rarity:c.rarity,
   img:(c.img&&c.img.startsWith('assets/cards/'))?c.img:(c.image&&c.image.startsWith('assets/cards/'))?c.image:`assets/cards/${P[c.cat]||'drg'}_${c.id}.webp`,
@@ -18,7 +18,7 @@ cards = json.loads(subprocess.check_output(["node", "-e", JS], cwd=BASE))
 todo = {e["id"]: e for e in json.load(open(os.path.join(BASE, "scripts/data/images_todo.json")))}
 credits = json.load(open(os.path.join(BASE, "data/image_credits.json")))
 def quiz_ok(c):
-    if c["cat"] in ("culte", "refs"):
+    if c["cat"] in ("culte", "refs", "saison"):
         return False
     e = todo.get(c["id"])
     if e and ("gen" in e or ("query" in e and c["id"] not in credits)):

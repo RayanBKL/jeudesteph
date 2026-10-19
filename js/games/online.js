@@ -340,6 +340,7 @@ const Online = (() => {
   }
 
   function launchRace(r) {
+    if (typeof RaceEngine !== 'undefined' && RaceEngine.pvp && RaceEngine.active && RaceEngine.pvp.matchId === r.id) { r.raceLaunched = true; return; }   // course déjà en cours : on ne la relance pas (les coups déjà joués seraient perdus)
     if (r.raceLaunched && typeof RaceEngine !== 'undefined' && RaceEngine.pvp) return;
     r.raceLaunched = true;
     const s = r.data.state, id = r.id;

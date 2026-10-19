@@ -817,3 +817,25 @@
 
 /* Blackjack : 3 boutons secondaires sur une ligne */
 .bj-secondary-actions { grid-template-columns: repeat(3, 1fr) !important; }
+
+/* Collection : barre de recherche */
+.inv-filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.inv-filter-bar .inv-search{flex:1 1 140px;min-width:0;padding:8px 10px;border-radius:8px;font-size:.8rem}
+
+/* Bourse : historique */
+.hist-list{display:flex;flex-direction:column;gap:6px}
+.hist-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;border:2px solid var(--outline);background:#0003}
+.hist-name{display:flex;flex-direction:column;min-width:0}
+.hist-name strong{font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-name em{font-size:.7rem;opacity:.7;font-style:normal}
+.hist-amt{font-family:var(--font-title);white-space:nowrap}
+.hist-row.is-sold .hist-amt{color:#3fcf7a}.hist-row.is-bought .hist-amt{color:#ffb4a8}
+
+/* Personnalisation : choix du rond de clic */
+.pz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.pz-opt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;border:2px solid var(--outline);border-radius:10px;background:#0003;color:inherit;font-size:.68rem;line-height:1.1;cursor:pointer}
+.pz-opt img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block;max-height:80px}
+.pz-opt.is-on{border-color:var(--gold);background:#e9c46a33}
+.pz-cards{max-height:26vh;overflow-y:auto}
+
+.help-list{margin:4px 0 8px 18px;padding:0;font-size:.82rem;line-height:1.35}

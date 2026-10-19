@@ -26,6 +26,7 @@ const CardsRenderer = (() => {
     refs:      { label:'Mème',      accent:'#3d8bfd' },
     chanteur:  { label:'Musique',   accent:'#a35cf0' },
     culte:     { label:'Culte',     accent:'#e2322b' },
+    saison:    { label:'Saison',    accent:'#ffc43a' },
   };
 
   // ── Build a Card Element ────────────────────────────────────
@@ -214,7 +215,7 @@ const CardsRenderer = (() => {
   function buildImageHtml(item, compact) {
     const realPhoto = resolveCardPhoto(item);
     if (realPhoto) {
-      return `<img src="${realPhoto}" class="card-img" alt="${item.name}" loading="lazy" onerror="this.onerror=null; this.style.display='none'; const fb = this.parentElement.querySelector('.card-collector-fallback'); if(fb) fb.style.display='flex';" /><div class="card-collector-fallback" style="display:none;width:100%;height:100%">${buildCollectorEmblem(item, compact)}</div>`;
+      return `<img src="${realPhoto}" class="card-img" alt="${item.name}" loading="lazy" onerror="CardsRenderer.imgFail(this)" /><div class="card-collector-fallback" style="display:none;width:100%;height:100%">${buildCollectorEmblem(item, compact)}</div>`;
     }
     return buildCollectorEmblem(item, compact);
   }
@@ -342,7 +343,20 @@ const CardsRenderer = (() => {
     return `#${((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1)}`;
   }
 
+  // Image de carte qui ne charge pas (réseau mobile capricieux) : on réessaie 2 fois avant d'afficher l'emblème de secours
+  function imgFail(img) {
+    const n = +(img.dataset.retry || 0);
+    if (n < 2) {
+      img.dataset.retry = n + 1;
+      setTimeout(() => { try { const u = new URL(img.getAttribute('src'), location.href); u.searchParams.set('r', n + 1); img.src = u.href; } catch (e) {} }, 1500 * (n + 1));
+      return;
+    }
+    img.onerror = null; img.style.display = 'none';
+    const fb = img.parentElement && img.parentElement.querySelector('.card-collector-fallback'); if (fb) fb.style.display = 'flex';
+  }
+
   return {
+    imgFail,
     buildCard,
     buildGrid,
     buildRevealCard,

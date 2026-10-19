@@ -107,6 +107,36 @@ const ClickerEngine = (() => {
     if (el) el.textContent = '+' + formatCash(perSec) + ' €';
   }
 
+  // Récapitulatif de tous les bonus actifs (talents + 3 cartes de clic + synergie)
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function bonusAuditHtml(syn) {
+    const T = (typeof TalentsEngine !== 'undefined') ? TalentsEngine : null;
+    const f = (n, d = 2) => Number(n).toFixed(d).replace('.', ',').replace(/,?0+$/, '');
+    const cards = (state.equippedClickCards || []).map(id => (typeof getEmpireItemById === 'function' ? getEmpireItemById(id) : null)).filter(Boolean);
+    const cardRows = cards.length ? cards.map(c => `<li>${esc(c.name)} : +${formatCash(c.clickBoost || 0)} € par clic</li>`).join('') : '<li>Aucune carte dans les cases Clic 1, 2, 3.</li>';
+    const rows = [];
+    if (T) {
+      const auto = T.getAutoClicksPerSec(); if (auto) rows.push(`Auto-clic : ${auto} clic${auto > 1 ? 's' : ''} par seconde`);
+      rows.push(`Clics : ×${f(T.getClickPowerMult())} (talents)`);
+      rows.push(`Critiques : ${Math.round(T.getCritChance() * 100)} % de chances, gains ×${f(T.getCritMult(), 1)}`);
+      if (T.getPassiveToClickRate()) rows.push(`Chaque clic ajoute ${f(T.getPassiveToClickRate() * 100, 1)} % de ton revenu par seconde`);
+      rows.push(`Revenu des cartes : ×${f(T.getPassiveMultiplier())} (talents)`);
+      const cd = T.getFreePackCooldownMult(); rows.push(`Paquet gratuit : toutes les ${f(10 * cd, 1)} min`);
+      if (T.getPityReduction()) rows.push(`Garantie de rare : ${T.getPityReduction()} paquets plus tôt`);
+      if (T.getMythicChanceMult() > 1) rows.push(`Mythiques ×${T.getMythicChanceMult()} dans les paquets`);
+      if (T.getXPMult && T.getXPMult() > 1) rows.push(`XP : ×${f(T.getXPMult())}`);
+    }
+    return `
+      <div class="help-block">
+        <strong>Tous tes bonus actifs</strong>
+        <p>Tes 3 cartes de clic :</p>
+        <ul class="help-list">${cardRows}</ul>
+        <p>Synergie : ${esc(syn.name)} (×${syn.multiplier}). ${esc(syn.desc || '')}</p>
+        <ul class="help-list">${rows.map(r => `<li>${r}</li>`).join('')}</ul>
+      </div>`;
+  }
+
   function openStatsHelp() {
     const modal = document.getElementById('modal-overlay');
     const body = document.getElementById('modal-body');
@@ -131,9 +161,10 @@ const ClickerEngine = (() => {
         <strong>Tes cartes / seconde : +${formatCash(state.passivePerSec)} €</strong>
         <p>Chaque carte que tu possèdes rapporte un peu d'argent toute seule (sa valeur « PASSIF »), même sans cliquer. Plus ta collection est grande et rare, plus ce chiffre monte.</p>
       </div>
+      ${bonusAuditHtml(syn)}
       <div class="help-block">
         <strong>XP et niveau d'Empire</strong>
-        <p>1 XP par clic et de l'XP à chaque paquet ouvert. Chaque niveau donne 1 point de talent et débloque de nouvelles salles.</p>
+        <p>1 XP tous les 2 clics, de l'XP à chaque paquet ouvert et à chaque partie. Chaque niveau donne 1 point de talent et débloque de nouvelles salles.</p>
       </div>
     `;
     modal.classList.remove('hidden');
@@ -451,7 +482,8 @@ const ClickerEngine = (() => {
   }
 
   function gainEmpireXP(xp) {
-    state.empireXP += xp;
+    const xm = (typeof TalentsEngine !== 'undefined' && TalentsEngine.getXPMult) ? TalentsEngine.getXPMult() : 1;
+    state.empireXP += xp * xm;
     while (state.empireXP >= state.empireXPToNext) {
       state.empireXP -= state.empireXPToNext;
       state.empireLevel++;
