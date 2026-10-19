@@ -727,11 +727,3 @@
 }
 .po-booster-drop.is-dropping { animation: po-drop-out2 0.5s ease-in forwards; }
 @keyframes po-drop-out2 { to { transform: translateY(26px) scale(0.9); opacity: 0; } }
-
-/* Niveaux de paquets : Classique / Doré / Diamant */
-.pack-tiers{display:flex;gap:6px;justify-content:center;margin:2px 0 6px}
-.pack-tier{font-family:var(--font-title);font-size:.78rem;padding:4px 10px;border-radius:10px;border:2px solid var(--outline);background:var(--cream);color:var(--outline);cursor:pointer;line-height:1.1}
-.pack-tier.active{background:var(--gold);box-shadow:0 2px 0 var(--outline)}
-.pack-tier-2.active{background:#9fe3ef}
-.booster-tier-1{filter:drop-shadow(0 0 10px #f6c343) saturate(1.15)}
-.booster-tier-2{filter:drop-shadow(0 0 12px #8fe3ff) saturate(1.25) hue-rotate(-8deg)}
