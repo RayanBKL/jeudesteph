@@ -355,12 +355,7 @@ const ClickerEngine = (() => {
     // 1. Ne rien compter si l'onglet du navigateur est masqué / inactif
     if (!isPlayerActive()) return;   // auto-clic : seulement si le joueur utilise la fenêtre
 
-    // 2. Ne rien compter si le joueur n'est pas sur la page du Cendrier / Clicker
-    const clickerPage = document.getElementById('page-clicker');
-    if (!clickerPage || clickerPage.classList.contains('hidden') || clickerPage.style.display === 'none') {
-      return;
-    }
-
+    // L'auto-clic continue sur toutes les pages (casino, mini-jeux, bourse…) : seul compte le fait d'être présent
     const earned = computeClickEarnings(true);
     state.cash += earned;
     state.totalClicks++;

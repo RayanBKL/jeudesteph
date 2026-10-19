@@ -211,11 +211,7 @@ const TalentsEngine = (() => {
       // 1. Ne pas compter si le navigateur/onglet est en arrière-plan ou minimisé
       if (document.hidden || document.visibilityState !== 'visible') return;
 
-      // 2. Ne pas compter si le joueur est sur une autre page du jeu (Casino, Bourse, Paquets, etc.)
-      const clickerPage = document.getElementById('page-clicker');
-      if (!clickerPage || clickerPage.classList.contains('hidden') || clickerPage.style.display === 'none') {
-        return;
-      }
+      // L'auto-clic tourne sur toutes les pages (casino, jeux, bourse…) tant que le joueur utilise la fenêtre (vérifié dans triggerClick)
 
       if (typeof ClickerEngine !== 'undefined' && ClickerEngine.triggerClick) {
         ClickerEngine.triggerClick(false);
@@ -294,9 +290,19 @@ const TalentsEngine = (() => {
   }
 
   // ── Rendu Visuel Style God of War ───────────────────────────
+  // Arbre en cercle : le meilleur talent est au CENTRE, les premiers sur le bord. Les positions (x, y) historiques servent d'angle et de rayon.
+  function ringRadius(y) { return y >= 95 ? 0 : 0.07 + (95 - y) / 83 * 0.36; }
+  function pos(node) {
+    const theta = ((node.x - 51) / 41) * 170 * Math.PI / 180, R = ringRadius(node.y);
+    return { x: 50 + R * 100 * Math.sin(theta), y: 50 - R * 100 * Math.cos(theta) };
+  }
+  let scrollMemo = null;
+
   function render() {
     const container = document.getElementById('talents-content');
     if (!container) return;
+    const oldScroll = container.querySelector('#gow-scroll');
+    if (oldScroll) scrollMemo = { l: oldScroll.scrollLeft, t: oldScroll.scrollTop };
 
     syncPointsWithPlayer();
 
@@ -315,12 +321,13 @@ const TalentsEngine = (() => {
           <div class="gow-pts-badge-right">
             <span class="gow-orb-icon">⭐</span>
             <strong>${state.pointsAvailable} PT</strong> disponibles
-            <button id="btn-gow-reset" class="btn-gow-reset" title="Réinitialiser tous les talents">🔄 Réinitialiser</button>
+            <button id="btn-gow-center" class="btn-gow-reset" title="Revenir au centre de l'arbre">Centre</button>
+            <button id="btn-gow-reset" class="btn-gow-reset" title="Réinitialiser tous les talents">Réinitialiser</button>
           </div>
         </div>
 
         <!-- The Grand Slate Tablet / Skill Tree Canvas -->
-        <div class="gow-tree-board">
+        <div class="gow-tree-scroll" id="gow-scroll"><div class="gow-tree-board gow-radial">
           <!-- Background SVG for Runic Energy Conduits -->
           <svg class="gow-conduits-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
@@ -335,6 +342,7 @@ const TalentsEngine = (() => {
               </filter>
             </defs>
 
+            ${[12, 24, 36, 48, 59, 70, 83].map(y => `<circle cx="50" cy="50" r="${(ringRadius(y) * 100).toFixed(2)}" class="gow-ring" />`).join('')}
             ${CONDUITS.map(([fromId, toId]) => {
               const fromNode = NODES.find(n => n.id === fromId);
               const toNode = NODES.find(n => n.id === toId);
@@ -343,11 +351,11 @@ const TalentsEngine = (() => {
 
               return `
                 <!-- Dark stone conduit channel -->
-                <line x1="${fromNode.x}" y1="${fromNode.y}" x2="${toNode.x}" y2="${toNode.y}"
+                <line x1="${pos(fromNode).x}" y1="${pos(fromNode).y}" x2="${pos(toNode).x}" y2="${pos(toNode).y}"
                       class="gow-line-channel" />
                 <!-- Lit runic line if active -->
                 ${isConduitLit ? `
-                  <line x1="${fromNode.x}" y1="${fromNode.y}" x2="${toNode.x}" y2="${toNode.y}"
+                  <line x1="${pos(fromNode).x}" y1="${pos(fromNode).y}" x2="${pos(toNode).x}" y2="${pos(toNode).y}"
                         class="gow-line-lit" />
                 ` : ''}
               `;
@@ -370,7 +378,7 @@ const TalentsEngine = (() => {
               if (isSelected) nodeClass += ' gow-node-selected';
 
               return `
-                <div class="${nodeClass}" style="left:${node.x}%; top:${node.y}%;" data-node-id="${node.id}">
+                <div class="${nodeClass}" style="left:${pos(node).x}%; top:${pos(node).y}%;" data-node-id="${node.id}">
                   <!-- Outer halo glow for unlocked nodes -->
                   ${isUnlocked ? '<div class="gow-diamond-aura"></div>' : ''}
 
@@ -389,7 +397,7 @@ const TalentsEngine = (() => {
               `;
             }).join('')}
           </div>
-        </div>
+        </div></div>
 
         <!-- God of War Inspector Card (Détail de la Rune sélectionnée) -->
         <div class="gow-inspector-panel">
@@ -421,6 +429,12 @@ const TalentsEngine = (() => {
         </div>
       </div>
     `;
+
+    // Défilement : on garde la position, sinon on se place au centre (le talent ultime)
+    const sc = container.querySelector('#gow-scroll');
+    const center = () => { sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2; sc.scrollTop = (sc.scrollHeight - sc.clientHeight) / 2; };
+    if (sc) { if (scrollMemo) { sc.scrollLeft = scrollMemo.l; sc.scrollTop = scrollMemo.t; } else requestAnimationFrame(center); }
+    container.querySelector('#btn-gow-center')?.addEventListener('click', () => sc && center());
 
     // Event listeners
     container.querySelector('#btn-gow-reset')?.addEventListener('click', reset);

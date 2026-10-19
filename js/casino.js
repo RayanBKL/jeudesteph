@@ -4,7 +4,7 @@
 // ============================================================
 
 const Casino = {
-  currentTab: 'blackjack', // 'blackjack' | 'roulette'
+  currentTab: 'lobby', // 'lobby' (menu des jeux) | un identifiant de jeu : blackjack, roulette, uth, pktable, classic, pmu, livre, cascade, scratch, crash
   cashMise: 50,
   lastResult: null,
 
@@ -201,17 +201,89 @@ const Casino = {
 
     this.bindGlobalTabs();
     this.updateHeaderDashboard();
+    this.renderNav();
 
-    if (typeof Poker !== 'undefined' && this.currentTab !== 'uth' && this.currentTab !== 'pktable') Poker.stopTable();
-    if (this.currentTab === 'blackjack') {
-      this.renderBlackjack(content);
-    } else if (this.currentTab === 'uth' && typeof Poker !== 'undefined') {
-      Poker.renderUltimate(content);
-    } else if (this.currentTab === 'pktable' && typeof Poker !== 'undefined') {
-      Poker.renderTable(content);
-    } else {
-      this.renderRoulette(content);
+    // on quitte un jeu : on coupe ses animations / sa connexion
+    const tab = this.currentTab;
+    if (typeof Poker !== 'undefined' && tab !== 'pktable') Poker.stopTable();
+    if (typeof Slots !== 'undefined' && !(Slots.META && Slots.META[tab])) Slots.stop();
+    if (typeof InstantGames !== 'undefined' && tab !== 'scratch' && tab !== 'crash') InstantGames.stop();
+
+    if (tab === 'lobby') this.renderLobby(content);
+    else if (tab === 'blackjack') this.renderBlackjack(content);
+    else if (tab === 'roulette') this.renderRoulette(content);
+    else if (tab === 'uth' && typeof Poker !== 'undefined') Poker.renderUltimate(content);
+    else if (tab === 'pktable' && typeof Poker !== 'undefined') Poker.renderTable(content);
+    else if (typeof Slots !== 'undefined' && Slots.META && Slots.META[tab]) Slots.render(content, tab);
+    else if (tab === 'scratch' && typeof InstantGames !== 'undefined') InstantGames.renderScratch(content);
+    else if (tab === 'crash' && typeof InstantGames !== 'undefined') InstantGames.renderCrash(content);
+    else { this.currentTab = 'lobby'; this.renderLobby(content); }
+  },
+
+  // ── Menu du casino (comme un casino en ligne) ──
+  GAME_MENU: [
+    { group: 'Tables', games: [
+      { id: 'blackjack', name: 'Blackjack', desc: '6 jeux, 2 mains, assurance, split', art: 'cards' },
+      { id: 'roulette', name: 'Roulette', desc: 'Européenne, 37 numéros, règle du partage', art: 'wheel' },
+      { id: 'uth', name: 'Ultimate Poker', desc: 'Texas Hold\'em contre la banque', art: 'cards2' },
+      { id: 'pktable', name: 'Poker à table', desc: 'Ouvre une table, joue contre d\'autres joueurs', art: 'chips' },
+    ] },
+    { group: 'Machines à sous', games: [
+      { id: 'classic', name: 'Le Tiroir-Caisse', desc: '3 rouleaux, 5 lignes', art: 'slot' },
+      { id: 'pmu', name: 'Le Bar PMU', desc: '5×3, 20 lignes, tours gratuits', art: 'slot' },
+      { id: 'livre', name: 'Le Livre du Buraliste', desc: 'Symbole qui s\'étend, 10 tours gratuits', art: 'slot' },
+      { id: 'cascade', name: 'La Cascade du Cendrier', desc: 'Grappes, chutes et bombes ×25', art: 'slot' },
+    ] },
+    { group: 'Instantanés', games: [
+      { id: 'scratch', name: 'Gratté du Tabac', desc: 'Ticket à gratter, jusqu\'à ×1 000', art: 'ticket' },
+      { id: 'crash', name: 'La Cendre qui monte', desc: 'Encaisse avant la chute', art: 'crash' },
+    ] },
+  ],
+
+  tileArt(g) {
+    const ink = '#120a04';
+    if (typeof Slots !== 'undefined' && Slots.META && Slots.META[g.id]) return Slots.tile(g.id);
+    const svg = {
+      cards: `<svg viewBox="0 0 80 52"><rect x="14" y="6" width="26" height="38" rx="4" fill="#fbf0d8" stroke="${ink}" stroke-width="3" transform="rotate(-10 27 25)"/><rect x="36" y="4" width="26" height="38" rx="4" fill="#fbf0d8" stroke="${ink}" stroke-width="3" transform="rotate(8 49 23)"/><text x="49" y="30" font-size="22" text-anchor="middle" fill="#c0261a" font-family="Arial Black">A</text></svg>`,
+      cards2: `<svg viewBox="0 0 80 52"><rect x="12" y="8" width="22" height="32" rx="3" fill="#fbf0d8" stroke="${ink}" stroke-width="3"/><rect x="38" y="8" width="22" height="32" rx="3" fill="#fbf0d8" stroke="${ink}" stroke-width="3"/><text x="23" y="30" font-size="18" text-anchor="middle" fill="${ink}" font-family="Arial Black">K</text><text x="49" y="30" font-size="18" text-anchor="middle" fill="#c0261a" font-family="Arial Black">A</text></svg>`,
+      wheel: `<svg viewBox="0 0 80 52"><circle cx="40" cy="26" r="22" fill="#1f7a4a" stroke="${ink}" stroke-width="3"/><circle cx="40" cy="26" r="14" fill="#c43b2d" stroke="${ink}" stroke-width="3"/><circle cx="40" cy="26" r="6" fill="#ffc43a" stroke="${ink}" stroke-width="3"/><circle cx="60" cy="14" r="4" fill="#fff" stroke="${ink}" stroke-width="2"/></svg>`,
+      chips: `<svg viewBox="0 0 80 52"><ellipse cx="28" cy="34" rx="16" ry="8" fill="#e2322b" stroke="${ink}" stroke-width="3"/><ellipse cx="28" cy="28" rx="16" ry="8" fill="#e2322b" stroke="${ink}" stroke-width="3"/><ellipse cx="52" cy="30" rx="16" ry="8" fill="#3b82f6" stroke="${ink}" stroke-width="3"/><ellipse cx="52" cy="24" rx="16" ry="8" fill="#3b82f6" stroke="${ink}" stroke-width="3"/><ellipse cx="52" cy="24" rx="9" ry="4" fill="none" stroke="#fff" stroke-width="2"/></svg>`,
+      ticket: `<svg viewBox="0 0 80 52"><rect x="12" y="6" width="56" height="40" rx="5" fill="#ffc43a" stroke="${ink}" stroke-width="3"/><g fill="#bfbfbf" stroke="${ink}" stroke-width="2"><rect x="20" y="16" width="12" height="10" rx="2"/><rect x="34" y="16" width="12" height="10" rx="2"/><rect x="48" y="16" width="12" height="10" rx="2"/><rect x="20" y="29" width="12" height="10" rx="2"/><rect x="34" y="29" width="12" height="10" rx="2"/><rect x="48" y="29" width="12" height="10" rx="2"/></g></svg>`,
+      crash: `<svg viewBox="0 0 80 52"><path d="M8 44C24 42 38 34 48 22 56 12 62 8 72 6" fill="none" stroke="#ffc43a" stroke-width="5" stroke-linecap="round"/><path d="M8 44H72" stroke="${ink}" stroke-width="3"/><circle cx="72" cy="6" r="4" fill="#e2322b" stroke="${ink}" stroke-width="2"/></svg>`,
+    };
+    return `<span class="sl-tile-art">${svg[g.art] || ''}</span>`;
+  },
+
+  renderLobby(content) {
+    content.innerHTML = `
+      <div class="cas-lobby">
+        ${this.GAME_MENU.map(sec => `
+          <div class="cas-group"><h3>${sec.group}</h3>
+            <div class="cas-tiles">${sec.games.map(g => `
+              <button class="cas-tile" data-game="${g.id}"><span class="cas-tile-art">${this.tileArt(g)}</span><strong>${g.name}</strong><em>${g.desc}</em></button>`).join('')}</div>
+          </div>`).join('')}
+      </div>`;
+    content.querySelectorAll('[data-game]').forEach(b => b.addEventListener('click', () => this.openGame(b.dataset.game)));
+  },
+
+  openGame(id) { this.currentTab = id; this.render(); },
+
+  renderNav() {
+    const nav = document.getElementById('casino-nav'); if (!nav) return;
+    if (this.currentTab === 'lobby') { nav.innerHTML = '<div class="cas-nav-title">Le casino · choisis ton jeu</div>'; return; }
+    let name = this.currentTab;
+    this.GAME_MENU.forEach(sec => sec.games.forEach(g => { if (g.id === this.currentTab) name = g.name; }));
+    nav.innerHTML = `<button class="btn-secondary cas-back" id="cas-back">‹ Le casino</button><div class="cas-nav-title">${name}</div>`;
+    document.getElementById('cas-back').onclick = () => this.backToLobby();
+  },
+
+  async backToLobby() {
+    // à une table de poker, quitter le jeu = quitter la table
+    if (this.currentTab === 'pktable' && typeof Poker !== 'undefined' && Poker.atTable && Poker.atTable()) {
+      if (!(await GameDialog.confirm('Tu te couches s\'il y a une main en cours, et tes jetons te reviennent.', { title: 'Quitter la table de poker ?', ok: 'Quitter' }))) return;
+      await Poker.leaveSilently();
     }
+    this.currentTab = 'lobby'; this.render();
   },
 
   // ============================================================
@@ -247,7 +319,8 @@ const Casino = {
     }
     this.bj.shoe = shoe;
     this.bj.cardsDealtFromShoe = 0;
-    this.bj.cutCardIndex = Math.floor(shoe.length * 0.75);
+    // Carte de coupe placée au hasard entre 50 % et 75 % du sabot : on remélange seulement quand elle est passée (entre deux manches)
+    this.bj.cutCardIndex = Math.floor(shoe.length * (0.5 + Math.random() * 0.25));
     return shoe;
   },
 
@@ -731,7 +804,7 @@ const Casino = {
     this.recordBet();
     if (window.SoundFX) SoundFX.click();
 
-    // Sabot officiel 6 jeux : remélangé quand la carte de coupe (75 %) est passée, entre deux manches
+    // Sabot officiel 6 jeux : remélangé quand la carte de coupe (entre 50 et 75 % du sabot) est passée, entre deux manches
     if (!this.bj.shoe || this.bj.shoe.length < 60 || this.bj.cardsDealtFromShoe >= this.bj.cutCardIndex) {
       this.initShoe(6);
       showToast('Sabot remélangé', 'info');

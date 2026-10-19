@@ -84,8 +84,26 @@ const EmpireManager = (() => {
     document.getElementById('btn-quick-bourse')?.addEventListener('click', () => navigateTo('bourse'));
   }
 
+  let navGuarding = false;
   function navigateTo(page) {
     if (page === 'course' || page === 'home') page = 'clicker';
+    // Partie en ligne en cours : changer d'onglet = abandonner (on demande confirmation) ; table de poker : on quitte la table
+    if (currentPage === 'multi' && page !== 'multi' && window.Online && Online.inMatch && Online.inMatch() && !navGuarding) {
+      navGuarding = true;
+      GameDialog.confirm('Si tu quittes cet écran, la partie est perdue.', { title: 'Abandonner la partie ?', ok: 'Abandonner', danger: true }).then(async ok => {
+        if (ok) { await Online.forfeitCurrent(); navGuarding = false; navigateTo(page); }
+        else { navGuarding = false; document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === currentPage)); }
+      });
+      return;
+    }
+    if (currentPage === 'casino' && page !== 'casino' && window.Poker && Poker.atTable && Poker.atTable() && !navGuarding) {
+      navGuarding = true;
+      GameDialog.confirm('Tu te couches s\'il y a une main en cours, et tes jetons te reviennent.', { title: 'Quitter la table de poker ?', ok: 'Quitter' }).then(async ok => {
+        if (ok) { await Poker.leaveSilently(); navGuarding = false; navigateTo(page); }
+        else { navGuarding = false; document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === currentPage)); }
+      });
+      return;
+    }
     currentPage = page;
 
     // Update nav

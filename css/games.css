@@ -906,3 +906,98 @@
 .pk-tname strong{font-size:.85rem}.pk-tname em{font-size:.66rem;opacity:.7;font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pk-tseats{font-size:.7rem;white-space:nowrap}
 @media (min-width:700px){.pk-card{width:54px;height:76px}.pk-card .pk-r{font-size:1.25rem}.pk-card .pk-s{font-size:1.5rem}.pk-table{max-width:760px;margin:0 auto}}
+
+/* ── Casino : menu des jeux ── */
+#page-casino .casino-tabs-european{display:flex !important;align-items:center;gap:10px !important;grid-template-columns:none}
+.cas-nav-title{font-family:var(--font-title);font-size:1rem;color:var(--gold)}
+.cas-back{font-size:.8rem !important;padding:6px 10px !important}
+.cas-lobby{display:flex;flex-direction:column;gap:12px;overflow-y:auto;overscroll-behavior:contain;max-height:100%;padding:2px 2px 10px;scrollbar-width:none}
+.cas-lobby::-webkit-scrollbar{display:none}
+.cas-group h3{font-family:var(--font-title);font-size:.95rem;color:var(--gold);margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}
+.cas-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.cas-tile{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px 9px;border:3px solid var(--outline);border-radius:14px;background:linear-gradient(180deg,#1f7a4a,#14532f);color:#fff;cursor:pointer;box-shadow:0 4px 0 var(--outline);text-align:center}
+.cas-tile:active{transform:translateY(2px);box-shadow:0 2px 0 var(--outline)}
+.cas-tile strong{font-family:var(--font-title);font-size:.88rem;line-height:1.1}
+.cas-tile em{font-size:.66rem;opacity:.85;font-style:normal;line-height:1.15}
+.cas-tile-art,.sl-tile-art{display:flex;justify-content:center;align-items:center;gap:2px;height:46px}
+.cas-tile-art svg{height:46px;width:auto}
+.sl-tile-art .sl-sym{width:34px;height:34px}
+@media (min-width:700px){.cas-tiles{grid-template-columns:repeat(4,1fr)}.cas-lobby{max-width:900px;margin:0 auto}}
+
+/* ── Machines à sous ── */
+.sl-machine,.ig-table{display:flex;flex-direction:column;gap:8px;padding:8px;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.sl-machine::-webkit-scrollbar,.ig-table::-webkit-scrollbar{display:none}
+.sl-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sl-head strong{font-family:var(--font-title);color:var(--gold);font-size:.95rem}
+.ig-sub{font-size:.68rem;opacity:.8}
+.sl-grid{display:flex;gap:4px;justify-content:center;padding:8px;border:3px solid var(--outline);border-radius:12px;background:#0a2a1a;box-shadow:inset 0 0 0 2px #ffc43a55}
+.sl-col{display:flex;flex-direction:column;gap:4px}
+.sl-grid{--cell:min(68px,calc((min(100vw,520px) - 74px) / var(--cols)))}
+.sl-cell{width:var(--cell);height:var(--cell);border-radius:8px;background:#fbf0d8;border:2px solid var(--outline);display:flex;align-items:center;justify-content:center;padding:2px}
+.sl-cascade .sl-grid{--cell:min(50px,calc((min(100vw,520px) - 74px) / var(--cols)))}
+.sl-cascade .sl-cell{border-radius:6px}
+.sl-sym{width:100%;height:100%;display:block}
+.sl-col.is-spin .sl-cell{filter:blur(1.5px);background:#e8dcc0}
+.sl-cell.is-win{background:#fff3b0;box-shadow:0 0 0 3px #ffc43a,0 0 12px #ffc43a;animation:slpulse .5s ease-in-out infinite alternate}
+@keyframes slpulse{to{transform:scale(1.06)}}
+.sl-win{min-height:1.4em;text-align:center;font-size:.85rem;opacity:.95}
+.sl-win.is-ok{color:#3fcf7a;font-weight:700}
+.sl-win.is-big{color:var(--gold);font-weight:800;font-size:1rem}
+.sl-fs{padding:5px 8px;border:2px solid var(--gold);border-radius:10px;background:#ffc43a22;font-size:.74rem;text-align:center}
+.sl-fs .sl-sym{display:inline-block;width:18px;height:18px;vertical-align:middle}
+.sl-controls{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.sl-bet{display:flex;align-items:center;gap:6px}
+.sl-bet .btn-secondary{padding:7px 12px;font-size:1rem}
+.sl-bet span{display:flex;flex-direction:column;align-items:center;min-width:64px;line-height:1.1}
+.sl-bet small{font-size:.6rem;opacity:.7;text-transform:uppercase}
+.sl-bet b{font-family:var(--font-title);color:var(--gold);font-size:.9rem}
+.sl-spin{flex:1;font-size:1rem;padding:12px 8px}
+.sl-side{display:flex;flex-direction:column;gap:4px}
+.sl-pt-row{display:flex;align-items:center;gap:10px;padding:4px 0;border-bottom:1px solid #fff2}
+.sl-pt-row .sl-sym{width:34px;height:34px;flex:none}
+.sl-pt-vals{display:flex;gap:10px;flex-wrap:wrap;font-size:.78rem}
+
+/* ── Instantanés ── */
+.ig-ticket{border:3px solid var(--outline);border-radius:14px;padding:10px;background:linear-gradient(160deg,#ffc43a,#e9a31f);color:var(--outline);text-align:center}
+.ig-ticket-title{font-family:var(--font-title);font-size:1.1rem;margin-bottom:6px}
+.ig-ticket-note{font-size:.8rem;opacity:.8;padding:22px 0}
+.ig-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:260px;margin:0 auto}
+.ig-cell{aspect-ratio:1;border:3px solid var(--outline);border-radius:10px;background:repeating-linear-gradient(45deg,#9b9b9b,#9b9b9b 6px,#bdbdbd 6px,#bdbdbd 12px);font-family:var(--font-title);font-size:.8rem;color:var(--outline);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:2px}
+.ig-cell.is-open{background:#fbf0d8;cursor:default}
+.ig-cell.is-hit{background:#fff3b0;box-shadow:0 0 0 3px #3fcf7a}
+.ig-prices{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.ig-prices .btn-secondary{padding:6px 10px;font-size:.78rem}.ig-prices .active{background:var(--gold);color:var(--outline)}
+.ig-small{font-size:.68rem;opacity:.7;text-align:center;margin:0}
+.ig-screen{position:relative;border:3px solid var(--outline);border-radius:12px;background:#0a2a1a;overflow:hidden}
+.ig-screen canvas{width:100%;height:130px;display:block}
+.ig-mult{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-title);font-size:2.6rem;color:#fff;text-shadow:0 3px 0 var(--outline)}
+.ig-screen.crashed .ig-mult{color:#ff6a5c}.ig-screen.cashed .ig-mult{color:#3fcf7a}
+.ig-hist{display:flex;gap:4px;flex-wrap:wrap;min-height:20px}
+.ig-hist span{font-size:.66rem;padding:1px 6px;border-radius:8px;border:2px solid var(--outline)}
+.ig-hist .hi{background:#3fcf7a;color:var(--outline)}.ig-hist .lo{background:#e2322b55}
+
+/* ── Arbre de talents en cercle ── */
+#talents-content .gow-tree-scroll{overflow:auto;overscroll-behavior:contain;border-radius:16px;border:2px solid #32261d;min-height:0;max-height:100%;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+#talents-content .gow-radial{width:1200px !important;height:1200px !important;max-width:none !important;flex:none;border:0 !important;border-radius:0 !important;
+  background:radial-gradient(circle at 50% 50%,rgba(245,158,11,.16) 0%,rgba(239,68,68,.08) 18%,transparent 52%),linear-gradient(180deg,#130e0a,#0a0806) !important}
+#talents-content .gow-radial .gow-diamond-outer{transform:rotate(45deg) scale(.78) !important}
+#talents-content .gow-radial .gow-ribbon-banner{display:none}
+#talents-content .gow-radial .gow-ring{fill:none;stroke:#ffffff10;stroke-width:.25;vector-effect:non-scaling-stroke;stroke-width:1px}
+@media (max-width:600px){#talents-content .gow-radial{width:1050px !important;height:1050px !important}}
+#talents-content .gow-radial .gow-line-channel{vector-effect:non-scaling-stroke;stroke-width:9px !important}
+#talents-content .gow-radial .gow-line-lit{vector-effect:non-scaling-stroke;stroke-width:4px !important}
+#talents-content .gow-tree-wrapper{grid-template-rows:auto minmax(150px,1fr) auto !important;height:100%;max-height:100%}
+@media (max-width:600px){#talents-content .gow-inspector-panel{flex-wrap:wrap;gap:6px !important;padding:8px 10px !important}#talents-content .gow-inspect-lore{display:none}#talents-content .gow-inspector-left{display:none}}
+@media (max-width:600px){
+  #talents-content .gow-inspector-panel{display:grid !important;grid-template-columns:1fr auto;align-items:center}
+  #talents-content .gow-inspector-center{grid-column:1}
+  #talents-content .gow-inspector-right{grid-column:2;display:flex;flex-direction:column;gap:4px;align-items:stretch}
+  #talents-content .gow-inspect-title{font-size:1rem !important;margin:0 !important}
+  #talents-content .gow-inspect-desc{font-size:.74rem !important;margin:2px 0 0 !important}
+  #talents-content .gow-inspect-tier{font-size:.6rem !important}
+  #talents-content .gow-inspect-cost-label{font-size:.68rem !important;text-align:center}
+  #talents-content .btn-gow-action{padding:7px 10px !important;font-size:.78rem !important;white-space:nowrap}
+  #talents-content .gow-unlocked-title{display:none}
+  #talents-content .gow-tree-top-bar{padding:6px 10px !important}
+}
+@media (max-width:600px){#talents-content .gow-inspector-panel{grid-template-columns:minmax(0,1fr) auto !important;overflow:hidden}#talents-content .btn-gow-action{font-size:.68rem !important;padding:6px 6px !important;letter-spacing:0 !important}}

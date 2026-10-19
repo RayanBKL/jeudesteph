@@ -23,7 +23,7 @@
   <meta http-equiv="Expires" content="0" />
   <script>
     (function() {
-      const CURRENT_V = "100";
+      const CURRENT_V = "106";
       if (localStorage.getItem("app_asset_version") !== CURRENT_V) {
         localStorage.setItem("app_asset_version", CURRENT_V);
         if (!window.location.search.includes("t=")) {
@@ -32,11 +32,11 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css?v=100" />
-  <link rel="stylesheet" href="css/empire.css?v=100" />
-  <link rel="stylesheet" href="css/theme.css?v=100" />
-  <link rel="stylesheet" href="css/packs.css?v=100" />
-  <link rel="stylesheet" href="css/games.css?v=100" />
+  <link rel="stylesheet" href="css/style.css?v=106" />
+  <link rel="stylesheet" href="css/empire.css?v=106" />
+  <link rel="stylesheet" href="css/theme.css?v=106" />
+  <link rel="stylesheet" href="css/packs.css?v=106" />
+  <link rel="stylesheet" href="css/games.css?v=106" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 </head>
@@ -566,12 +566,7 @@
           </div>
         </div>
 
-        <div class="casino-tabs-european">
-          <button class="cas-tab active" data-ctab="blackjack">Blackjack</button>
-          <button class="cas-tab" data-ctab="roulette">Roulette</button>
-          <button class="cas-tab" data-ctab="uth">Ultimate Poker</button>
-          <button class="cas-tab" data-ctab="pktable">Poker à table</button>
-        </div>
+        <div class="casino-tabs-european" id="casino-nav"></div>
 
         <div id="casino-content"></div>
       </div>
@@ -855,44 +850,47 @@
 </div>
 
 <!-- ═══ SCRIPTS ═══════════════════════════════════════════ -->
-<script src="js/dialog.js?v=100"></script>
-<script src="js/audio.js?v=100"></script>
-<script src="js/icons.js?v=100"></script>
-<script src="js/cigarettes_db.js?v=100"></script>
-<script src="js/data.js?v=100"></script>
-<script src="js/supabase.js?v=100"></script>
-<script src="js/account.js?v=100"></script>
-<script src="js/empire_db_expansion.js?v=100"></script>
-<script src="js/cards_extra.js?v=100"></script>
-<script src="js/cards_season.js?v=100"></script>
-<script src="js/empire_db.js?v=100"></script>
-<script src="js/balance.js?v=100"></script>
-<script src="js/clicker.js?v=100"></script>
-<script src="js/pack_art.js?v=100"></script>
-<script src="js/cards.js?v=100"></script>
-<script src="js/empire.js?v=100"></script>
-<script src="js/game.js?v=100"></script>
-<script src="js/race.js?v=100"></script>
-<script src="js/packs.js?v=100"></script>
-<script src="js/market.js?v=100"></script>
-<script src="js/poker.js?v=100"></script>
-<script src="js/casino.js?v=100"></script>
-<script src="js/talents.js?v=100"></script>
-<script src="js/games/league.js?v=100"></script>
-<script src="js/games/prestige.js?v=100"></script>
-<script src="js/games/game_ui.js?v=100"></script>
-<script src="js/games/bataille.js?v=100"></script>
-<script src="js/games/des421.js?v=100"></script>
-<script src="js/games/pbc.js?v=100"></script>
-<script src="js/games/ut.js?v=100"></script>
-<script src="js/games/quiz.js?v=100"></script>
-<script src="js/games/online.js?v=100"></script>
-<script src="js/chat.js?v=100"></script>
-<script src="js/social.js?v=100"></script>
-<script src="js/games/hub.js?v=100"></script>
-<script src="js/ui.js?v=100"></script>
-<script src="js/profile.js?v=100"></script>
-<script src="js/personalize.js?v=100"></script>
-<script src="js/main.js?v=100"></script>
+<script src="js/dialog.js?v=106"></script>
+<script src="js/audio.js?v=106"></script>
+<script src="js/icons.js?v=106"></script>
+<script src="js/cigarettes_db.js?v=106"></script>
+<script src="js/data.js?v=106"></script>
+<script src="js/supabase.js?v=106"></script>
+<script src="js/account.js?v=106"></script>
+<script src="js/empire_db_expansion.js?v=106"></script>
+<script src="js/cards_extra.js?v=106"></script>
+<script src="js/cards_season.js?v=106"></script>
+<script src="js/empire_db.js?v=106"></script>
+<script src="js/balance.js?v=106"></script>
+<script src="js/clicker.js?v=106"></script>
+<script src="js/pack_art.js?v=106"></script>
+<script src="js/cards.js?v=106"></script>
+<script src="js/empire.js?v=106"></script>
+<script src="js/game.js?v=106"></script>
+<script src="js/race.js?v=106"></script>
+<script src="js/packs.js?v=106"></script>
+<script src="js/market.js?v=106"></script>
+<script src="js/poker.js?v=106"></script>
+<script src="js/slots_engine.js?v=106"></script>
+<script src="js/slots_ui.js?v=106"></script>
+<script src="js/casino_games.js?v=106"></script>
+<script src="js/casino.js?v=106"></script>
+<script src="js/talents.js?v=106"></script>
+<script src="js/games/league.js?v=106"></script>
+<script src="js/games/prestige.js?v=106"></script>
+<script src="js/games/game_ui.js?v=106"></script>
+<script src="js/games/bataille.js?v=106"></script>
+<script src="js/games/des421.js?v=106"></script>
+<script src="js/games/pbc.js?v=106"></script>
+<script src="js/games/ut.js?v=106"></script>
+<script src="js/games/quiz.js?v=106"></script>
+<script src="js/games/online.js?v=106"></script>
+<script src="js/chat.js?v=106"></script>
+<script src="js/social.js?v=106"></script>
+<script src="js/games/hub.js?v=106"></script>
+<script src="js/ui.js?v=106"></script>
+<script src="js/profile.js?v=106"></script>
+<script src="js/personalize.js?v=106"></script>
+<script src="js/main.js?v=106"></script>
 </body>
 </html>

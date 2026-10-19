@@ -365,7 +365,16 @@ const Poker = (() => {
     } finally { T.busy = false; }
   }
 
-  return { renderUltimate, renderTable, stopTable, best, handName };
+  // Assis à une table (pour demander confirmation avant de quitter l'onglet)
+  const atTable = () => !!(T.id && T.view === 'table');
+  async function leaveSilently() {
+    stopTable();
+    try { await sb().rpc('poker_leave'); } catch (e) {}
+    T.id = null; T.data = null; T.view = 'lobby';
+    await applyCredits();
+  }
+
+  return { renderUltimate, renderTable, stopTable, best, handName, atTable, leaveSilently };
 })();
 
 if (typeof window !== 'undefined') window.Poker = Poker;
