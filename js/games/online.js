@@ -6,7 +6,7 @@
 
 const Online = (() => {
   const TOTAL_TIME = { pbc: 25, des421: 45, quiz: 10, bataille: 30 };
-  const GAME_IDS = ['pbc', 'des421', 'quiz', 'bataille'];
+  const GAME_IDS = ['pbc', 'des421', 'bataille'];
   const cache = {};
   let run = null;          // partie en cours d'affichage
   let searchTimer = null;

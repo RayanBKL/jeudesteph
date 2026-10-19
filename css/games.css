@@ -1036,3 +1036,23 @@
 .pk-sec{display:flex;flex-direction:column;gap:6px}
 .pk-sec h4{margin:0;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-title);font-size:.82rem;color:var(--gold);text-transform:uppercase}
 .pk-tbanner{text-align:center;font-size:.74rem;padding:4px 8px;border:2px solid var(--gold);border-radius:10px;background:#ffc43a22}
+
+/* ── Instantanés : La Cendre qui monte + Mégots Piégés ── */
+.ig-table{display:flex;flex-direction:column;gap:8px;padding:10px;min-height:0;height:100%;overflow:hidden}
+.ig-sub{font-size:.8rem;opacity:.8}
+.ig-hist{display:flex;gap:6px;overflow:hidden;white-space:nowrap;font-family:Cendrier,sans-serif;font-size:.85rem}
+.ig-hist .lo{color:#ff8a7a}.ig-hist .hi{color:#8fe3a5}.ig-hist .vh{color:var(--gold)}
+.ig-screen{position:relative;flex:1;min-height:110px;border:3px solid var(--outline);border-radius:12px;background:#1b110a;overflow:hidden}
+.ig-screen canvas{position:absolute;inset:0;width:100%;height:100%}
+.ig-mult{position:absolute;left:50%;top:14%;transform:translateX(-50%);font-family:Cendrier,sans-serif;font-size:clamp(2rem,9vw,3.4rem);color:var(--gold);text-shadow:0 3px 0 var(--outline)}
+.ig-screen.crashed .ig-mult{color:#ff5a4d}.ig-screen.cashed .ig-mult{color:#6fe39a}
+.ig-cig{position:absolute;left:10px;right:10px;bottom:8px;height:12px;border:2px solid var(--outline);border-radius:6px;background:#fbf0d8;overflow:hidden;--burn:0}
+.ig-cig-body{position:absolute;inset:0;background:linear-gradient(90deg,#3a2a1a calc(var(--burn)*100%),#fbf0d8 calc(var(--burn)*100%))}
+.ig-cig-ember{position:absolute;top:0;bottom:0;left:calc(var(--burn)*100%);width:6px;background:#ff6a2b;box-shadow:0 0 8px #ff6a2b}
+.ig-flake{position:absolute;top:-6px;width:6px;height:6px;border-radius:50%;background:#bdb7ae;animation:ig-fall 1.2s ease-in forwards}
+@keyframes ig-fall{to{transform:translateY(190px) rotate(120deg);opacity:0}}
+.mn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1;min-height:0;align-content:center;width:min(100%,46vh);margin:0 auto}
+.mn-cell{aspect-ratio:1;border:3px solid var(--outline);border-radius:10px;background:var(--cream);box-shadow:0 3px 0 var(--outline);padding:4px;cursor:pointer}
+.mn-cell:disabled{cursor:default}
+.mn-cell.is-safe{background:#8fe3a5}.mn-cell.is-bomb{background:#ffb3a8}.mn-cell.is-hit{background:#ff5a4d}.mn-cell.is-dim{opacity:.45}
+.mn-cell span,.mn-cell svg{display:block;width:100%;height:100%}

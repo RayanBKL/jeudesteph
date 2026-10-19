@@ -34,7 +34,6 @@ const Prestige = (() => {
     { id: 'rares_5',      tier: 'bronze', target: 15,  text: 'Tire 15 cartes Rares ou mieux', on: 'card_drawn', match: p => RARITY_RANK[p.rarity] >= 2 },
     { id: 'play_ut_3',    tier: 'bronze', target: 9,  text: 'Joue 9 matchs d\'Ultimate Comptoir', on: 'game_end', match: p => p.game === 'ut' },
     { id: 'goals_ut_8',   tier: 'bronze', target: 24,  text: 'Marque 24 buts en Ultimate Comptoir', on: 'ut_goals' },
-    { id: 'quiz_good_20', tier: 'bronze', target: 60, text: 'Donne 60 bonnes réponses au Quiz du Comptoir', on: 'quiz_good' },
     { id: 'brelan_1',     tier: 'bronze', target: 1,  text: 'Sors un brelan au 421', on: 'dice_combo', match: p => p.combo === 'brelan' || p.combo === 'mac' },
     // ── Argent ──
     { id: 'win_bat_5',    tier: 'argent', target: 15,  text: 'Gagne 15 Batailles de Comptoir', on: 'game_end', match: p => p.game === 'bataille' && p.result === 'win' },
@@ -42,7 +41,6 @@ const Prestige = (() => {
     { id: 'win_pbc_6',    tier: 'argent', target: 18,  text: 'Gagne 18 parties de Pierre-Briquet-Clope', on: 'game_end', match: p => p.game === 'pbc' && p.result === 'win' },
     { id: 'win_ut_4',     tier: 'argent', target: 12,  text: 'Gagne 12 matchs d\'Ultimate Comptoir', on: 'game_end', match: p => p.game === 'ut' && p.result === 'win' },
     { id: 'clean_ut',     tier: 'argent', target: 1,  text: 'Gagne un match d\'Ultimate Comptoir sans encaisser de but', on: 'perfect', match: p => p.game === 'ut' },
-    { id: 'win_quiz_3',   tier: 'argent', target: 9,  text: 'Gagne 9 parties de Quiz du Comptoir', on: 'game_end', match: p => p.game === 'quiz' && p.result === 'win' },
     { id: 'combo_421',    tier: 'argent', target: 1,  text: 'Sors un 421 au 421', on: 'dice_combo', match: p => p.combo === '421' },
     { id: 'sweep_bat',    tier: 'argent', target: 1,  text: 'Gagne une Bataille 3 manches à 0', on: 'perfect', match: p => p.game === 'bataille' },
     { id: 'sweep_pbc',    tier: 'argent', target: 1,  text: 'Gagne un Pierre-Briquet-Clope 3 à 0', on: 'perfect', match: p => p.game === 'pbc' },

@@ -4,7 +4,7 @@
 // ============================================================
 
 const Social = (() => {
-  const GAME_NAMES = { pbc: 'Pierre-Briquet-Clope', des421: '421', quiz: 'Quiz du Comptoir' };
+  const GAME_NAMES = { pbc: 'Pierre-Briquet-Clope', des421: '421', bataille: 'Bataille de Comptoir' };
   let tab = 'profil';
   let clanView = 'mon';
   let inviteShown = null;

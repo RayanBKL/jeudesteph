@@ -9,7 +9,6 @@ const GameHub = (() => {
     { id: 'bataille', name: 'Bataille de Comptoir', desc: 'Tes cartes contre les siennes, stat par stat.', engine: () => Bataille, art: 'cards' },
     { id: 'des421',   name: '421',                  desc: 'Trois dés, trois lancers, une seule combinaison.', engine: () => Des421, art: 'dice' },
     { id: 'pbc',      name: 'Pierre-Briquet-Clope', desc: 'Le shifumi du comptoir. Pierre, briquet, clope : devine le coup de l\'autre.', engine: () => PBC, art: 'pbc' },
-    { id: 'quiz',     name: 'Quiz du Comptoir',     desc: 'Une photo, quatre noms, dix secondes. Plus vite que ton adversaire ?', engine: () => QuizComptoir, art: 'quiz' },
   ];
   let view = 'home';          // home | prestiges | rangs
   let prestigeTab = 'semaine';

@@ -207,7 +207,7 @@ const Casino = {
     const tab = this.currentTab;
     if (typeof Poker !== 'undefined' && tab !== 'pktable') Poker.stopTable();
     if (typeof Slots !== 'undefined' && !(Slots.META && Slots.META[tab])) Slots.stop();
-    if (typeof InstantGames !== 'undefined' && tab !== 'scratch' && tab !== 'crash') InstantGames.stop();
+    if (typeof InstantGames !== 'undefined' && tab !== 'scratch' && tab !== 'crash' && tab !== 'mines') InstantGames.stop();
 
     if (tab === 'lobby') this.renderLobby(content);
     else if (tab === 'blackjack') this.renderBlackjack(content);
@@ -217,6 +217,7 @@ const Casino = {
     else if (typeof Slots !== 'undefined' && Slots.META && Slots.META[tab]) Slots.render(content, tab);
     else if (tab === 'scratch' && typeof InstantGames !== 'undefined') InstantGames.renderScratch(content);
     else if (tab === 'crash' && typeof InstantGames !== 'undefined') InstantGames.renderCrash(content);
+    else if (tab === 'mines' && typeof InstantGames !== 'undefined') InstantGames.renderMines(content);
     else { this.currentTab = 'lobby'; this.renderLobby(content); }
   },
 
@@ -237,6 +238,7 @@ const Casino = {
     { group: 'Instantanés', games: [
       { id: 'scratch', name: 'Gratté du Tabac', desc: 'Ticket à gratter, jusqu\'à ×1 000', art: 'ticket' },
       { id: 'crash', name: 'La Cendre qui monte', desc: 'Encaisse avant la chute', art: 'crash' },
+      { id: 'mines', name: 'Mégots Piégés', desc: 'Évite les briquets piégés', art: 'mines' },
     ] },
   ],
 
@@ -249,6 +251,7 @@ const Casino = {
       wheel: `<svg viewBox="0 0 80 52"><circle cx="40" cy="26" r="22" fill="#1f7a4a" stroke="${ink}" stroke-width="3"/><circle cx="40" cy="26" r="14" fill="#c43b2d" stroke="${ink}" stroke-width="3"/><circle cx="40" cy="26" r="6" fill="#ffc43a" stroke="${ink}" stroke-width="3"/><circle cx="60" cy="14" r="4" fill="#fff" stroke="${ink}" stroke-width="2"/></svg>`,
       chips: `<svg viewBox="0 0 80 52"><ellipse cx="28" cy="34" rx="16" ry="8" fill="#e2322b" stroke="${ink}" stroke-width="3"/><ellipse cx="28" cy="28" rx="16" ry="8" fill="#e2322b" stroke="${ink}" stroke-width="3"/><ellipse cx="52" cy="30" rx="16" ry="8" fill="#3b82f6" stroke="${ink}" stroke-width="3"/><ellipse cx="52" cy="24" rx="16" ry="8" fill="#3b82f6" stroke="${ink}" stroke-width="3"/><ellipse cx="52" cy="24" rx="9" ry="4" fill="none" stroke="#fff" stroke-width="2"/></svg>`,
       ticket: `<svg viewBox="0 0 80 52"><rect x="12" y="6" width="56" height="40" rx="5" fill="#ffc43a" stroke="${ink}" stroke-width="3"/><g fill="#bfbfbf" stroke="${ink}" stroke-width="2"><rect x="20" y="16" width="12" height="10" rx="2"/><rect x="34" y="16" width="12" height="10" rx="2"/><rect x="48" y="16" width="12" height="10" rx="2"/><rect x="20" y="29" width="12" height="10" rx="2"/><rect x="34" y="29" width="12" height="10" rx="2"/><rect x="48" y="29" width="12" height="10" rx="2"/></g></svg>`,
+      mines: `<svg viewBox="0 0 80 52"><g stroke="${ink}" stroke-width="2.5"><rect x="8" y="6" width="20" height="20" rx="3" fill="#fbf0d8"/><rect x="30" y="6" width="20" height="20" rx="3" fill="#e2322b"/><rect x="52" y="6" width="20" height="20" rx="3" fill="#fbf0d8"/><rect x="8" y="28" width="20" height="20" rx="3" fill="#fbf0d8"/><rect x="30" y="28" width="20" height="20" rx="3" fill="#fbf0d8"/><rect x="52" y="28" width="20" height="20" rx="3" fill="#fbf0d8"/></g></svg>`,
       crash: `<svg viewBox="0 0 80 52"><path d="M8 44C24 42 38 34 48 22 56 12 62 8 72 6" fill="none" stroke="#ffc43a" stroke-width="5" stroke-linecap="round"/><path d="M8 44H72" stroke="${ink}" stroke-width="3"/><circle cx="72" cy="6" r="4" fill="#e2322b" stroke="${ink}" stroke-width="2"/></svg>`,
     };
     return `<span class="sl-tile-art">${svg[g.art] || ''}</span>`;
