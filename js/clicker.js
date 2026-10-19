@@ -705,13 +705,13 @@ const ClickerEngine = (() => {
         <h3 style="font-family:var(--font-title);font-size:1.4rem;color:var(--empire-gold);margin-bottom:12px;text-align:center">
           Équiper une Carte de Clic (Slot ${slotIndex + 1})
         </h3>
-        <div class="cards-grid" id="equip-modal-grid" style="max-height:60vh;overflow-y:auto"></div>
+        <div id="equip-modal-grid" class="pick-wrap"></div>
       `;
 
       const grid = body.querySelector('#equip-modal-grid');
-      if (typeof CardsRenderer !== 'undefined' && CardsRenderer.buildGrid) {
-        CardsRenderer.buildGrid(grid, candidates, inventory, {
-          compact: true,
+      if (typeof CardsRenderer !== 'undefined' && CardsRenderer.buildPicker) {
+        CardsRenderer.buildPicker(grid, candidates, inventory, {
+          mode: 'click',
           onClick: (item) => {
             equipClickCard(item.id);
             modal.classList.add('hidden');

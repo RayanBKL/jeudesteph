@@ -852,12 +852,12 @@ const EmpireManager = (() => {
         <h3 style="font-family:var(--font-title);font-size:1.5rem;color:var(--empire-gold);margin-bottom:16px">
           Assigner dans ${room.name}
         </h3>
-        <div class="cards-grid" id="assign-modal-grid" style="max-height:60vh;overflow-y:auto"></div>
+        <div id="assign-modal-grid" class="pick-wrap"></div>
       `;
 
       const grid = body.querySelector('#assign-modal-grid');
-      CardsRenderer.buildGrid(grid, ownedItems, state.inventory, {
-        compact: true,
+      CardsRenderer.buildPicker(grid, ownedItems, state.inventory, {
+        mode: 'passive',
         onClick: (item) => {
           assignToRoom(roomId, item.id);
           modal.classList.add('hidden');
