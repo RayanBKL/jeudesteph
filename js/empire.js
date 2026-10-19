@@ -2294,7 +2294,7 @@ const EmpireManager = (() => {
           Object.values(state.priceHistory || {}).forEach(h => { if (h && typeof h.ema === 'number') h.ema = Math.round(h.ema * k); });
           (state.myListings || []).forEach(l => { ['price', 'currentBid', 'minBid'].forEach(f => { if (typeof l[f] === 'number') l[f] = Math.round(l[f] * k); }); });
         }
-        if (saved.balanceVersion !== Balance.VERSION) { state.balanceVersion = Balance.VERSION; saveState(); }
+        if ((saved.balanceVersion || 0) < Balance.VERSION) { state.balanceVersion = Balance.VERSION; saveState(); }
       } else {
         state.balanceVersion = Balance.VERSION;
         saveState();

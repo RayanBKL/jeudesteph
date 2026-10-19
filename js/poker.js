@@ -229,7 +229,7 @@ const Poker = (() => {
               <select class="game-select-empire" id="pkt-max"><option value="3">3 joueurs</option><option value="4">4 joueurs</option><option value="6" selected>6 joueurs</option></select>
               <button class="btn-primary" id="pkt-open">Créer un tournoi</button>
             </div>
-            <p class="ig-small">1 500 jetons chacun, blindes qui montent toutes les 2 minutes. 3 joueurs : 70/30 ; 4 à 6 : 50/30/20.</p>
+            <p class="ig-small">1 500 jetons chacun, blindes +1 niveau toutes les 2 minutes. 60 % du droit d'entrée va dans la cagnotte (3 joueurs : 70/30 ; 4 à 6 : 50/30/20), 40 % est ta PRIME : qui t'élimine la touche tout de suite. Le vainqueur garde sa prime.</p>
             <div class="pk-list">${tours.length ? tours.map(rowHtml).join('') : '<p class="soc-empty" style="text-align:center;padding:10px">Aucun tournoi en cours.</p>'}</div>
           </div>
         </div>`;
@@ -239,7 +239,7 @@ const Poker = (() => {
       content.querySelectorAll('[data-join]').forEach(b => b.addEventListener('click', () => joinTable(content, b.dataset.join)));
     };
     const rowHtml = t => t.kind === 'tournoi'
-      ? `<div class="pk-trow"><span class="pk-tname"><strong>${esc(t.name)}</strong><em>Entrée ${fmt(t.buyin)} € · cagnotte ${fmt(t.pool || 0)} € · ${t.status === 'running' ? 'en cours (niveau ' + (t.level || 1) + ')' : 'inscriptions'} · ${esc(t.players.join(', ') || 'vide')}</em></span>
+      ? `<div class="pk-trow"><span class="pk-tname"><strong>${esc(t.name)}</strong><em>Entrée ${fmt(t.buyin)} € (prime ${fmt(Math.floor(t.buyin * 0.4))} €) · cagnotte ${fmt(t.pool || 0)} € · ${t.status === 'running' ? 'en cours (niveau ' + (t.level || 1) + ')' : 'inscriptions'} · ${esc(t.players.join(', ') || 'vide')}</em></span>
           <span class="pk-tseats">${t.seats}/${t.max_seats}</span><button class="btn-secondary pk-mini" data-join="${t.id}" ${t.status !== 'registering' || t.seats >= t.max_seats ? 'disabled' : ''}>S'inscrire</button></div>`
       : `<div class="pk-trow"><span class="pk-tname"><strong>${esc(t.name)}</strong><em>${fmt(t.buyin)} € · blindes ${fmt(t.sb)}/${fmt(t.bb)} · ${esc(t.players.join(', ') || 'vide')}</em></span>
           <span class="pk-tseats">${t.seats}/${t.max_seats}${t.playing ? ' · en jeu' : ''}</span><button class="btn-secondary pk-mini" data-join="${t.id}" ${t.seats >= t.max_seats ? 'disabled' : ''}>Rejoindre</button></div>`;
@@ -336,8 +336,8 @@ const Poker = (() => {
     if (pl.place <= 3 && typeof Prestige !== 'undefined') Prestige.emit('tourney_podium');
     const el = document.createElement('div'); el.className = 'soc-modal';
     el.innerHTML = `<div class="soc-modal-card pp-card"><h3>${pl.place === 1 ? 'Tu gagnes le tournoi !' : 'Tournoi terminé'}</h3>
-      <p class="soc-empty">${esc(data.name)}</p><p style="font-size:1.1rem">Tu finis <b>${pl.place}${pl.place === 1 ? 'er' : 'e'}</b> sur ${(data.tourney.players || []).length}${pl.prize ? ` · <b style="color:var(--gold)">+${fmt(pl.prize)} €</b>` : ' · pas de gain'}</p>
-      <div class="bj-hist-list">${(data.tourney.places || []).slice().sort((a, b) => a.place - b.place).map(p => `<div class="pk-trow"><span class="pk-tseats">${p.place}</span><span class="pk-tname"><strong>${esc(p.pseudo)}</strong></span><span class="pk-tseats">${p.prize ? '+' + fmt(p.prize) + ' €' : ''}</span></div>`).join('')}</div>
+      <p class="soc-empty">${esc(data.name)}</p><p style="font-size:1.1rem">Tu finis <b>${pl.place}${pl.place === 1 ? 'er' : 'e'}</b> sur ${(data.tourney.players || []).length}${pl.prize || pl.bounty ? ` · <b style="color:var(--gold)">+${fmt((pl.prize || 0) + (pl.bounty || 0))} €</b>` : ' · pas de gain'}${pl.bounty ? ` (dont ${fmt(pl.bounty)} € de primes, ${pl.kills || 0} élimination${(pl.kills || 0) > 1 ? 's' : ''})` : ''}</p>
+      <div class="bj-hist-list">${(data.tourney.places || []).slice().sort((a, b) => a.place - b.place).map(p => `<div class="pk-trow"><span class="pk-tseats">${p.place}</span><span class="pk-tname"><strong>${esc(p.pseudo)}</strong></span><span class="pk-tseats">${(p.prize || p.bounty) ? '+' + fmt((p.prize || 0) + (p.bounty || 0)) + ' €' : ''}${p.kills ? ' · ' + p.kills + ' ✕' : ''}</span></div>`).join('')}</div>
       <button class="btn-empire btn-empire-secondary soc-wide" data-x>Fermer</button></div>`;
     el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-x]')) el.remove(); });
     document.body.appendChild(el);
@@ -400,7 +400,7 @@ const Poker = (() => {
     content.innerHTML = `
       <div class="casino-felt-table pk-table pk-game">
         <div class="pk-top"><span><strong>${esc(t.name)}</strong> · ${fmt(t.sb)}/${fmt(t.bb)}</span><span class="pk-pot">Pot ${fmt(h ? h.pot : 0)}${UN}</span><button class="btn-secondary pk-mini" id="pk-leave">${isT ? 'Abandonner' : 'Quitter'}</button></div>
-        ${isT && tr ? `<div class="pk-tbanner">${tr.status === 'registering' ? `Inscriptions ${d.seats.length}/${t.max_seats} · le tournoi démarre quand la table est complète` : `Niveau ${tr.level || 1} · blindes ${fmt(t.sb)}/${fmt(t.bb)}`} · cagnotte <b>${fmt(tr.pool || 0)} €</b></div>` : ''}
+        ${isT && tr ? `<div class="pk-tbanner">${tr.status === 'registering' ? `Inscriptions ${d.seats.length}/${t.max_seats} · le tournoi démarre quand la table est complète` : `Niveau ${tr.level || 1} · blindes ${fmt(t.sb)}/${fmt(t.bb)}`} · cagnotte <b>${fmt((tr.pool || 0) + (tr.forfeit || 0))} €</b> · prime <b>${fmt(tr.bounty_each || 0)} €</b> par joueur${tr.kills && me && tr.kills[me.user_id] ? ` · tes éliminations : <b>${tr.kills[me.user_id]}</b>` : ''}</div>` : ''}
         <div class="pk-seats">${seatsHtml}</div>
         <div class="pk-zone"><div class="pk-row">${boardCells}</div></div>
         <div class="pk-me ${L && L.myTurn ? 'is-turn' : ''}">

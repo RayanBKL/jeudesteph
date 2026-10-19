@@ -823,7 +823,8 @@ const ClickerEngine = (() => {
           state.earnedFromClicks = Math.round((state.earnedFromClicks || 0) * f);
           state.earnedFromPassive = Math.round((state.earnedFromPassive || 0) * f);
         }
-        if (typeof Balance !== 'undefined') state.balanceVersion = Balance.VERSION;
+        // ne JAMAIS faire redescendre la version : une vieille page ouverte ferait reconvertir l'argent (÷12) à la prochaine ouverture
+        if (typeof Balance !== 'undefined') state.balanceVersion = Math.max(saved.balanceVersion || 0, Balance.VERSION);
 
         // Courbe d'XP : toujours recalculée depuis le niveau (les anciennes sauvegardes suivaient une autre courbe)
         state.empireXPToNext = xpForLevel(state.empireLevel || 1);
