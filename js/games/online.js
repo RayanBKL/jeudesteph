@@ -52,7 +52,7 @@ const Online = (() => {
           <div class="on-spinner"></div>
           <strong>On cherche quelqu'un au comptoir…</strong>
           <span id="on-wait">0 s</span>
-          <p class="mg-hint" id="on-hint">Un autre joueur doit lancer la même recherche en même temps.</p>
+          <p class="mg-hint" id="on-hint">Si personne n'arrive en 10 secondes, un bot de ton niveau joue contre toi.</p>
           <div class="mg-actions">
             <button class="btn-empire btn-empire-secondary" id="on-cancel">Annuler</button>
             <button class="btn-empire btn-empire-primary hidden" id="on-invite">Inviter un ami</button>
@@ -69,7 +69,7 @@ const Online = (() => {
       if (!container.querySelector('.mg-search')) { await leave(); return; }
       const secs = Math.floor((Date.now() - t0) / 1000);
       const w = container.querySelector('#on-wait'); if (w) w.textContent = `${secs} s`;
-      if (secs >= 20) {
+      if (secs >= 25) {
         container.querySelector('#on-invite')?.classList.remove('hidden');
         const h = container.querySelector('#on-hint'); if (h && !h.dataset.late) { h.dataset.late = '1'; h.textContent = 'Peu de monde en ligne pour l\'instant. On continue de chercher : tu peux aussi inviter un ami pour jouer tout de suite.'; }
       }
@@ -78,7 +78,13 @@ const Online = (() => {
         const h = container.querySelector('#on-hint'); if (h) h.textContent = 'Connexion au serveur impossible, on réessaie…';
         return;
       }
-      if (data && data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, data.match_id, game); }
+      if (data && data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, data.match_id, game); return; }
+      // Personne au bout de 10 s : un bot de ton niveau prend la place
+      if (secs >= 10) {
+        const h = container.querySelector('#on-hint'); if (h && !h.dataset.bot) { h.dataset.bot = '1'; h.textContent = 'Personne en ligne pour l\'instant : un bot de ton niveau arrive.'; }
+        const b = await sb().rpc('mm_bot', { p_game: game });
+        if (b.data && b.data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, b.data.match_id, game); }
+      }
     };
     step();
     searchTimer = setInterval(step, 2000);

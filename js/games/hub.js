@@ -85,7 +85,7 @@ const GameHub = (() => {
           <button class="btn-empire btn-empire-primary" data-friends>Jouer avec des amis</button>
           <button class="btn-empire btn-empire-secondary" data-view="rangs">Les 26 rangs</button>
         </div>
-        <p class="hub-note">Classements remis à zéro tous les 30 jours (saison ${League.seasonLabel()}). Tous les matchs se jouent contre de vrais joueurs : pas de bots.</p>
+        <p class="hub-note">Classements remis à zéro tous les 30 jours (saison ${League.seasonLabel()}). On joue contre de vrais joueurs ; si personne n'est là au bout de 10 secondes, un bot de ton niveau le remplace (points plafonnés).</p>
       </div>`;
 
     c.querySelectorAll('[data-game]').forEach(b => b.addEventListener('click', (e) => {
