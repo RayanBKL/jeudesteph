@@ -2246,6 +2246,7 @@ const EmpireManager = (() => {
         const items = drawEmpirePack('gratuit', state.pityState);
         items.forEach(item => addToInventory(item.id));
         emitPackPrestige(items);
+        if (typeof Prestige !== 'undefined') Prestige.emit('free_pack');
         autoFillRooms();
         saveState();
         openPackReveal(items, EMPIRE_PACKS.gratuit);

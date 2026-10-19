@@ -63,6 +63,7 @@ const Social = (() => {
     if (error) { host.innerHTML = `<p class="soc-empty">${esc(msg(error))}</p>`; return; }
     const list = data || [];
     const received = list.filter(f => f.rel === 'recue'), friends = list.filter(f => f.rel === 'ami'), sent = list.filter(f => f.rel === 'envoyee');
+    if (window.Achievements) Achievements.on('friends', { n: friends.length });
     const code = (Account.profile && Account.profile.friend_code) || '';
     const row = (f, actions) => `<div class="soc-row"><span class="soc-click" data-profile="${f.user_id}" role="button" tabindex="0">${avatar(f)}</span><span class="soc-name soc-click" data-profile="${f.user_id}" role="button" tabindex="0"><strong>${esc(f.pseudo)}</strong><em>${f.rel === 'ami' ? `<i class="soc-dot ${f.online ? 'on' : ''}"></i>${f.online ? 'En ligne' : 'Hors ligne'} · ` : ''}Niv. ${f.level}</em></span>${actions}</div>`;
     host.innerHTML = `
@@ -172,6 +173,7 @@ const Social = (() => {
     const un = await sb().rpc('chat_unread');
     if (un && un.data) unread = { clan: un.data.clan || 0, dm: un.data.dm || {} };
     const { data: mine } = await sb().rpc('clan_mine');
+    if (mine && window.Achievements) Achievements.on('clan');
     const bar = `<div class="cat-tabs hub-tabs"><button class="cat-tab ${clanView === 'mon' ? 'active' : ''}" data-cv="mon">${mine ? 'Mon clan' : 'Rejoindre'}</button><button class="cat-tab ${clanView === 'top' ? 'active' : ''}" data-cv="top">Classement</button></div>`;
     let body = '';
     if (clanView === 'top') {
@@ -419,10 +421,11 @@ const Social = (() => {
     }).join('');
     const since = new Date(p.since).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     const el = modal(`
-      <div class="pp-head">${av}<div class="pp-id"><h3>${esc(p.pseudo)}</h3>
+      <div class="pp-head">${av}<div class="pp-id"><h3>${esc(p.pseudo)}</h3>${p.title ? `<p class="pp-title">${esc(p.title)}</p>` : ''}
         <p><i class="soc-dot ${p.online ? 'on' : ''}"></i>${p.online ? 'En ligne' : 'Hors ligne'} · Niv. ${p.level} · ${p.cards} cartes</p>
         ${p.clan ? `<p><span class="soc-tagbadge">${esc(p.clan.tag)}</span> ${esc(p.clan.name)}</p>` : ''}<p class="pp-since">Joue depuis ${esc(since)}</p></div></div>
       ${p.bio ? `<p class="pp-bio"></p>` : ''}
+      ${(p.badges || []).length && window.Achievements ? `<div class="ach-chips">${p.badges.map(b => Achievements.badgeHtml(b)).join('')}</div>` : ''}
       ${(p.showcase || []).length ? `<h4>Vitrine</h4><div class="sc-row">${p.showcase.map(c => tile(c)).join('')}</div>` : (p.rel === 'self' ? '<p class="soc-empty">Ta vitrine est vide : choisis jusqu\'à 6 cartes à montrer.</p>' : '')}
       ${ratings ? `<h4>Rangs de la saison</h4><div class="pp-ranks">${ratings}</div>` : ''}
       <div class="pp-actions"></div>
@@ -507,7 +510,10 @@ const Social = (() => {
   }
 
   // Appelé à l'ouverture de la page Profil
-  function onProfileOpen() { start(); renderTabs(); renderMyShowcase(); }
+  function onProfileOpen() {
+    start(); renderTabs(); renderMyShowcase();
+    if (window.Achievements) { Achievements.renderProfile(document.getElementById('prof-ach')); const t = document.getElementById('prof-title'); if (t) t.textContent = Achievements.title(); }
+  }
 
   // Ouvre directement un onglet (amis, clan) depuis n'importe où
   function openTab(t) { tab = t; showPage('profil'); }

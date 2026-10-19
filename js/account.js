@@ -15,7 +15,7 @@ const Account = (() => {
   const KEYS = [
     'stephane_v1', 'empire_state', 'empire_clicker', 'empire_free_packs_count', 'empire_next_free_pack_time',
     'empire_last_free_pack', 'ashtray_talents_gow', 'ashtray_talents', 'league_v1', 'prestige_v1', 'ut_squad_v1',
-    'casino_last_result', 'casino_bank_advance_at', 'ashtray_pvp_deck', 'ashtray_audio_enabled', 'ak_click_skin',
+    'casino_last_result', 'casino_bank_advance_at', 'ashtray_pvp_deck', 'ashtray_audio_enabled', 'ak_click_skin', 'ak_quests', 'ak_ach', 'ak_title', 'casino_bj_history',
   ];
   const PREFIXES = ['rules_seen_'];
   const OWNER = 'ak_owner', STAMP = 'ak_stamp', DIRTY = 'ak_dirty', LEFT = 'ak_signed_out';
@@ -325,6 +325,7 @@ const Account = (() => {
       if (typeof showToast === 'function') {
         const f = typeof ClickerEngine.formatCash === 'function' ? ClickerEngine.formatCash(Math.abs(g.amount)) : g.amount;
         if (g.kind === 'poker') { showToast(`${g.note || 'Poker'} (${g.amount >= 0 ? '+' : '−'}${f} €)`, g.amount >= 0 ? 'gold' : 'info'); return; }
+        if (g.kind === 'market' && typeof Prestige !== 'undefined') Prestige.emit('market_sale');
         if (g.kind === 'market') { showToast(`${g.note || 'Vente'} : +${f} € (commission de 5 % déduite).`, 'gold'); return; }
         showToast(g.mode === 'set' ? `Ton solde a été fixé à ${f} € par l'administrateur.` : (g.amount >= 0 ? `L'administrateur t'a offert ${f} € !` : `L'administrateur a retiré ${f} € de ton solde.`) + (g.note ? ' ' + g.note : ''), 'gold');
       }

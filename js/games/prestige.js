@@ -146,6 +146,8 @@ const Prestige = (() => {
 
   // ── Événements du jeu ──────────────────────────────────────
   function emit(type, payload = {}) {
+    // les quêtes du jour et les succès écoutent les mêmes événements
+    try { if (window.Quests) Quests.on(type, payload); if (window.Achievements) Achievements.on(type, payload); } catch (e) {}
     ensureWeek();
 
     // Défis de la semaine

@@ -1001,3 +1001,38 @@
   #talents-content .gow-tree-top-bar{padding:6px 10px !important}
 }
 @media (max-width:600px){#talents-content .gow-inspector-panel{grid-template-columns:minmax(0,1fr) auto !important;overflow:hidden}#talents-content .btn-gow-action{font-size:.68rem !important;padding:6px 6px !important;letter-spacing:0 !important}}
+
+/* ── Quêtes du jour ── */
+.clicker-quest-btn{position:relative;font-family:var(--font-title);font-size:.8rem;padding:6px 10px;border:3px solid var(--outline);border-radius:12px;background:var(--gold);color:var(--outline);cursor:pointer;box-shadow:0 3px 0 var(--outline);align-self:center}
+.quest-dot{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;border-radius:9px;background:#e2322b;color:#fff;font-style:normal;font-size:.68rem;display:flex;align-items:center;justify-content:center;border:2px solid var(--outline);padding:0 3px}
+.quest-dot.hidden{display:none}
+.quest-list{display:flex;flex-direction:column;gap:8px;margin:8px 0;text-align:left}
+.quest-row{border:2px solid var(--outline);border-radius:12px;padding:8px 10px;background:#0003}
+.quest-row.is-done{border-color:#3fcf7a}.quest-row.is-got{opacity:.55}
+.quest-top{display:flex;gap:8px;align-items:center;font-size:.86rem}
+.quest-tier{font-size:.6rem;font-family:var(--font-title);padding:2px 6px;border-radius:8px;border:2px solid var(--outline);color:var(--outline);flex:none}
+.quest-facile{background:#9fe3a8}.quest-moyenne{background:#ffc43a}.quest-difficile{background:#ff8f7a}
+.quest-bar{position:relative;height:16px;border-radius:8px;background:#0006;border:2px solid var(--outline);margin:6px 0;overflow:hidden}
+.quest-bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#e9a31f,#ffc43a)}
+.quest-bar span{position:relative;display:block;text-align:center;font-size:.64rem;line-height:12px}
+.quest-foot{display:flex;justify-content:space-between;align-items:center;font-size:.74rem;gap:8px}
+.quest-foot em{opacity:.75}
+.quest-claim{padding:6px 12px !important;font-size:.76rem !important}
+
+/* ── Succès et titres ── */
+.profile-title{font-size:.8rem;color:var(--gold);font-style:italic;min-height:1em}
+.pp-title{margin:0 0 2px;color:var(--gold);font-style:italic;font-size:.82rem}
+.ach-title-sel{max-width:160px}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;margin-top:6px;max-height:34vh;overflow-y:auto}
+.ach-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border:2px solid var(--outline);border-radius:10px;background:#0002;color:inherit;font-size:.68rem;line-height:1.1;text-align:center;cursor:pointer;opacity:.6}
+.ach-card.is-on{opacity:1;background:#e9c46a22}
+.ach-medal{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--outline);font-size:.8rem;color:var(--outline);background:#6b6256;flex:none}
+.ach-medal.is-on.ach-t1{background:#c98a4b}.ach-medal.is-on.ach-t2{background:#cfd3d8}.ach-medal.is-on.ach-t3{background:#ffc43a}.ach-medal.is-on.ach-t4{background:#9fe3ef}.ach-medal.is-on.ach-t5{background:#ff9ad0}
+.ach-name{font-weight:700}.ach-prog{opacity:.75;font-size:.62rem}
+.ach-chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.ach-chip{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;padding:2px 8px 2px 3px;border:2px solid var(--outline);border-radius:12px;background:#0003}
+.ach-chip .ach-medal{width:16px;height:16px;font-size:.6rem}
+
+.pk-sec{display:flex;flex-direction:column;gap:6px}
+.pk-sec h4{margin:0;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-title);font-size:.82rem;color:var(--gold);text-transform:uppercase}
+.pk-tbanner{text-align:center;font-size:.74rem;padding:4px 8px;border:2px solid var(--gold);border-radius:10px;background:#ffc43a22}
