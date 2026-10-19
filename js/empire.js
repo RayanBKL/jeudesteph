@@ -295,7 +295,7 @@ const EmpireManager = (() => {
     }
     state.totalPacksOpened++;
     // XP d'ouverture : prix d'origine / 100 (minimum 15)
-    if (ClickerEngine.gainXP) ClickerEngine.gainXP(Balance.xpForPack(pack.price));
+    if (ClickerEngine.gainXP) ClickerEngine.gainXP(pack.xp != null ? pack.xp : Balance.xpForPack(pack.price));
 
     const items = drawEmpirePack(packId, state.pityState);
     items.forEach(item => addToInventory(item.id));
