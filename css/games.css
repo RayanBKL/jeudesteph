@@ -800,3 +800,20 @@
 
 /* Grille de cartes vide : le message prend toute la largeur */
 .empty-state{grid-column:1/-1;width:100%;text-align:center;padding:24px 12px}
+
+/* Historique du blackjack */
+.bj-hist-list{max-height:55vh;overflow-y:auto;text-align:left;display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.bj-hist-row{border:2px solid var(--outline);border-radius:10px;padding:6px 8px;background:#0003;font-size:.78rem}
+.bj-hist-row.win{border-color:#3fcf7a}.bj-hist-row.lose{border-color:#e2322b}
+.bj-hist-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:2px}
+.bj-hist-cards{opacity:.9}.bj-hist-text{opacity:.65;font-size:.7rem;margin-top:2px}
+
+/* Dernière manche affichée à la fin d'un match */
+.lr-box{margin:10px auto 0;max-width:360px;border:2px solid var(--outline);border-radius:12px;padding:8px 10px;background:#0003}
+.lr-title{font-family:var(--font-title);color:var(--gold);font-size:.9rem;text-align:center;margin-bottom:6px}
+.lr-row{display:flex;gap:10px;justify-content:space-around}
+.lr-side{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.8rem;text-align:center}
+.lr-side em{opacity:.7;font-style:normal;font-size:.72rem}
+
+/* Blackjack : 3 boutons secondaires sur une ligne */
+.bj-secondary-actions { grid-template-columns: repeat(3, 1fr) !important; }

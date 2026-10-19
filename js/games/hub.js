@@ -98,6 +98,11 @@ const GameHub = (() => {
     }));
     c.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { view = b.dataset.view; render(); }));
     c.querySelector('[data-friends]')?.addEventListener('click', () => window.Social && Social.openTab('amis'));
+    // Une partie est encore en cours (retour sur l'onglet, page rechargée) : on la reprend
+    if (window.Online && Online.available()) {
+      const mine = c;
+      window.sb.rpc('my_active_match').then(({ data }) => { if (data && view === 'home' && mine.querySelector('.hub')) Online.resume(mine, data); });
+    }
     countdownTimer = setInterval(() => {
       const el = document.getElementById('hub-reset');
       if (!el) return clearInterval(countdownTimer);

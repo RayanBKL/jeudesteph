@@ -8,7 +8,7 @@ const Casino = {
   cashMise: 50,
   lastResult: null,
 
-  // Blackjack State (Sabot de 6 Jeux Européens = 312 cartes, ENHC, Multi-Mains & Side Bets)
+  // Blackjack State (Sabot de 6 jeux = 312 cartes, ENHC, 2 mains max & Side Bets)
   bj: {
     shoe: null,
     cutCardIndex: 234,
@@ -17,12 +17,12 @@ const Casino = {
     dealerScore: 0,
     dealerHasNaturalBJ: false,
     status: 'idle', // 'idle' | 'playing' | 'dealer' | 'finished'
-    activeSpotIdx: 1, // 0: Main I, 1: Main II (Centre), 2: Main III
+    activeSpotIdx: 0, // 0 : Main I, 1 : Main II (2 mains maximum)
     spots: [
-      { id: 0, name: 'Main I', active: false, bet: 50, sidePP: 0, side213: 0, hand: [], score: 0, status: 'idle', isSplit: false, splitHands: [], splitIdx: 0, splitBets: [], sidePPRating: null, side213Rating: null, outcome: null },
-      { id: 1, name: 'Main II (Centre)', active: true, bet: 50, sidePP: 0, side213: 0, hand: [], score: 0, status: 'idle', isSplit: false, splitHands: [], splitIdx: 0, splitBets: [], sidePPRating: null, side213Rating: null, outcome: null },
-      { id: 2, name: 'Main III', active: false, bet: 50, sidePP: 0, side213: 0, hand: [], score: 0, status: 'idle', isSplit: false, splitHands: [], splitIdx: 0, splitBets: [], sidePPRating: null, side213Rating: null, outcome: null }
+      { id: 0, name: 'Main I', active: true, bet: 50, sidePP: 0, side213: 0, hand: [], score: 0, status: 'idle', isSplit: false, splitHands: [], splitIdx: 0, splitBets: [], sidePPRating: null, side213Rating: null, outcome: null },
+      { id: 1, name: 'Main II', active: false, bet: 50, sidePP: 0, side213: 0, hand: [], score: 0, status: 'idle', isSplit: false, splitHands: [], splitIdx: 0, splitBets: [], sidePPRating: null, side213Rating: null, outcome: null }
     ],
+    history: [],
     roundNetGain: 0,
     msg: '',
     msgClass: '',
@@ -53,6 +53,7 @@ const Casino = {
       const saved = localStorage.getItem('casino_last_result');
       if (saved) this.lastResult = JSON.parse(saved);
     } catch(e) {}
+    try { const h = JSON.parse(localStorage.getItem('casino_bj_history') || '[]'); if (Array.isArray(h)) this.bj.history = h.slice(0, 20); } catch (e) {}
     this.bindGlobalTabs();
     this.render();
   },
@@ -246,9 +247,9 @@ const Casino = {
   },
 
   drawCardFromShoe() {
-    if (!this.bj.shoe || this.bj.shoe.length < 20 || this.bj.cardsDealtFromShoe >= this.bj.cutCardIndex) {
-      this.initShoe(6);
-    }
+    // Même sabot pour tout le monde (croupier compris) : on tire dans l'ordre du sabot mélangé.
+    // La carte de coupe est vérifiée au début de chaque manche (startBlackjackDeal), jamais en pleine manche.
+    if (!this.bj.shoe || this.bj.shoe.length < 1) this.initShoe(6);
     this.bj.cardsDealtFromShoe++;
     return this.bj.shoe.pop();
   },
@@ -412,8 +413,8 @@ const Casino = {
             ${this.bj.msg ? `<div class="bj-status-msg ${this.bj.msgClass}">${this.bj.msg}</div>` : ''}
           </div>
 
-          <!-- MULTI-MAINS : 3 SPOTS (Main I, Main II, Main III) -->
-          <div class="bj-spots-container ${isIdle ? '' : 'is-dealing'}" style="--n:${isIdle ? 3 : Math.max(1, this.bj.spots.filter(sp => sp.active).length)}">
+          <!-- 2 MAINS MAXIMUM (Main I, Main II) -->
+          <div class="bj-spots-container ${isIdle ? '' : 'is-dealing'}" style="--n:${isIdle ? 2 : Math.max(1, this.bj.spots.filter(sp => sp.active).length)}">
             ${this.bj.spots.map((spot, idx) => {
               const isCurrentPlaying = (isPlaying && this.bj.activeSpotIdx === idx);
               return `
@@ -512,10 +513,9 @@ const Casino = {
                 Distribuer (${fmt(totalWagered)})
               </button>
               <div class="bj-secondary-actions">
-                <button id="btn-bj-rebet" class="btn-secondary">🔄 Même mise (${fmt(this.bj.lastWagered || totalWagered)})</button>
-                <button id="btn-bj-clear-bets" class="btn-secondary">🗑️ Effacer les mises</button>
-                <button id="btn-bj-all-hands" class="btn-secondary">Activer les 3 mains</button>
-                <button id="btn-bj-reset-sides" class="btn-secondary">Effacer side bets</button>
+                <button id="btn-bj-rebet" class="btn-secondary">Même mise (${fmt(this.bj.lastWagered || totalWagered)})</button>
+                <button id="btn-bj-clear-bets" class="btn-secondary">Tout effacer</button>
+                <button id="btn-bj-history" class="btn-secondary">Historique</button>
               </div>
             </div>
           ` : this.bj.status === 'insurance_prompt' ? `
@@ -585,7 +585,7 @@ const Casino = {
         };
       });
 
-      // Bouton Activer les 3 Mains
+      // Bouton Jouer 2 mains
       content.querySelector('#btn-bj-all-hands')?.addEventListener('click', () => {
         const anyInactive = this.bj.spots.some(s => !s.active);
         this.bj.spots.forEach(s => {
@@ -595,6 +595,8 @@ const Casino = {
         if (window.SoundFX) SoundFX.click();
         this.render();
       });
+
+      content.querySelector('#btn-bj-history')?.addEventListener('click', () => this.showBjHistory());
 
       // Bouton Effacer Side Bets
       content.querySelector('#btn-bj-reset-sides')?.addEventListener('click', () => {
@@ -678,7 +680,7 @@ const Casino = {
     // Vérifier les mains actives
     const activeSpots = this.bj.spots.filter(s => s.active);
     if (activeSpots.length === 0) {
-      this.bj.spots[1].active = true;
+      this.bj.spots[0].active = true;
     }
 
     // Réinitialiser l'état des mains
@@ -724,9 +726,10 @@ const Casino = {
     this.recordBet();
     if (window.SoundFX) SoundFX.click();
 
-    // Sabot officiel 6 jeux
-    if (!this.bj.shoe || this.bj.shoe.length < 20 || this.bj.cardsDealtFromShoe >= this.bj.cutCardIndex) {
+    // Sabot officiel 6 jeux : remélangé quand la carte de coupe (75 %) est passée, entre deux manches
+    if (!this.bj.shoe || this.bj.shoe.length < 60 || this.bj.cardsDealtFromShoe >= this.bj.cutCardIndex) {
       this.initShoe(6);
+      showToast('Sabot remélangé', 'info');
     }
 
     // Distribution officielle ENHC :
@@ -1013,6 +1016,7 @@ const Casino = {
 
     // Décompte officiel de l'Assurance (Paye 2:1 si Blackjack Croupier)
     if (this.bj.insuranceActive) {
+      totalWageredOnHands += this.bj.insuranceCost;
       if (dealerHasBJ) {
         const insPayout = this.bj.insuranceCost * 3; // Mise remboursée + 2:1 net
         totalCashWon += insPayout;
@@ -1025,7 +1029,8 @@ const Casino = {
 
     this.bj.spots.forEach(spot => {
       if (!spot.active) return;
-      totalWageredOnHands += spot.bet;
+      // Mise réellement engagée : une main séparée a une mise par sous-main
+      totalWageredOnHands += (spot.isSplit && spot.splitBets && spot.splitBets.length) ? spot.splitBets.reduce((a, b) => a + b, 0) : spot.bet;
 
       // Décompte précis des Side Bets
       if (spot.sidePP > 0) {
@@ -1163,8 +1168,41 @@ const Casino = {
       this.recordResult('push', 0, 'Blackjack : Égalité');
     }
 
+    const cardTxt = h => h.map(c => c.rank + c.suit).join(' ');
+    this.pushBjHistory({
+      net: Math.round(netRoundProfit), bet: Math.round(totalWageredOnHands),
+      dealer: cardTxt(this.bj.dealerHand), dealerScore: dScore,
+      hands: this.bj.spots.filter(sp => sp.active).map(sp => sp.isSplit ? sp.splitHands.map(cardTxt).join('  |  ') : cardTxt(sp.hand)),
+      text: resultSummaries.join(' · '),
+    });
+
     saveGame();
     this.render();
+  },
+
+  // Historique des 20 dernières manches (consultable avec le bouton « Historique »)
+  pushBjHistory(entry) {
+    entry.t = Date.now();
+    this.bj.history.unshift(entry);
+    this.bj.history = this.bj.history.slice(0, 20);
+    try { localStorage.setItem('casino_bj_history', JSON.stringify(this.bj.history)); } catch (e) {}
+  },
+
+  showBjHistory() {
+    document.querySelectorAll('.bj-history-modal').forEach(m => m.remove());
+    const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const rows = this.bj.history.map(h => `
+      <div class="bj-hist-row ${h.net > 0 ? 'win' : h.net < 0 ? 'lose' : 'push'}">
+        <div class="bj-hist-top"><strong>${h.net > 0 ? '+' : ''}${fmt(h.net)} €</strong><span>mise ${fmt(h.bet)} € · ${new Date(h.t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span></div>
+        <div class="bj-hist-cards">Banque : ${esc(h.dealer)} (${h.dealerScore})</div>
+        ${h.hands.map((x, i) => `<div class="bj-hist-cards">Main ${i + 1} : ${esc(x)}</div>`).join('')}
+        <div class="bj-hist-text">${esc(h.text)}</div>
+      </div>`).join('') || '<p class="soc-empty">Aucune manche jouée pour l\'instant.</p>';
+    const el = document.createElement('div');
+    el.className = 'soc-modal bj-history-modal';
+    el.innerHTML = `<div class="soc-modal-card pp-card"><h3>Historique du blackjack</h3><div class="bj-hist-list">${rows}</div><button class="btn-empire btn-empire-secondary soc-wide" data-x>Fermer</button></div>`;
+    el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-x]')) el.remove(); });
+    document.body.appendChild(el);
   },
 
   blackjackRebet() {
@@ -1189,9 +1227,9 @@ const Casino = {
   blackjackClearBets() {
     if (this.bj.status !== 'finished' && this.bj.status !== 'idle') return;
     this.bj.spots.forEach((s, idx) => {
-      s.bet = (idx === 1 ? this.cashMise : 0);
+      s.bet = (idx === 0 ? this.cashMise : 0);
       s.baseBet = s.bet;
-      s.active = (idx === 1);
+      s.active = (idx === 0);
       s.sidePP = 0;
       s.side213 = 0;
       s.hand = [];

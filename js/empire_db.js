@@ -17,7 +17,7 @@ const EMPIRE_RARITIES = {
 const EMPIRE_PACKS = {
   gratuit: {
     id: 'gratuit', name: '🎁 Paquet Cadeau Surprise', price: 0,
-    description: "Mélange de TOUTES les catégories du marché noir. Offert par la maison toutes les 20 minutes.",
+    description: "Mélange de TOUTES les catégories du marché noir. Offert par la maison toutes les 10 minutes.",
     gradient: 'linear-gradient(135deg,#1e1b4b,#3b0764)',
     categories: ['cigarette', 'briquet', 'alcool', 'drogue', 'actrice', 'beauf', 'foot', 'refs', 'chanteur', 'culte'],
     odds: { commune: 0.65, 'peu-commune': 0.25, rare: 0.085, epique: 0.013, legendaire: 0.0019, mythique: 0.0001 },

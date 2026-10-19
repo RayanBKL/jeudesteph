@@ -122,6 +122,7 @@ const EmpireManager = (() => {
       // Salle de jeux (mini-jeux classés). Ne pas écraser une partie de course en cours de retour.
       if (typeof GameHub !== 'undefined') {
         if (GameHub.keepScreenOnce) GameHub.keepScreenOnce = false;
+        else if (window.Online && Online.inMatch && Online.inMatch()) { /* partie en cours : on la garde à l'écran */ }
         else GameHub.render();
       }
     }
@@ -2086,9 +2087,9 @@ const EmpireManager = (() => {
   function updateFreePackDisplay() {
     if (freePackTimerId) clearTimeout(freePackTimerId);
 
-    // 20 minutes par paquet gratuit (moins avec les talents « Livreur du Tabac » / « Grossiste Agréé »)
+    // 10 minutes par paquet gratuit (moins avec les talents « Livreur du Tabac » / « Grossiste Agréé »)
     const cdMult = (typeof TalentsEngine !== 'undefined' && TalentsEngine.getFreePackCooldownMult) ? TalentsEngine.getFreePackCooldownMult() : 1;
-    const cooldown = Math.round(20 * 60 * 1000 * cdMult);
+    const cooldown = Math.round(10 * 60 * 1000 * cdMult);
     const now = Date.now();
 
     let freePacks = parseInt(localStorage.getItem('empire_free_packs_count') ?? '3'); // 3 offerts au départ

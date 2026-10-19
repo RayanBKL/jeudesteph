@@ -407,6 +407,24 @@ const Online = (() => {
   }
 
   // ── Fin de partie ──
+  // Dernière manche, gardée à l'écran après la fin du match (pour voir ce que l'autre avait)
+  function lastRoundHtml(r) {
+    const d = r.data, s = d.state, me = d.me, opp = 1 - me, last = s.last;
+    if (!last) return '';
+    const who = (i) => i === me ? 'Toi' : esc(r.opp.pseudo);
+    let inner = '';
+    if (d.game === 'des421' && last.dice) {
+      inner = [me, opp].map(i => `<div class="lr-side"><span>${who(i)}</span><div class="d421-dice d421-dice-sm">${last.dice[i].map(v => Des421.diceSVG(v)).join('')}</div><em>${esc(Des421.evaluate(last.dice[i]).name)}</em></div>`).join('');
+    } else if (d.game === 'pbc' && last.moves) {
+      const nm = { pierre: 'Pierre', briquet: 'Briquet', clope: 'Clope' };
+      inner = [me, opp].map(i => `<div class="lr-side"><span>${who(i)}</span><strong>${last.moves[i] ? nm[last.moves[i]] : 'n\'a pas joué'}</strong></div>`).join('');
+    } else if (d.game === 'bataille' && last.cards) {
+      const nm = id => { const it = typeof getEmpireItemById === 'function' ? getEmpireItemById(id) : null; return it ? it.name : 'Carte'; };
+      inner = [me, opp].map(i => `<div class="lr-side"><span>${who(i)}</span><strong>${esc(nm(last.cards[i]))}</strong><em>${esc(last.stat)} ${last.values[i]}</em></div>`).join('');
+    } else return '';
+    return `<div class="lr-box"><div class="lr-title">Dernière manche</div><div class="lr-row">${inner}</div></div>`;
+  }
+
   async function finish() {
     const r = run; if (!r || r.over) return;
     r.over = true;
@@ -427,11 +445,22 @@ const Online = (() => {
     else if (!lp) pre = { error: 'Tu as déjà joué 10 fois contre ce joueur aujourd\'hui : pas de points cette fois.' };
     else pre = League.applyResult(d.game, lp, result);
     GameUI.showResult(screen, d.game, reason === 'abandon' ? 'draw' : result, detail, again, pre);
+    const recap = lastRoundHtml(r);
+    if (recap) { const box = screen.querySelector('.mg-result') || screen; box.insertAdjacentHTML('beforeend', recap); }
     screen.querySelector('[data-mg-back]')?.addEventListener('click', () => stopAll());
     stopAll();
   }
 
-  return { go, search, watch, available, stopAll, abandonRace, GAME_IDS };
+  // Une partie est à l'écran : on ne la remplace pas quand on revient sur l'onglet Jeux
+  function inMatch() { return !!(run && run.data && run.data.status === 'active' && run.container && run.container.isConnected); }
+
+  // Reprise d'une partie en cours (retour sur l'onglet, rechargement de la page)
+  async function resume(container, matchId) {
+    const { data } = await sb().rpc('match_get', { p_match: matchId });
+    if (data && data.status === 'active') watch(container, matchId, data.game);
+  }
+
+  return { go, search, watch, available, stopAll, abandonRace, inMatch, resume, GAME_IDS };
 })();
 
 if (typeof window !== 'undefined') window.Online = Online;

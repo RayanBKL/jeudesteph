@@ -84,9 +84,11 @@ const ClickerEngine = (() => {
 
     // Main click / tap
     els.clickTarget.addEventListener('click', handleClick);
+    // Chaque doigt posé compte pour un clic (jusqu'à 5 doigts) ; deux doigts qui touchent « en même temps » ne sont pas un robot
     els.clickTarget.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      handleClick(e.touches[0] || e);
+      const fingers = e.changedTouches && e.changedTouches.length ? [...e.changedTouches].slice(0, 5) : [e];
+      fingers.forEach((t, i) => handleClick({ clientX: t.clientX, clientY: t.clientY, target: e.target, isTrusted: e.isTrusted, preventDefault() {} }, { multi: (e.touches && e.touches.length > 1) || i > 0 }));
     }, { passive: false });
 
     // Touch multi-finger bonus
@@ -175,8 +177,9 @@ const ClickerEngine = (() => {
   }
 
   // ── Click Handler ──────────────────────────────────────────
-  function handleClick(e) {
+  function handleClick(e, opts) {
     const now = performance.now();
+    const multi = !!(opts && opts.multi);
 
     // 1. Anti-bot : cooldown actif
     if (now < botCooldownUntil) {
@@ -195,7 +198,7 @@ const ClickerEngine = (() => {
     const lastClickTime = recentManualClicks[recentManualClicks.length - 1] || 0;
 
     // Trop vite : moins de 7 ms d'écart ou plus de 80 clics sur la dernière seconde
-    if ((lastClickTime > 0 && now - lastClickTime < MIN_GAP_MS) || recentManualClicks.length >= MAX_CPS) {
+    if ((!multi && lastClickTime > 0 && now - lastClickTime < MIN_GAP_MS) || recentManualClicks.length >= MAX_CPS) {
       triggerBotLockout('Toux suspecte : tu cliques trop vite pour un fumeur (max 80 clics/s).');
       return;
     }
@@ -230,8 +233,8 @@ const ClickerEngine = (() => {
     spawnPopup(e, earned);
 
     // Empire XP
-    // 1 XP par clic manuel, quel que soit le gain : l'XP récompense le jeu, pas l'argent
-    gainEmpireXP(1);
+    // 0,5 XP par clic manuel (2 clics = 1 XP), quel que soit le gain : l'XP récompense le jeu, pas l'argent
+    gainEmpireXP(0.5);
 
     render();
     saveToStorage();
