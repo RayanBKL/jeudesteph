@@ -133,7 +133,7 @@ const PackArt = (() => {
       <div class="booster-face">
         <div class="booster-crimp booster-crimp-top"></div>
         <div class="booster-brand">The Ashtray King</div>
-        <div class="booster-emblem">${emblem(pack.id)}</div>
+        <div class="booster-emblem">${emblem(pack.artId || pack.id)}</div>
         <div class="booster-name">${cleanName(pack)}</div>
         <div class="booster-count">${pack.count} cartes</div>
         <div class="booster-shine"></div>
@@ -148,7 +148,7 @@ const PackArt = (() => {
          <div class="booster-layer booster-top">${face(pack)}</div>
          <div class="booster-tear-line"></div>`
       : face(pack);
-    return `<div class="booster${opts.tearable ? ' booster-tearable' : ''}" style="${themeStyle(pack.id)}">${inner}</div>`;
+    return `<div class="booster${opts.tearable ? ' booster-tearable' : ''}${pack.tier ? ' booster-tier-' + pack.tier : ''}" style="${themeStyle(pack.artId || pack.id)}">${inner}</div>`;
   }
 
   return { buildBooster, emblem, themeStyle, cleanName, THEMES };

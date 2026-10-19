@@ -145,7 +145,7 @@ const EmpireManager = (() => {
 
     // Le paquet gratuit d'abord, puis les paquets payants
     container.appendChild(buildPackCard(EMPIRE_PACKS.gratuit, true));
-    Object.values(EMPIRE_PACKS).filter(p => p.price > 0).sort((a, b) => a.price - b.price).forEach(pack => {
+    Object.values(EMPIRE_PACKS).filter(p => p.price > 0 && !p.artId).sort((a, b) => a.price - b.price).forEach(pack => {
       container.appendChild(buildPackCard(pack));
     });
 
@@ -155,24 +155,18 @@ const EmpireManager = (() => {
     requestAnimationFrame(updateActivePack);
   }
 
-  function buildPackCard(pack, isFree = false) {
-    const div = document.createElement('div');
-    div.className = 'pack-slide' + (isFree ? ' pack-slide-free' : '');
-    div.dataset.pack = pack.id;
-
+  function packInfoHtml(pack, isFree) {
     const oddsHtml = Object.entries(pack.odds)
       .filter(([,v]) => v > 0)
       .sort((a,b) => b[1]-a[1])
       .map(([k,v]) => `<span class="pack-odds-pill odds-${k}">${EMPIRE_RARITIES[k].name} ${formatOdds(v)}</span>`)
       .join('');
-
-    div.innerHTML = `
-      <div class="pack-slide-visual">
-        ${PackArt.buildBooster(pack)}
-        ${isFree ? '<span class="pack-free-ribbon">Gratuit</span>' : ''}
-      </div>
-      <div class="pack-info">
+    const base = pack.artId ? EMPIRE_PACKS[pack.artId] : pack;
+    const tiers = (!isFree && base.variants && base.variants.length > 1) ? `
+        <div class="pack-tiers">${base.variants.map(vid => `<button type="button" class="pack-tier ${vid === pack.id ? 'active' : ''} pack-tier-${EMPIRE_PACKS[vid].tier || 0}" data-tier-pack="${vid}">${EMPIRE_PACKS[vid].tierLabel}</button>`).join('')}</div>` : '';
+    return `
         <div class="pack-info-name">${PackArt.cleanName(pack)}</div>
+        ${tiers}
         <p class="pack-card-desc">${pack.description}</p>
         <div class="pack-card-odds">${oddsHtml}</div>
         <div class="pack-buy-row">
@@ -183,10 +177,28 @@ const EmpireManager = (() => {
             <span class="pack-price-tag">${formatCash(pack.price)} €</span>
             <button class="btn-empire btn-empire-primary btn-buy-empire-pack" data-pack="${pack.id}">Ouvrir ×${pack.count}</button>
           `}
-        </div>
+        </div>`;
+  }
+
+  function buildPackCard(pack, isFree = false) {
+    const div = document.createElement('div');
+    div.className = 'pack-slide' + (isFree ? ' pack-slide-free' : '');
+    div.dataset.pack = pack.id;
+    div.innerHTML = `
+      <div class="pack-slide-visual">
+        ${PackArt.buildBooster(pack)}
+        ${isFree ? '<span class="pack-free-ribbon">Gratuit</span>' : ''}
       </div>
+      <div class="pack-info">${packInfoHtml(pack, isFree)}</div>
     `;
     return div;
+  }
+
+  // Changer de niveau de paquet (Classique / Doré / Diamant) dans une page de la boutique
+  function switchPackTier(slide, packId) {
+    const pack = EMPIRE_PACKS[packId]; if (!pack) return;
+    slide.querySelector('.pack-slide-visual').innerHTML = PackArt.buildBooster(pack);
+    slide.querySelector('.pack-info').innerHTML = packInfoHtml(pack, false);
   }
 
   function renderPackDots() {
@@ -267,6 +279,8 @@ const EmpireManager = (() => {
 
   function bindPackShop() {
     document.addEventListener('click', (e) => {
+      const tierBtn = e.target.closest('[data-tier-pack]');
+      if (tierBtn) { switchPackTier(tierBtn.closest('.pack-slide'), tierBtn.dataset.tierPack); return; }
       const btn = e.target.closest('.btn-buy-empire-pack');
       if (!btn) return;
       const packId = btn.dataset.pack;
@@ -295,7 +309,7 @@ const EmpireManager = (() => {
     }
     state.totalPacksOpened++;
     // XP d'ouverture : prix d'origine / 100 (minimum 15)
-    if (ClickerEngine.gainXP) ClickerEngine.gainXP(Balance.xpForPack(pack.price));
+    if (ClickerEngine.gainXP) ClickerEngine.gainXP(Balance.xpForPack(pack.xpPrice ? pack.xpPrice * Balance.PRICE_MULT : pack.price));
 
     const items = drawEmpirePack(packId, state.pityState);
     items.forEach(item => addToInventory(item.id));

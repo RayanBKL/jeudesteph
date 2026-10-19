@@ -105,6 +105,41 @@ const EMPIRE_PACKS = {
   },
 };
 
+// ── Prix et variantes des paquets ──
+// Tous les paquets de catégorie coûtent le même prix de base et donnent 5 cartes (le paquet gratuit en donne 4).
+// Chaque catégorie existe en 3 niveaux : Classique, Doré (plus de rares) et Diamant (beaucoup plus de rares, bien plus cher).
+// Les prix ci-dessous sont les prix d'origine : js/balance.js les multiplie (PRICE_MULT).
+const PACK_BASE_PRICE = 3000;
+const PACK_RARITY_ORDER = ['commune', 'peu-commune', 'rare', 'epique', 'legendaire', 'mythique'];
+const PACK_TIERS = [
+  { suffix: '_or',      label: 'Doré',    priceMult: 4,  boost: 1.5, pityThreshold: 15, pityRarity: 'epique',    xpMult: 2 },
+  { suffix: '_diamant', label: 'Diamant', priceMult: 15, boost: 2.2, pityThreshold: 8,  pityRarity: 'legendaire', xpMult: 4 },
+];
+
+function boostPackOdds(odds, b) {
+  const w = PACK_RARITY_ORDER.map((r, i) => (odds[r] || 0) * Math.pow(b, i));
+  const sum = w.reduce((a, x) => a + x, 0);
+  const out = {};
+  PACK_RARITY_ORDER.forEach((r, i) => { out[r] = w[i] / sum; });
+  return out;
+}
+
+(function buildPackTiers() {
+  ['tabac', 'beauf', 'alcool', 'pochon', 'backstage', 'foot', 'refs', 'musique', 'culte'].forEach(id => {
+    const base = EMPIRE_PACKS[id];
+    base.price = PACK_BASE_PRICE; base.count = 5; base.tier = 0; base.tierLabel = 'Classique'; base.xpPrice = PACK_BASE_PRICE; base.variants = [id];
+    PACK_TIERS.forEach(t => {
+      const vid = id + t.suffix;
+      EMPIRE_PACKS[vid] = {
+        ...base, id: vid, artId: id, tier: PACK_TIERS.indexOf(t) + 1, tierLabel: t.label, price: PACK_BASE_PRICE * t.priceMult, xpPrice: PACK_BASE_PRICE * t.xpMult,
+        odds: boostPackOdds(base.odds, t.boost), pityThreshold: t.pityThreshold, pityRarity: t.pityRarity, count: 5, variants: null,
+      };
+      base.variants.push(vid);
+    });
+  });
+  EMPIRE_PACKS.valise.count = 5;
+})();
+
 // ============================================================
 // EMPIRE ITEMS DATABASE (Cartes avec vraies photos et formules)
 // ============================================================
