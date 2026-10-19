@@ -52,7 +52,7 @@ const Online = (() => {
           <div class="on-spinner"></div>
           <strong>On cherche quelqu'un au comptoir…</strong>
           <span id="on-wait">0 s</span>
-          <p class="mg-hint" id="on-hint">Un autre joueur doit lancer la même recherche en même temps.</p>
+          <p class="mg-hint" id="on-hint">Si personne n'arrive en 10 secondes, un bot de ton niveau joue contre toi.</p>
           <div class="mg-actions">
             <button class="btn-empire btn-empire-secondary" id="on-cancel">Annuler</button>
             <button class="btn-empire btn-empire-primary hidden" id="on-invite">Inviter un ami</button>
@@ -69,7 +69,7 @@ const Online = (() => {
       if (!container.querySelector('.mg-search')) { await leave(); return; }
       const secs = Math.floor((Date.now() - t0) / 1000);
       const w = container.querySelector('#on-wait'); if (w) w.textContent = `${secs} s`;
-      if (secs >= 20) {
+      if (secs >= 25) {
         container.querySelector('#on-invite')?.classList.remove('hidden');
         const h = container.querySelector('#on-hint'); if (h && !h.dataset.late) { h.dataset.late = '1'; h.textContent = 'Peu de monde en ligne pour l\'instant. On continue de chercher : tu peux aussi inviter un ami pour jouer tout de suite.'; }
       }
@@ -78,7 +78,13 @@ const Online = (() => {
         const h = container.querySelector('#on-hint'); if (h) h.textContent = 'Connexion au serveur impossible, on réessaie…';
         return;
       }
-      if (data && data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, data.match_id, game); }
+      if (data && data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, data.match_id, game); return; }
+      // Personne au bout de 10 s : un bot de ton niveau prend la place
+      if (secs >= 10) {
+        const h = container.querySelector('#on-hint'); if (h && !h.dataset.bot) { h.dataset.bot = '1'; h.textContent = 'Personne en ligne pour l\'instant : un bot de ton niveau arrive.'; }
+        const b = await sb().rpc('mm_bot', { p_game: game });
+        if (b.data && b.data.match_id) { clearInterval(searchTimer); searchTimer = null; watch(container, b.data.match_id, game); }
+      }
     };
     step();
     searchTimer = setInterval(step, 2000);
@@ -334,6 +340,7 @@ const Online = (() => {
   }
 
   function launchRace(r) {
+    if (typeof RaceEngine !== 'undefined' && RaceEngine.pvp && RaceEngine.active && RaceEngine.pvp.matchId === r.id) { r.raceLaunched = true; return; }   // course déjà en cours : on ne la relance pas (les coups déjà joués seraient perdus)
     if (r.raceLaunched && typeof RaceEngine !== 'undefined' && RaceEngine.pvp) return;
     r.raceLaunched = true;
     const s = r.data.state, id = r.id;
@@ -401,6 +408,24 @@ const Online = (() => {
   }
 
   // ── Fin de partie ──
+  // Dernière manche, gardée à l'écran après la fin du match (pour voir ce que l'autre avait)
+  function lastRoundHtml(r) {
+    const d = r.data, s = d.state, me = d.me, opp = 1 - me, last = s.last;
+    if (!last) return '';
+    const who = (i) => i === me ? 'Toi' : esc(r.opp.pseudo);
+    let inner = '';
+    if (d.game === 'des421' && last.dice) {
+      inner = [me, opp].map(i => `<div class="lr-side"><span>${who(i)}</span><div class="d421-dice d421-dice-sm">${last.dice[i].map(v => Des421.diceSVG(v)).join('')}</div><em>${esc(Des421.evaluate(last.dice[i]).name)}</em></div>`).join('');
+    } else if (d.game === 'pbc' && last.moves) {
+      const nm = { pierre: 'Pierre', briquet: 'Briquet', clope: 'Clope' };
+      inner = [me, opp].map(i => `<div class="lr-side"><span>${who(i)}</span><strong>${last.moves[i] ? nm[last.moves[i]] : 'n\'a pas joué'}</strong></div>`).join('');
+    } else if (d.game === 'bataille' && last.cards) {
+      const nm = id => { const it = typeof getEmpireItemById === 'function' ? getEmpireItemById(id) : null; return it ? it.name : 'Carte'; };
+      inner = [me, opp].map(i => `<div class="lr-side"><span>${who(i)}</span><strong>${esc(nm(last.cards[i]))}</strong><em>${esc(last.stat)} ${last.values[i]}</em></div>`).join('');
+    } else return '';
+    return `<div class="lr-box"><div class="lr-title">Dernière manche</div><div class="lr-row">${inner}</div></div>`;
+  }
+
   async function finish() {
     const r = run; if (!r || r.over) return;
     r.over = true;
@@ -421,11 +446,22 @@ const Online = (() => {
     else if (!lp) pre = { error: 'Tu as déjà joué 10 fois contre ce joueur aujourd\'hui : pas de points cette fois.' };
     else pre = League.applyResult(d.game, lp, result);
     GameUI.showResult(screen, d.game, reason === 'abandon' ? 'draw' : result, detail, again, pre);
+    const recap = lastRoundHtml(r);
+    if (recap) { const box = screen.querySelector('.mg-result') || screen; box.insertAdjacentHTML('beforeend', recap); }
     screen.querySelector('[data-mg-back]')?.addEventListener('click', () => stopAll());
     stopAll();
   }
 
-  return { go, search, watch, available, stopAll, abandonRace, GAME_IDS };
+  // Une partie est à l'écran : on ne la remplace pas quand on revient sur l'onglet Jeux
+  function inMatch() { return !!(run && run.data && run.data.status === 'active' && run.container && run.container.isConnected); }
+
+  // Reprise d'une partie en cours (retour sur l'onglet, rechargement de la page)
+  async function resume(container, matchId) {
+    const { data } = await sb().rpc('match_get', { p_match: matchId });
+    if (data && data.status === 'active') watch(container, matchId, data.game);
+  }
+
+  return { go, search, watch, available, stopAll, abandonRace, inMatch, resume, GAME_IDS };
 })();
 
 if (typeof window !== 'undefined') window.Online = Online;

@@ -213,3 +213,14 @@ Si rien ne manque après quelques jours de test, le dossier d'archive peut être
 ### Avant le lancement public
 - [ ] Tests mobile (tactile, performances avec beaucoup d'images).
 - [ ] Économie du jeu : équilibrer prix des paquets, revenus passifs, casino.
+
+## Session du 19 octobre 2026
+- **Bots de secours** par niveau (après 9-10 s sans adversaire), joués par le serveur (`018`, `019`) ; points plafonnés.
+- **Paquets** : Vrac 5 000 €, Premium 20 000 €, 9 catégories à 30 000 €, Valise 200 000 € ; 5 cartes (4 pour le gratuit) ; gratuit toutes les 10 min.
+- **Blackjack** : 2 mains, historique, sabot vérifié ; 45 manches de test (doubles, splits, assurances) : le gain affiché = le gain réel.
+- **Clans** à rôles, échanges de cartes, profil public avec vitrine, saison de 30 jours (`015`, `016`), récompenses de fin de saison + cartes exclusives (`022`).
+- Noms de cartes tous uniques (`020`), historique Bourse « Cartes vendues » (`021`), tri des offres, recherche + filtre « doubles » dans la Collection.
+- Clic à deux doigts, XP des clics /2, 2 talents d'XP, audit des bonus (bouton « ? » de la page Clic), rond du clic personnalisable, raccourci écran d'accueil (PWA).
+- Reprise automatique d'une partie en cours quand on revient sur l'onglet Jeux ; dernière manche visible à la fin d'un match ; images de cartes qui réessaient avant d'afficher l'emblème.
+- Vitesse : une seule police Google (Rubik), fond d'écran en WebP.
+- **Reste** : poker et machines à sous (reportés), nouvelles cartes (liste à fournir), migration 017 (sécurité) à appliquer, vrais iPhone/Safari à tester.

@@ -99,7 +99,7 @@ html, body {
   background:
     radial-gradient(ellipse 90% 70% at 50% 45%, rgba(20,13,8,0.94) 0%, rgba(20,13,8,0.86) 70%, rgba(20,13,8,0.78) 100%),
     linear-gradient(180deg, rgba(20,13,8,0.35) 0%, rgba(20,13,8,0.75) 100%),
-    url('../assets/lobby_bg.jpeg') center top / cover fixed,
+    url('../assets/lobby_bg.webp') center top / cover fixed,
     var(--ink);
   color: var(--text);
   font-family: var(--font-body);

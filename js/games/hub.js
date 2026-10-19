@@ -85,7 +85,7 @@ const GameHub = (() => {
           <button class="btn-empire btn-empire-primary" data-friends>Jouer avec des amis</button>
           <button class="btn-empire btn-empire-secondary" data-view="rangs">Les 26 rangs</button>
         </div>
-        <p class="hub-note">Classements remis à zéro tous les 30 jours (saison ${League.seasonLabel()}). Tous les matchs se jouent contre de vrais joueurs : pas de bots.</p>
+        <p class="hub-note">Classements remis à zéro tous les 30 jours (saison ${League.seasonLabel()}). On joue contre de vrais joueurs ; si personne n'est là au bout de 10 secondes, un bot de ton niveau le remplace (points plafonnés). En fin de saison : un paquet avec au moins une mythique et la carte exclusive de ton meilleur palier (5 parties minimum).</p>
       </div>`;
 
     c.querySelectorAll('[data-game]').forEach(b => b.addEventListener('click', (e) => {
@@ -98,6 +98,11 @@ const GameHub = (() => {
     }));
     c.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { view = b.dataset.view; render(); }));
     c.querySelector('[data-friends]')?.addEventListener('click', () => window.Social && Social.openTab('amis'));
+    // Une partie est encore en cours (retour sur l'onglet, page rechargée) : on la reprend
+    if (window.Online && Online.available()) {
+      const mine = c;
+      window.sb.rpc('my_active_match').then(({ data }) => { if (data && view === 'home' && mine.querySelector('.hub')) Online.resume(mine, data); });
+    }
     countdownTimer = setInterval(() => {
       const el = document.getElementById('hub-reset');
       if (!el) return clearInterval(countdownTimer);

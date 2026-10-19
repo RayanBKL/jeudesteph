@@ -8,39 +8,42 @@ const TalentsEngine = (() => {
   // Définition des 17 Nœuds Runiques du Panthéon
   const NODES = [
     // Tier 1 (Haut - 4 Nœuds Fondateurs)
-    { id: 'colosse_1', name: 'Souffle Primordial', icon: '⚔️', banner: '⚒️', tier: 1, x: 16, y: 12, cost: 1, type: 'auto', val: 1, prereqs: [], desc: 'Allume la flamme sacrée : débloque l\'Auto-Cliqueur à 1 clic/s.', lore: 'La première bouffée gravée dans la pierre par Stéphane.' },
-    { id: 'forge_1',   name: 'Pierre de Force',    icon: '🗼', banner: '⚒️', tier: 1, x: 38, y: 12, cost: 1, type: 'click', mult: 1.35, prereqs: [], desc: '+35% sur tous les gains des clics manuels.', lore: 'La forge spartiate durcit chaque frappe du pouce.' },
-    { id: 'butin_1',   name: 'Sceau de Fortune',   icon: '👑', banner: '💍', tier: 1, x: 62, y: 12, cost: 1, type: 'drop', dropBoost: 1.25, prereqs: [], desc: '+25% de chances de trouver des cartes Rares dans les paquets.', lore: 'Le flair divin d\'un pilleur de cendriers célestes.' },
-    { id: 'rage_1',    name: 'Fureur de Kratos',   icon: '🔥', banner: '⚔️', tier: 1, x: 84, y: 12, cost: 1, type: 'click', mult: 1.2, prereqs: [], desc: '+20% sur tous les gains des clics manuels.', lore: 'Une colère rougeoyante qui embrase les poumons.' },
+    { id: 'colosse_1', name: 'Souffle Primordial', icon: '⚔️', banner: '⚒️', tier: 1, x: 16, y: 12, cost: 1, type: 'auto', val: 1, prereqs: [], desc: 'Auto-clic : 1 clic gratuit par seconde (quand tu es sur le jeu).', lore: 'La première bouffée gravée dans la pierre par Stéphane.' },
+    { id: 'forge_1',   name: 'Pierre de Force',    icon: '🗼', banner: '⚒️', tier: 1, x: 38, y: 12, cost: 1, type: 'click', mult: 1.35, prereqs: [], desc: 'Clics : +35 % d\'argent par clic.', lore: 'La forge spartiate durcit chaque frappe du pouce.' },
+    { id: 'butin_1',   name: 'Sceau de Fortune',   icon: '👑', banner: '💍', tier: 1, x: 62, y: 12, cost: 1, type: 'drop', dropBoost: 1.25, prereqs: [], desc: 'Paquets : +25 % de chances de tomber sur des cartes Rares.', lore: 'Le flair divin d\'un pilleur de cendriers célestes.' },
+    { id: 'rage_1',    name: 'Fureur de Kratos',   icon: '🔥', banner: '⚔️', tier: 1, x: 84, y: 12, cost: 1, type: 'click', mult: 1.2, prereqs: [], desc: 'Clics : +20 % d\'argent par clic.', lore: 'Une colère rougeoyante qui embrase les poumons.' },
 
     // Tier 2 (5 Nœuds - Croisement Runique)
-    { id: 'colosse_2', name: 'Fournaise Perpétuelle', icon: '⚒️', banner: '⚒️', tier: 2, x: 12, y: 24, cost: 2, type: 'auto', val: 3, prereqs: ['colosse_1'], desc: 'Auto-clic accéléré à 3 clics automatiques par seconde.', lore: 'Le foyer brûle nuit et jour sans jamais faiblir.' },
-    { id: 'forge_2',   name: 'Lames du Destin',    icon: '⚔️', banner: '⚔️', tier: 2, x: 31, y: 24, cost: 2, type: 'crit', critChance: 0.12, critMult: 3, prereqs: ['colosse_1', 'forge_1'], desc: 'Débloque 12% de Coups Critiques (gains multipliés par ×3 au clic).', lore: 'Des lames forgées dans le goudron des enfers.' },
-    { id: 'centre_2',  name: 'Rune du Buraliste',  icon: '⚜️', banner: '🪙', tier: 2, x: 50, y: 24, cost: 2, type: 'market', prereqs: ['forge_1', 'butin_1'], desc: '+25% sur la valeur marchande de revente des doublons.', lore: 'Le tarif préférentiel des contrebandiers de haut vol.' },
-    { id: 'butin_2',   name: 'Pity Accélérée',     icon: '🗼', banner: '💍', tier: 2, x: 69, y: 24, cost: 2, type: 'drop', pityReduce: 5, prereqs: ['butin_1', 'rage_1'], desc: 'Réduit de 5 boosters le quota pour déclencher la garantie Pity.', lore: 'Le destin s\'incline devant la ténacité du banni.' },
-    { id: 'rage_2',    name: 'Sang d\'Acier',      icon: '🛡️', banner: '🗼', tier: 2, x: 88, y: 24, cost: 2, type: 'click', mult: 1.25, prereqs: ['rage_1'], desc: '+25% supplémentaires sur les gains des clics.', lore: 'Des bronches blindées capables de résister à la tempête.' },
+    { id: 'colosse_2', name: 'Fournaise Perpétuelle', icon: '⚒️', banner: '⚒️', tier: 2, x: 12, y: 24, cost: 2, type: 'auto', val: 3, prereqs: ['colosse_1'], desc: 'Auto-clic : 3 clics gratuits par seconde.', lore: 'Le foyer brûle nuit et jour sans jamais faiblir.' },
+    { id: 'forge_2',   name: 'Lames du Destin',    icon: '⚔️', banner: '⚔️', tier: 2, x: 31, y: 24, cost: 2, type: 'crit', critChance: 0.12, critMult: 3, prereqs: ['colosse_1', 'forge_1'], desc: 'Critiques : 12 % de tes clics rapportent ×3.', lore: 'Des lames forgées dans le goudron des enfers.' },
+    { id: 'centre_2',  name: 'Rune du Buraliste',  icon: '⚜️', banner: '🪙', tier: 2, x: 50, y: 24, cost: 2, type: 'market', prereqs: ['forge_1', 'butin_1'], desc: 'Bourse : +25 % sur la valeur de tes doubles à la revente.', lore: 'Le tarif préférentiel des contrebandiers de haut vol.' },
+    { id: 'butin_2',   name: 'Pity Accélérée',     icon: '🗼', banner: '💍', tier: 2, x: 69, y: 24, cost: 2, type: 'drop', pityReduce: 5, prereqs: ['butin_1', 'rage_1'], desc: 'Paquets : la garantie d\'une carte rare arrive 5 paquets plus tôt.', lore: 'Le destin s\'incline devant la ténacité du banni.' },
+    { id: 'rage_2',    name: 'Sang d\'Acier',      icon: '🛡️', banner: '🗼', tier: 2, x: 88, y: 24, cost: 2, type: 'click', mult: 1.25, prereqs: ['rage_1'], desc: 'Clics : +25 % d\'argent par clic.', lore: 'Des bronches blindées capables de résister à la tempête.' },
 
     // Tier 3 (3 Nœuds Centraux)
-    { id: 'colosse_3', name: 'Cendrier Rotatif',   icon: '⚡', banner: '🪙', tier: 3, x: 26, y: 36, cost: 3, type: 'auto', val: 8, prereqs: ['colosse_2', 'forge_2'], desc: 'Vitesse d\'auto-clic augmentée à 8 clics par seconde.', lore: 'Un engrenage infatigable qui récolte le magot sans arrêt.' },
-    { id: 'centre_3',  name: 'L\'Œil Divin',       icon: '👁️', banner: '💍', tier: 3, x: 50, y: 36, cost: 3, type: 'drop', dropEpicBoost: 1.45, prereqs: ['forge_2', 'centre_2', 'butin_2'], desc: '+45% de chances d\'obtenir des cartes Épiques et Légendaires.', lore: 'La vision perçante pour déceler les reliques interdites.' },
-    { id: 'forge_3',   name: 'Super Critique',     icon: '⚔️', banner: '🪙', tier: 3, x: 74, y: 36, cost: 3, type: 'crit', critChance: 0.25, critMult: 4.5, prereqs: ['centre_2', 'butin_2', 'rage_2'], desc: 'Chances de critique poussées à 25% (dégâts et gains ×4.5).', lore: 'Chaque impact résonne comme un coup de tonnerre.' },
+    { id: 'colosse_3', name: 'Cendrier Rotatif',   icon: '⚡', banner: '🪙', tier: 3, x: 26, y: 36, cost: 3, type: 'auto', val: 8, prereqs: ['colosse_2', 'forge_2'], desc: 'Auto-clic : 8 clics gratuits par seconde.', lore: 'Un engrenage infatigable qui récolte le magot sans arrêt.' },
+    { id: 'centre_3',  name: 'L\'Œil Divin',       icon: '👁️', banner: '💍', tier: 3, x: 50, y: 36, cost: 3, type: 'drop', dropEpicBoost: 1.45, prereqs: ['forge_2', 'centre_2', 'butin_2'], desc: 'Paquets : +45 % de chances d\'Épiques et de Légendaires.', lore: 'La vision perçante pour déceler les reliques interdites.' },
+    { id: 'forge_3',   name: 'Super Critique',     icon: '⚔️', banner: '🪙', tier: 3, x: 74, y: 36, cost: 3, type: 'crit', critChance: 0.25, critMult: 4.5, prereqs: ['centre_2', 'butin_2', 'rage_2'], desc: 'Critiques : 25 % de tes clics rapportent ×4,5.', lore: 'Chaque impact résonne comme un coup de tonnerre.' },
 
     // Tier 4 (2 Nœuds Transcendants)
-    { id: 'midas_4',   name: 'Toucher de Midas',   icon: '👑', banner: '🪙', tier: 4, x: 38, y: 48, cost: 4, type: 'midas', passiveToClick: 0.025, prereqs: ['colosse_3', 'centre_3'], desc: 'Chaque clic rapporte 2.5% de votre revenu passif par seconde en bonus brut !', lore: 'L\'or coule des doigts à chaque pression sur l\'écran.' },
-    { id: 'foil_4',    name: 'Chasseur de Légendes', icon: '✨', banner: '💍', tier: 4, x: 62, y: 48, cost: 4, type: 'drop', dropBoost: 0.35, prereqs: ['centre_3', 'forge_3'], desc: '+35% de chance de trouver des cartes Rares, Épiques et Légendaires.', lore: 'Le reflet doré des cartes sacrées brille à travers le paquet.' },
+    { id: 'midas_4',   name: 'Toucher de Midas',   icon: '👑', banner: '🪙', tier: 4, x: 38, y: 48, cost: 4, type: 'midas', passiveToClick: 0.025, prereqs: ['colosse_3', 'centre_3'], desc: 'Chaque clic rapporte en plus 2,5 % de ton revenu par seconde.', lore: 'L\'or coule des doigts à chaque pression sur l\'écran.' },
+    { id: 'foil_4',    name: 'Chasseur de Légendes', icon: '✨', banner: '💍', tier: 4, x: 62, y: 48, cost: 4, type: 'drop', dropBoost: 0.35, prereqs: ['centre_3', 'forge_3'], desc: 'Paquets : +35 % de chances de Rares, Épiques et Légendaires.', lore: 'Le reflet doré des cartes sacrées brille à travers le paquet.' },
 
     // Tier 5 (3 Nœuds Apex - Sommet Mythique)
-    { id: 'apex_colosse', name: 'Usine Stéphane 24/7', icon: '🏛️', banner: '⚒️', tier: 5, x: 26, y: 59, cost: 5, type: 'auto', val: 25, prereqs: ['midas_4'], desc: 'Auto-clic colossal à 25 clics/s et active en permanence le bonus passif !', lore: 'L\'empire industriel absolu qui tourne même pendant votre sommeil.' },
-    { id: 'apex_kratos',  name: 'Ragnarök du Cendrier', icon: '💀', banner: '⚔️', tier: 5, x: 50, y: 59, cost: 5, type: 'apex', mult: 2.2, critChance: 0.35, critMult: 6.0, prereqs: ['midas_4', 'foil_4'], desc: 'Multiplicateur général ×2.2 sur TOUS les gains et 35% de Critiques dévastateurs (×6.0) !', lore: 'La fureur mythologique qui terrasse les dieux du tabac.' },
-    { id: 'apex_mythic',  name: 'L\'Œil d\'Odin Mythique', icon: '👁️', banner: '💍', tier: 5, x: 74, y: 59, cost: 5, type: 'drop', mythicMult: 3.0, prereqs: ['foil_4'], desc: 'Chance de cartes Mythiques multipliée par 3 dans tous les boosters du jeu !', lore: 'La bénédiction suprême des dieux anciens sur chaque tirage.' },
+    { id: 'apex_colosse', name: 'Usine Stéphane 24/7', icon: '🏛️', banner: '⚒️', tier: 5, x: 26, y: 59, cost: 5, type: 'auto', val: 25, prereqs: ['midas_4'], desc: 'Auto-clic : 25 clics gratuits par seconde.', lore: 'L\'empire industriel absolu qui tourne même pendant votre sommeil.' },
+    { id: 'apex_kratos',  name: 'Ragnarök du Cendrier', icon: '💀', banner: '⚔️', tier: 5, x: 50, y: 59, cost: 5, type: 'apex', mult: 2.2, critChance: 0.35, critMult: 6.0, prereqs: ['midas_4', 'foil_4'], desc: 'Tous tes gains ×2,2, et 35 % de critiques à ×6.', lore: 'La fureur mythologique qui terrasse les dieux du tabac.' },
+    { id: 'apex_mythic',  name: 'L\'Œil d\'Odin Mythique', icon: '👁️', banner: '💍', tier: 5, x: 74, y: 59, cost: 5, type: 'drop', mythicMult: 3.0, prereqs: ['foil_4'], desc: 'Paquets : les cartes Mythiques tombent 3 fois plus souvent.', lore: 'La bénédiction suprême des dieux anciens sur chaque tirage.' },
+    // Talents d'XP : les niveaux montent plus vite (clics, paquets, parties)
+    { id: 'xp_3', name: 'Habitué du Comptoir', icon: '🍺', banner: '🪙', tier: 3, x: 92, y: 36, cost: 3, type: 'xp', mult: 1.2, prereqs: ['rage_2'], desc: 'XP : +20 % sur tout ce qui rapporte de l\'XP (clics, paquets, parties).', lore: 'Le patron te connaît, les anciens te respectent : tu apprends vite.' },
+    { id: 'xp_7', name: 'Pilier de Bar', icon: '🏆', banner: '🪙', tier: 7, x: 92, y: 83, cost: 3, type: 'xp', mult: 1.25, prereqs: ['pack_7'], desc: 'XP : +25 % en plus (×1,5 avec Habitué du Comptoir).', lore: 'Il était là avant les néons, il sera là après la fermeture.' },
     // Tier 6-8 (Le Grand Œuvre : points gagnés aussi avec les prestiges Or et Platine)
-    { id: 'passif_6', name: 'Comptoir Rentable', icon: '💰', banner: '🪙', tier: 6, x: 26, y: 70, cost: 2, type: 'passive', mult: 1.15, prereqs: ['apex_colosse', 'apex_kratos'], desc: '+15% sur tout le revenu passif de tes cartes.', lore: 'Le tiroir-caisse sonne même quand le patron fait la sieste.' },
-    { id: 'clic_6',   name: 'Pouce d\'Acier',     icon: '👊', banner: '⚔️', tier: 6, x: 50, y: 70, cost: 2, type: 'click', mult: 1.3, prereqs: ['apex_kratos'], desc: '+30% sur les gains des clics manuels.', lore: 'Un pouce forgé par dix mille parties de baby-foot.' },
-    { id: 'pack_6',   name: 'Livreur du Tabac',   icon: '📦', banner: '💍', tier: 6, x: 74, y: 70, cost: 2, type: 'pack', cooldown: 0.85, prereqs: ['apex_kratos', 'apex_mythic'], desc: 'Les paquets gratuits arrivent 15% plus vite.', lore: 'Le livreur passe deux fois par jour, et il connaît ton prénom.' },
-    { id: 'passif_7', name: 'Empire Immobilier',  icon: '🏛️', banner: '🪙', tier: 7, x: 26, y: 83, cost: 3, type: 'passive', mult: 1.25, prereqs: ['passif_6'], desc: '+25% supplémentaires sur le revenu passif.', lore: 'Trois bars, deux PMU et un kiosque à journaux.' },
-    { id: 'crit_7',   name: 'Coup du Patron',     icon: '💥', banner: '⚔️', tier: 7, x: 50, y: 83, cost: 3, type: 'crit', critChance: 0.4, critMult: 6, prereqs: ['clic_6'], desc: '40% de coups critiques, gains ×6.', lore: 'Quand le patron tape sur le comptoir, tout le monde paie.' },
-    { id: 'pack_7',   name: 'Grossiste Agréé',    icon: '🚚', banner: '💍', tier: 7, x: 74, y: 83, cost: 3, type: 'pack', cooldown: 0.75, prereqs: ['pack_6'], desc: 'Les paquets gratuits arrivent 25% plus vite (au total).', lore: 'Un camion entier, garé en double file devant le tabac.' },
-    { id: 'apex_8',   name: 'Empereur du Cendrier', icon: '👑', banner: '👑', tier: 8, x: 50, y: 95, cost: 5, type: 'passive', mult: 1.5, clickMult: 1.5, prereqs: ['passif_7', 'crit_7', 'pack_7'], desc: 'Revenu passif ×1,5 et clics ×1,5. Le sommet absolu.', lore: 'Stéphane n\'est plus roi du cendrier. Il est empereur.' },
+    { id: 'passif_6', name: 'Comptoir Rentable', icon: '💰', banner: '🪙', tier: 6, x: 26, y: 70, cost: 2, type: 'passive', mult: 1.15, prereqs: ['apex_colosse', 'apex_kratos'], desc: 'Revenu des cartes : +15 %.', lore: 'Le tiroir-caisse sonne même quand le patron fait la sieste.' },
+    { id: 'clic_6',   name: 'Pouce d\'Acier',     icon: '👊', banner: '⚔️', tier: 6, x: 50, y: 70, cost: 2, type: 'click', mult: 1.3, prereqs: ['apex_kratos'], desc: 'Clics : +30 % d\'argent par clic.', lore: 'Un pouce forgé par dix mille parties de baby-foot.' },
+    { id: 'pack_6',   name: 'Livreur du Tabac',   icon: '📦', banner: '💍', tier: 6, x: 74, y: 70, cost: 2, type: 'pack', cooldown: 0.85, prereqs: ['apex_kratos', 'apex_mythic'], desc: 'Paquet gratuit : arrive 15 % plus vite.', lore: 'Le livreur passe deux fois par jour, et il connaît ton prénom.' },
+    { id: 'passif_7', name: 'Empire Immobilier',  icon: '🏛️', banner: '🪙', tier: 7, x: 26, y: 83, cost: 3, type: 'passive', mult: 1.25, prereqs: ['passif_6'], desc: 'Revenu des cartes : +25 % en plus.', lore: 'Trois bars, deux PMU et un kiosque à journaux.' },
+    { id: 'crit_7',   name: 'Coup du Patron',     icon: '💥', banner: '⚔️', tier: 7, x: 50, y: 83, cost: 3, type: 'crit', critChance: 0.4, critMult: 6, prereqs: ['clic_6'], desc: 'Critiques : 40 % de tes clics rapportent ×6.', lore: 'Quand le patron tape sur le comptoir, tout le monde paie.' },
+    { id: 'pack_7',   name: 'Grossiste Agréé',    icon: '🚚', banner: '💍', tier: 7, x: 74, y: 83, cost: 3, type: 'pack', cooldown: 0.75, prereqs: ['pack_6'], desc: 'Paquet gratuit : arrive 25 % plus vite en tout.', lore: 'Un camion entier, garé en double file devant le tabac.' },
+    { id: 'apex_8',   name: 'Empereur du Cendrier', icon: '👑', banner: '👑', tier: 8, x: 50, y: 95, cost: 5, type: 'passive', mult: 1.5, clickMult: 1.5, prereqs: ['passif_7', 'crit_7', 'pack_7'], desc: 'Revenu des cartes ×1,5 et clics ×1,5. Le sommet de l\'arbre.', lore: 'Stéphane n\'est plus roi du cendrier. Il est empereur.' },
   ];
 
   // Connexions entre les nœuds
@@ -101,7 +104,7 @@ const TalentsEngine = (() => {
     if (typeof ClickerEngine !== 'undefined' && ClickerEngine.getState) {
       empireLevel = ClickerEngine.getState().empireLevel || 1;
     }
-    // 1 point par niveau d'Empire + 1 point bonus tous les 5 niveaux (arbre complet = 66 points, vers le niveau 55)
+    // 1 point par niveau d'Empire + 1 point bonus tous les 5 niveaux (arbre complet = 72 points, vers le niveau 60)
     const deservedTotal = empireLevel + Math.floor(empireLevel / 5);
     if (state.totalPointsEarned > deservedTotal) {
       // Ancienne règle (7 points + 2 par niveau) : on rend les points et on recommence l'arbre
@@ -234,6 +237,13 @@ const TalentsEngine = (() => {
       if (n.mult) mult *= n.mult;
     });
     NODES.filter(n => n.clickMult && isNodeUnlocked(n.id)).forEach(n => { mult *= n.clickMult; });
+    return mult;
+  }
+
+  // Multiplicateur d'XP des talents (Habitué du Comptoir ×1,2, Pilier de Bar ×1,25)
+  function getXPMult() {
+    let mult = 1.0;
+    NODES.filter(n => n.type === 'xp' && isNodeUnlocked(n.id)).forEach(n => { mult *= n.mult; });
     return mult;
   }
 
@@ -481,6 +491,7 @@ const TalentsEngine = (() => {
     getPityReduction,
     getMythicChanceMult,
     getPassiveMultiplier,
+    getXPMult,
     getFreePackCooldownMult,
     prestigePoints,
     syncPointsWithPlayer,

@@ -18,6 +18,8 @@ const PackArt = (() => {
     pochon:    ['#9df59a', '#2e9e44', '#0b3315'],
     backstage: ['#ffb0e0', '#d63c9c', '#4f0b3d'],
     valise:    ['#b4c4ff', '#3a4fae', '#0f1844'],
+    surprise:  ['#ffd27a', '#d9622b', '#5b2308'],
+    premium:   ['#f3d98a', '#7b2d8e', '#2a0b3a'],
     foot:      ['#a7f0a0', '#2e9e44', '#0b3315'],
     refs:      ['#9cc8ff', '#2f6fd6', '#0f1844'],
     musique:   ['#e0b8ff', '#8f45dc', '#2a0f44'],

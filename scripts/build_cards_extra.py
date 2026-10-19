@@ -602,6 +602,11 @@ def main():
         nd += 1
     print("drogue", nd)
 
+    # Noms en double : on les distingue (scripts/data/renames.json)
+    _ren = json.load(open(os.path.join(DATA, "renames.json"), encoding="utf-8"))
+    for _c in cards:
+        if _c["id"] in _ren:
+            _c["name"] = _ren[_c["id"]]
     with open(os.path.join(BASE, "js", "cards_extra.js"), "w", encoding="utf-8") as f:
         f.write("// Généré par scripts/build_cards_extra.py — ne pas modifier à la main.\n")
         f.write("// Photos : Wikimedia Commons (voir data/image_credits.json).\n")

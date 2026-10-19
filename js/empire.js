@@ -122,6 +122,10 @@ const EmpireManager = (() => {
       // Salle de jeux (mini-jeux classés). Ne pas écraser une partie de course en cours de retour.
       if (typeof GameHub !== 'undefined') {
         if (GameHub.keepScreenOnce) GameHub.keepScreenOnce = false;
+        else if (window.Online && Online.inMatch && Online.inMatch()) {
+          // partie en cours : on la garde à l'écran (et on retourne sur la piste si une course est en train de se courir)
+          if (typeof RaceEngine !== 'undefined' && RaceEngine.active && RaceEngine.pvp) setTimeout(() => showPage('race'), 0);
+        }
         else GameHub.render();
       }
     }
@@ -295,7 +299,7 @@ const EmpireManager = (() => {
     }
     state.totalPacksOpened++;
     // XP d'ouverture : prix d'origine / 100 (minimum 15)
-    if (ClickerEngine.gainXP) ClickerEngine.gainXP(Balance.xpForPack(pack.price));
+    if (ClickerEngine.gainXP) ClickerEngine.gainXP(pack.xp != null ? pack.xp : Balance.xpForPack(pack.price));
 
     const items = drawEmpirePack(packId, state.pityState);
     items.forEach(item => addToInventory(item.id));
@@ -597,7 +601,8 @@ const EmpireManager = (() => {
   }
 
   // ── Inventory ──────────────────────────────────────────────
-  let invViewMode = 'owned'; // 'owned' | 'catalog'
+  let invViewMode = 'owned'; // 'owned' | 'catalog' | 'doubles'
+  let invSearch = '';
 
   function renderInventory() {
     const grid = document.getElementById('empire-inv-grid');
@@ -624,6 +629,9 @@ const EmpireManager = (() => {
     let items = [];
     if (invViewMode === 'owned') {
       items = ownedIds.map(id => getEmpireItemById(id)).filter(Boolean);
+    } else if (invViewMode === 'doubles') {
+      // Cartes en plusieurs exemplaires : le surplus se vend sur la Bourse
+      items = ownedIds.filter(id => state.inventory[id] > 1).map(id => getEmpireItemById(id)).filter(Boolean);
     } else {
       items = all.slice();
     }
@@ -633,14 +641,21 @@ const EmpireManager = (() => {
       items = items.filter(i => catMatches(i.cat, currentInventoryCat));
     }
 
+    // Recherche par nom
+    if (invSearch) items = items.filter(i => i.name.toLowerCase().includes(invSearch));
+
     // Sort
     const rarityOrder = { mythique:6, legendaire:5, epique:4, rare:3, 'peu-commune':2, commune:1 };
     if (currentInventorySort === 'rarity') {
       items.sort((a,b) => (rarityOrder[b.rarity]||0) - (rarityOrder[a.rarity]||0));
     } else if (currentInventorySort === 'value') {
       items.sort((a,b) => b.value - a.value);
+    } else if (currentInventorySort === 'value_asc') {
+      items.sort((a,b) => a.value - b.value);
     } else if (currentInventorySort === 'name') {
-      items.sort((a,b) => a.name.localeCompare(b.name));
+      items.sort((a,b) => a.name.localeCompare(b.name, 'fr'));
+    } else if (currentInventorySort === 'name_desc') {
+      items.sort((a,b) => b.name.localeCompare(a.name, 'fr'));
     } else if (currentInventorySort === 'owned') {
       items.sort((a,b) => (state.inventory[b.id]||0) - (state.inventory[a.id]||0));
     }
@@ -648,6 +663,7 @@ const EmpireManager = (() => {
     if (items.length === 0) {
       grid.innerHTML = `<p class="empty-state">${invViewMode === 'owned'
         ? 'Aucune carte de cette famille pour l\'instant. Ouvre des paquets dans la Boutique, ou passe en « Catalogue complet » pour voir ce qui t\'attend.'
+        : invViewMode === 'doubles' ? 'Aucun double ici : tu n\'as qu\'un exemplaire de chaque carte.'
         : 'Aucune carte.'}</p>`;
       return;
     }
@@ -693,6 +709,11 @@ const EmpireManager = (() => {
         invViewMode = viewSel.value;
         renderInventory();
       });
+    }
+
+    const searchInp = document.getElementById('inv-search-empire');
+    if (searchInp) {
+      searchInp.addEventListener('input', () => { invSearch = searchInp.value.toLowerCase().trim(); renderInventory(); });
     }
 
     const sortSel = document.getElementById('inv-sort-empire');
@@ -901,13 +922,14 @@ const EmpireManager = (() => {
   // et qu'un joueur / collectionneur l'a mise en vente !
   // ═══════════════════════════════════════════════════════════
 
-  let bourseTab = 'listings'; // 'listings' | 'catalog' | 'my_sales'
+  let bourseTab = 'listings'; // 'listings' | 'catalog' | 'my_sales' | 'history'
   let bourseCatFilter = 'all';
   let bourseRarityFilter = 'all';
   let bourseOwnershipFilter = 'all';
   let bourseListingTypeFilter = 'all'; // 'all' | 'sale' | 'auction'
   let bourseSort = 'value_desc';
   let bourseSearchQuery = '';
+  let bourseListSort = 'new';   // tri des offres : new | price_asc | price_desc | name | rarity
   let boursePage = 1;
   const BOURSE_PAGE_SIZE = 32;
 
@@ -1116,6 +1138,9 @@ const EmpireManager = (() => {
         <button class="btn-empire ${bourseTab === 'my_sales' ? 'btn-empire-primary' : 'btn-empire-secondary'}" id="btn-bourse-my-sales" style="flex:1;min-width:140px;font-size:0.82rem;font-weight:700">
           Mes Ventes (${myListingsCount})
         </button>
+        <button class="btn-empire ${bourseTab === 'history' ? 'btn-empire-primary' : 'btn-empire-secondary'}" id="btn-bourse-history" style="flex:1;min-width:140px;font-size:0.82rem;font-weight:700">
+          Cartes vendues
+        </button>
       </div>
 
       <!-- Zone Dynamique selon l'onglet -->
@@ -1139,6 +1164,11 @@ const EmpireManager = (() => {
       renderBourse();
     });
 
+    container.querySelector('#btn-bourse-history')?.addEventListener('click', () => {
+      bourseTab = 'history';
+      renderBourse();
+    });
+
     const tabContent = container.querySelector('#bourse-tab-content');
     if (!tabContent) return;
 
@@ -1148,7 +1178,35 @@ const EmpireManager = (() => {
       renderBourseCatalogView(tabContent);
     } else if (bourseTab === 'my_sales') {
       renderBourseMySales(tabContent);
+    } else if (bourseTab === 'history') {
+      renderBourseHistory(tabContent);
     }
+  }
+
+  // ── Historique : cartes vendues et achetées ────────────────
+  async function renderBourseHistory(container) {
+    container.innerHTML = '<p class="soc-empty" style="padding:20px;text-align:center">Chargement…</p>';
+    let rows = [];
+    if (window.sb && window.Account && Account.user) {
+      const { data } = await window.sb.rpc('market_history');
+      rows = data || [];
+    }
+    if (!container.isConnected) return;
+    const sold = rows.filter(r => r.sold);
+    const earned = sold.reduce((a, r) => a + Number(r.net || 0), 0);
+    const when = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' ' + new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    container.innerHTML = `
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:12px 16px;margin-bottom:12px">
+        <h3 style="font-family:var(--font-title);color:var(--empire-gold);font-size:1.1rem">Tes ventes et achats</h3>
+        <p style="font-size:0.78rem;color:var(--text-muted)">${sold.length} carte${sold.length > 1 ? 's' : ''} vendue${sold.length > 1 ? 's' : ''} · ${formatCash(earned)} € encaissés (commission de 5 % déduite)</p>
+      </div>
+      ${rows.length ? `<div class="hist-list">${rows.map(r => {
+        const it = getEmpireItemById(r.card);
+        return `<div class="hist-row ${r.sold ? 'is-sold' : 'is-bought'}">
+          <span class="hist-name"><strong>${escHtml(it ? it.name : r.card)}</strong><em>${r.sold ? 'Vendue à' : 'Achetée à'} ${escHtml(r.other || 'un joueur')} · ${when(r.at)}</em></span>
+          <span class="hist-amt">${r.sold ? '+' + formatCash(r.net) : '−' + formatCash(r.price)} €</span>
+        </div>`;
+      }).join('')}</div>` : '<p class="soc-empty" style="text-align:center;padding:24px">Aucune vente ni achat pour l\'instant.</p>'}`;
   }
 
   // ── 0. FICHE DÉTAILLÉE DE COTATION & CARNET D'ORDRES (TOUTES LES OFFRES) ──
@@ -1373,6 +1431,15 @@ const EmpireManager = (() => {
       });
     }
 
+    // Tri des offres
+    const rk = { mythique: 6, legendaire: 5, epique: 4, rare: 3, 'peu-commune': 2, commune: 1 };
+    const itemOf = l => getEmpireItemById(l.itemId) || {};
+    const priceOf = l => Number(l.type === 'auction' ? l.currentBid : l.price) || 0;
+    if (bourseListSort === 'price_asc') listings.sort((a, b) => priceOf(a) - priceOf(b));
+    else if (bourseListSort === 'price_desc') listings.sort((a, b) => priceOf(b) - priceOf(a));
+    else if (bourseListSort === 'name') listings.sort((a, b) => String(itemOf(a).name || '').localeCompare(String(itemOf(b).name || ''), 'fr'));
+    else if (bourseListSort === 'rarity') listings.sort((a, b) => (rk[itemOf(b).rarity] || 0) - (rk[itemOf(a).rarity] || 0) || priceOf(a) - priceOf(b));
+
     container.innerHTML = `
       <div class="bourse-info-banner" style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:0.8rem;color:#fde047;line-height:1.4">
         ⚡ <strong>Place de Marché Entre Joueurs & Collectionneurs</strong> :
@@ -1384,6 +1451,13 @@ const EmpireManager = (() => {
         <button type="button" class="btn-empire btn-empire-secondary" id="btn-bourse-refresh" style="padding:8px 12px;font-size:0.75rem">Actualiser</button>
         <input type="text" id="bourse-listings-search" class="game-input" style="flex:2;min-width:180px;padding:8px 12px;border-radius:8px;background:rgba(0,0,0,0.4);border:1px solid var(--border-lit);color:#fff;font-size:0.8rem"
                placeholder="Rechercher une offre, un vendeur ou une carte..." value="${bourseSearchQuery}" />
+        <select id="bourse-listings-sort" class="game-select-empire" aria-label="Trier les offres">
+          <option value="new" ${bourseListSort === 'new' ? 'selected' : ''}>Plus récentes</option>
+          <option value="price_asc" ${bourseListSort === 'price_asc' ? 'selected' : ''}>Prix croissant</option>
+          <option value="price_desc" ${bourseListSort === 'price_desc' ? 'selected' : ''}>Prix décroissant</option>
+          <option value="rarity" ${bourseListSort === 'rarity' ? 'selected' : ''}>Rareté</option>
+          <option value="name" ${bourseListSort === 'name' ? 'selected' : ''}>Nom (A-Z)</option>
+        </select>
       </div>
 
       <!-- Onglets Catégories -->
@@ -1414,6 +1488,13 @@ const EmpireManager = (() => {
     const searchInp = container.querySelector('#bourse-listings-search');
     searchInp?.addEventListener('input', (e) => {
       bourseSearchQuery = e.target.value.toLowerCase().trim();
+      renderBourseListings(container);
+      // la liste est redessinée : on remet le curseur dans la barre pour pouvoir continuer à taper
+      const again = container.querySelector('#bourse-listings-search');
+      if (again) { again.focus(); const n = again.value.length; try { again.setSelectionRange(n, n); } catch (err) {} }
+    });
+    container.querySelector('#bourse-listings-sort')?.addEventListener('change', (e) => {
+      bourseListSort = e.target.value;
       renderBourseListings(container);
     });
 
@@ -2086,9 +2167,9 @@ const EmpireManager = (() => {
   function updateFreePackDisplay() {
     if (freePackTimerId) clearTimeout(freePackTimerId);
 
-    // 20 minutes par paquet gratuit (moins avec les talents « Livreur du Tabac » / « Grossiste Agréé »)
+    // 10 minutes par paquet gratuit (moins avec les talents « Livreur du Tabac » / « Grossiste Agréé »)
     const cdMult = (typeof TalentsEngine !== 'undefined' && TalentsEngine.getFreePackCooldownMult) ? TalentsEngine.getFreePackCooldownMult() : 1;
-    const cooldown = Math.round(20 * 60 * 1000 * cdMult);
+    const cooldown = Math.round(10 * 60 * 1000 * cdMult);
     const now = Date.now();
 
     let freePacks = parseInt(localStorage.getItem('empire_free_packs_count') ?? '3'); // 3 offerts au départ

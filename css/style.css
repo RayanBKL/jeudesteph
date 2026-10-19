@@ -65,7 +65,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   width: 100%; height: 100%;
-  background: #0c0a09 url('../assets/lobby_bg.jpeg') no-repeat center center fixed;
+  background: #0c0a09 url('../assets/lobby_bg.webp') no-repeat center center fixed;
   background-size: cover;
   color: var(--text);
   font-family: var(--font-body);
@@ -3532,7 +3532,7 @@ html, body {
 
 .home-city {
   position: absolute; top: 20%; left: 0; right: 0; height: 30%;
-  background: url('assets/lobby_bg.jpeg') center center / cover;
+  background: url('assets/lobby_bg.webp') center center / cover;
   opacity: 0.6;
   mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
