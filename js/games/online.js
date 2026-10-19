@@ -6,7 +6,7 @@
 
 const Online = (() => {
   const TOTAL_TIME = { pbc: 25, des421: 45, quiz: 10, bataille: 30 };
-  const GAME_IDS = ['pbc', 'des421', 'quiz', 'bataille', 'course'];
+  const GAME_IDS = ['pbc', 'des421', 'quiz', 'bataille'];
   const cache = {};
   let run = null;          // partie en cours d'affichage
   let searchTimer = null;
@@ -461,7 +461,14 @@ const Online = (() => {
     if (data && data.status === 'active') watch(container, matchId, data.game);
   }
 
-  return { go, search, watch, available, stopAll, abandonRace, inMatch, resume, GAME_IDS };
+  // Quitter l'onglet pendant une partie en cours : la partie est abandonnée (le serveur donne la victoire à l'adversaire)
+  async function forfeitCurrent() {
+    const r = run; if (!r) return;
+    const id = r.id; stopAll();
+    try { await sb().rpc('match_forfeit', { p_match: id }); } catch (e) {}
+  }
+
+  return { go, search, watch, available, stopAll, abandonRace, inMatch, resume, forfeitCurrent, GAME_IDS };
 })();
 
 if (typeof window !== 'undefined') window.Online = Online;

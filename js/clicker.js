@@ -355,12 +355,7 @@ const ClickerEngine = (() => {
     // 1. Ne rien compter si l'onglet du navigateur est masqué / inactif
     if (!isPlayerActive()) return;   // auto-clic : seulement si le joueur utilise la fenêtre
 
-    // 2. Ne rien compter si le joueur n'est pas sur la page du Cendrier / Clicker
-    const clickerPage = document.getElementById('page-clicker');
-    if (!clickerPage || clickerPage.classList.contains('hidden') || clickerPage.style.display === 'none') {
-      return;
-    }
-
+    // L'auto-clic continue sur toutes les pages (casino, mini-jeux, bourse…) : seul compte le fait d'être présent
     const earned = computeClickEarnings(true);
     state.cash += earned;
     state.totalClicks++;
@@ -705,13 +700,13 @@ const ClickerEngine = (() => {
         <h3 style="font-family:var(--font-title);font-size:1.4rem;color:var(--empire-gold);margin-bottom:12px;text-align:center">
           Équiper une Carte de Clic (Slot ${slotIndex + 1})
         </h3>
-        <div class="cards-grid" id="equip-modal-grid" style="max-height:60vh;overflow-y:auto"></div>
+        <div id="equip-modal-grid" class="pick-wrap"></div>
       `;
 
       const grid = body.querySelector('#equip-modal-grid');
-      if (typeof CardsRenderer !== 'undefined' && CardsRenderer.buildGrid) {
-        CardsRenderer.buildGrid(grid, candidates, inventory, {
-          compact: true,
+      if (typeof CardsRenderer !== 'undefined' && CardsRenderer.buildPicker) {
+        CardsRenderer.buildPicker(grid, candidates, inventory, {
+          mode: 'click',
           onClick: (item) => {
             equipClickCard(item.id);
             modal.classList.add('hidden');
@@ -828,7 +823,8 @@ const ClickerEngine = (() => {
           state.earnedFromClicks = Math.round((state.earnedFromClicks || 0) * f);
           state.earnedFromPassive = Math.round((state.earnedFromPassive || 0) * f);
         }
-        if (typeof Balance !== 'undefined') state.balanceVersion = Balance.VERSION;
+        // ne JAMAIS faire redescendre la version : une vieille page ouverte ferait reconvertir l'argent (÷12) à la prochaine ouverture
+        if (typeof Balance !== 'undefined') state.balanceVersion = Math.max(saved.balanceVersion || 0, Balance.VERSION);
 
         // Courbe d'XP : toujours recalculée depuis le niveau (les anciennes sauvegardes suivaient une autre courbe)
         state.empireXPToNext = xpForLevel(state.empireLevel || 1);

@@ -29,8 +29,8 @@ const Prestige = (() => {
     { id: 'play_bat_5',   tier: 'bronze', target: 15,  text: 'Joue 15 Batailles de Comptoir', on: 'game_end', match: p => p.game === 'bataille' },
     { id: 'play_421_5',   tier: 'bronze', target: 15,  text: 'Joue 15 parties de 421', on: 'game_end', match: p => p.game === 'des421' },
     { id: 'play_pbc_5',   tier: 'bronze', target: 15,  text: 'Joue 15 parties de Pierre-Briquet-Clope', on: 'game_end', match: p => p.game === 'pbc' },
-    { id: 'play_course_3',tier: 'bronze', target: 9,  text: 'Cours 9 Courses Clandestines', on: 'game_end', match: p => p.game === 'course' },
     { id: 'casino_3',     tier: 'bronze', target: 9,  text: 'Gagne 9 fois au casino', on: 'casino_win' },
+    { id: 'poker_6',      tier: 'bronze', target: 9,  text: 'Gagne 9 mains de poker (Ultimate Poker ou table)', on: 'poker_win' },
     { id: 'rares_5',      tier: 'bronze', target: 15,  text: 'Tire 15 cartes Rares ou mieux', on: 'card_drawn', match: p => RARITY_RANK[p.rarity] >= 2 },
     { id: 'play_ut_3',    tier: 'bronze', target: 9,  text: 'Joue 9 matchs d\'Ultimate Comptoir', on: 'game_end', match: p => p.game === 'ut' },
     { id: 'goals_ut_8',   tier: 'bronze', target: 24,  text: 'Marque 24 buts en Ultimate Comptoir', on: 'ut_goals' },
@@ -43,11 +43,11 @@ const Prestige = (() => {
     { id: 'win_ut_4',     tier: 'argent', target: 12,  text: 'Gagne 12 matchs d\'Ultimate Comptoir', on: 'game_end', match: p => p.game === 'ut' && p.result === 'win' },
     { id: 'clean_ut',     tier: 'argent', target: 1,  text: 'Gagne un match d\'Ultimate Comptoir sans encaisser de but', on: 'perfect', match: p => p.game === 'ut' },
     { id: 'win_quiz_3',   tier: 'argent', target: 9,  text: 'Gagne 9 parties de Quiz du Comptoir', on: 'game_end', match: p => p.game === 'quiz' && p.result === 'win' },
-    { id: 'win_course_3', tier: 'argent', target: 9,  text: 'Finis 1er de 9 Courses Clandestines', on: 'game_end', match: p => p.game === 'course' && p.result === 'win' },
     { id: 'combo_421',    tier: 'argent', target: 1,  text: 'Sors un 421 au 421', on: 'dice_combo', match: p => p.combo === '421' },
     { id: 'sweep_bat',    tier: 'argent', target: 1,  text: 'Gagne une Bataille 3 manches à 0', on: 'perfect', match: p => p.game === 'bataille' },
     { id: 'sweep_pbc',    tier: 'argent', target: 1,  text: 'Gagne un Pierre-Briquet-Clope 3 à 0', on: 'perfect', match: p => p.game === 'pbc' },
     { id: 'bj_2',         tier: 'argent', target: 6,  text: 'Fais 6 Blackjacks au casino', on: 'blackjack' },
+    { id: 'poker_25',     tier: 'argent', target: 25, text: 'Gagne 25 mains de poker', on: 'poker_win' },
     { id: 'epiques_2',    tier: 'argent', target: 6,  text: 'Tire 6 cartes Épiques ou mieux', on: 'card_drawn', match: p => RARITY_RANK[p.rarity] >= 3 },
     { id: 'clics_6000',   tier: 'argent', target: 12000, text: 'Clique 12 000 fois sur le jeton', on: 'click' },
     // ── Or ──
@@ -146,6 +146,8 @@ const Prestige = (() => {
 
   // ── Événements du jeu ──────────────────────────────────────
   function emit(type, payload = {}) {
+    // les quêtes du jour et les succès écoutent les mêmes événements
+    try { if (window.Quests) Quests.on(type, payload); if (window.Achievements) Achievements.on(type, payload); } catch (e) {}
     ensureWeek();
 
     // Défis de la semaine

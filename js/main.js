@@ -632,6 +632,7 @@ function renderSettings() {
   if (window.sb && u) window.sb.rpc('am_i_admin').then(({ data }) => document.getElementById('set-admin')?.classList.toggle('hidden', !data)).catch(() => {});
   const a = document.getElementById('set-audio');
   if (a) a.textContent = (window.SoundFX && SoundFX.enabled) ? 'Activé' : 'Coupé';
+  if (window.Personalize && Personalize.refreshPushUi) Personalize.refreshPushUi();
 }
 document.getElementById('set-audio')?.addEventListener('click', () => {
   if (window.SoundFX) SoundFX.toggle();

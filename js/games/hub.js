@@ -10,7 +10,6 @@ const GameHub = (() => {
     { id: 'des421',   name: '421',                  desc: 'Trois dés, trois lancers, une seule combinaison.', engine: () => Des421, art: 'dice' },
     { id: 'pbc',      name: 'Pierre-Briquet-Clope', desc: 'Le shifumi du comptoir. Pierre, briquet, clope : devine le coup de l\'autre.', engine: () => PBC, art: 'pbc' },
     { id: 'quiz',     name: 'Quiz du Comptoir',     desc: 'Une photo, quatre noms, dix secondes. Plus vite que ton adversaire ?', engine: () => QuizComptoir, art: 'quiz' },
-    { id: 'course',   name: 'Course Clandestine',   desc: 'Quatre fumeurs, un trottoir, un seul vainqueur.', engine: () => CourseClandestine, art: 'race' },
   ];
   let view = 'home';          // home | prestiges | rangs
   let prestigeTab = 'semaine';

@@ -96,8 +96,50 @@ const Personalize = (() => {
     if (window.GameDialog) GameDialog.alert(msg, { title: 'Ajouter le jeu à ton téléphone' }); else alert(msg);
   }
 
+  // ── Notifications push (amis, paquet gratuit prêt) ──
+  const VAPID_PUBLIC = 'BHZ5FCKqTH8IP3ooJGMWSmPCoWXk65HUNzMym1ZatMpJ8oth5RbvihX7as4Go9-Q9vvN2v11vrxzl1jRPXuwyIo';
+  const b64ToBytes = b => { const pad = '='.repeat((4 - b.length % 4) % 4), s = atob((b + pad).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, c => c.charCodeAt(0)); };
+  const bytesToB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+  async function pushState() {
+    if (!pushSupported()) return 'unsupported';
+    if (Notification.permission === 'denied') return 'denied';
+    try { const reg = await navigator.serviceWorker.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); return sub && Notification.permission === 'granted' ? 'on' : 'off'; } catch (e) { return 'off'; }
+  }
+  async function refreshPushUi() {
+    const st = await pushState(), btn = document.getElementById('set-push'), note = document.getElementById('set-push-note'); if (!btn) return;
+    const L = { on: ['Désactiver', 'Tu seras prévenu quand un ami t\'invite ou t\'écrit, et quand un paquet gratuit est prêt.'],
+      off: ['Activer', 'Reçois une notification quand un ami t\'invite ou t\'écrit, et quand un paquet gratuit est prêt.'],
+      denied: ['Bloquées', 'Les notifications sont bloquées dans les réglages de ton navigateur ou de ton téléphone.'],
+      unsupported: ['Indisponible', isIOS() && !standalone() ? 'Sur iPhone, ajoute d\'abord le jeu à l\'écran d\'accueil, puis réactive ici.' : 'Ce navigateur ne gère pas les notifications.'] }[st];
+    btn.textContent = L[0]; btn.disabled = st === 'denied' || st === 'unsupported'; if (note) note.textContent = L[1];
+  }
+  async function togglePush() {
+    const st = await pushState();
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (st === 'on') {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) { if (window.sb && window.Account && Account.user) await window.sb.rpc('push_unsubscribe', { p_endpoint: sub.endpoint }); await sub.unsubscribe(); }
+      } else {
+        if (!window.Account || !Account.user) return showToast('Connecte-toi pour activer les notifications.', 'error');
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') { refreshPushUi(); return showToast('Notifications refusées.', 'info'); }
+        const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(VAPID_PUBLIC) });
+        const j = sub.toJSON();
+        const { error } = await window.sb.rpc('push_subscribe', { p_endpoint: sub.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth });
+        if (error) { await sub.unsubscribe(); return showToast('Impossible d\'activer les notifications : ' + error.message, 'error'); }
+        showToast('Notifications activées.', 'gold');
+      }
+    } catch (e) { showToast('Notifications indisponibles sur cet appareil.', 'error'); }
+    refreshPushUi();
+  }
+
   function init() {
     apply();
+    document.getElementById('set-push')?.addEventListener('click', togglePush);
+    refreshPushUi();
     document.getElementById('set-skin')?.addEventListener('click', openPicker);
     const card = document.getElementById('set-install-card');
     if (card && standalone()) card.classList.add('hidden');
@@ -110,7 +152,7 @@ const Personalize = (() => {
     setTimeout(apply, 1500); setTimeout(apply, 5000);
   }
 
-  return { init, apply, set, openPicker };
+  return { init, apply, set, openPicker, refreshPushUi };
 })();
 
 if (typeof window !== 'undefined') window.Personalize = Personalize;

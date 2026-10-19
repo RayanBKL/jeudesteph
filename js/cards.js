@@ -343,6 +343,56 @@ const CardsRenderer = (() => {
     return `#${((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1)}`;
   }
 
+  // Sélecteur de cartes (placement dans l'Empire, cases de clic) : recherche, filtre par famille et tri (meilleur bonus d'abord)
+  function buildPicker(container, items, inventory, opts = {}) {
+    if (!container) return;
+    const bonusKey = opts.mode === 'click' ? 'clickBoost' : 'cashPerSec';
+    const bonusLabel = opts.mode === 'click' ? 'Meilleur bonus de clic' : 'Meilleur revenu passif';
+    const RO = { mythique: 6, legendaire: 5, epique: 4, rare: 3, 'peu-commune': 2, commune: 1 };
+    container.innerHTML = `
+      <div class="pick-bar">
+        <input type="search" class="game-input pick-search" placeholder="Chercher une carte" autocomplete="off" />
+        <select class="game-select-empire pick-sort" aria-label="Trier">
+          <option value="bonus">${bonusLabel}</option><option value="rarity">Rareté</option><option value="value">Valeur</option><option value="name">Nom (A-Z)</option>
+        </select>
+        <select class="game-select-empire pick-cat" aria-label="Famille">
+          <option value="all">Toutes</option><option value="tabac">Tabac</option><option value="alcool">Boissons</option><option value="drogue">Substances</option><option value="actrice">VIP</option>
+          <option value="beauf">Terroirs</option><option value="foot">Football</option><option value="refs">Mèmes</option><option value="chanteur">Musique</option><option value="culte">Culte</option><option value="saison">Saison</option>
+        </select>
+      </div>
+      <p class="pick-count"></p>
+      <div class="cards-grid pick-grid"></div>
+      <button type="button" class="btn-empire btn-empire-secondary pick-more hidden">Voir plus de cartes</button>`;
+    const q = container.querySelector('.pick-search'), sortSel = container.querySelector('.pick-sort'), catSel = container.querySelector('.pick-cat');
+    const grid = container.querySelector('.pick-grid'), more = container.querySelector('.pick-more'), count = container.querySelector('.pick-count');
+    const PAGE = 48; let list = [], shown = 0;
+    const draw = () => {
+      const chunk = list.slice(shown, shown + PAGE);
+      chunk.forEach(item => {
+        const card = buildCard(item, { quantity: inventory[item.id] || 0, compact: true, onClick: opts.onClick });
+        grid.appendChild(card);
+      });
+      shown += chunk.length;
+      more.classList.toggle('hidden', shown >= list.length);
+    };
+    const refresh = () => {
+      const term = q.value.trim().toLowerCase(), cat = catSel.value;
+      list = items.filter(i => (!term || i.name.toLowerCase().includes(term)) && (cat === 'all' || (cat === 'tabac' ? (i.cat === 'cigarette' || i.cat === 'briquet') : i.cat === cat)));
+      const by = sortSel.value;
+      if (by === 'bonus') list.sort((a, b) => (b[bonusKey] || 0) - (a[bonusKey] || 0));
+      else if (by === 'rarity') list.sort((a, b) => (RO[b.rarity] || 0) - (RO[a.rarity] || 0) || (b[bonusKey] || 0) - (a[bonusKey] || 0));
+      else if (by === 'value') list.sort((a, b) => (b.value || 0) - (a.value || 0));
+      else list.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+      grid.innerHTML = ''; shown = 0;
+      count.textContent = list.length ? `${list.length} carte${list.length > 1 ? 's' : ''}` : 'Aucune carte ne correspond.';
+      draw();
+    };
+    q.addEventListener('input', refresh); sortSel.addEventListener('change', refresh); catSel.addEventListener('change', refresh);
+    more.addEventListener('click', draw);
+    refresh();
+  }
+
+
   // Image de carte qui ne charge pas (réseau mobile capricieux) : on réessaie 2 fois avant d'afficher l'emblème de secours
   function imgFail(img) {
     const n = +(img.dataset.retry || 0);
@@ -356,6 +406,7 @@ const CardsRenderer = (() => {
   }
 
   return {
+    buildPicker,
     imgFail,
     buildCard,
     buildGrid,

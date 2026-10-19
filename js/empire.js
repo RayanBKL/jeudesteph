@@ -84,8 +84,26 @@ const EmpireManager = (() => {
     document.getElementById('btn-quick-bourse')?.addEventListener('click', () => navigateTo('bourse'));
   }
 
+  let navGuarding = false;
   function navigateTo(page) {
     if (page === 'course' || page === 'home') page = 'clicker';
+    // Partie en ligne en cours : changer d'onglet = abandonner (on demande confirmation) ; table de poker : on quitte la table
+    if (currentPage === 'multi' && page !== 'multi' && window.Online && Online.inMatch && Online.inMatch() && !navGuarding) {
+      navGuarding = true;
+      GameDialog.confirm('Si tu quittes cet écran, la partie est perdue.', { title: 'Abandonner la partie ?', ok: 'Abandonner', danger: true }).then(async ok => {
+        if (ok) { await Online.forfeitCurrent(); navGuarding = false; navigateTo(page); }
+        else { navGuarding = false; document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === currentPage)); }
+      });
+      return;
+    }
+    if (currentPage === 'casino' && page !== 'casino' && window.Poker && Poker.atTable && Poker.atTable() && !navGuarding) {
+      navGuarding = true;
+      GameDialog.confirm('Tu te couches s\'il y a une main en cours, et tes jetons te reviennent.', { title: 'Quitter la table de poker ?', ok: 'Quitter' }).then(async ok => {
+        if (ok) { await Poker.leaveSilently(); navGuarding = false; navigateTo(page); }
+        else { navGuarding = false; document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === currentPage)); }
+      });
+      return;
+    }
     currentPage = page;
 
     // Update nav
@@ -852,12 +870,12 @@ const EmpireManager = (() => {
         <h3 style="font-family:var(--font-title);font-size:1.5rem;color:var(--empire-gold);margin-bottom:16px">
           Assigner dans ${room.name}
         </h3>
-        <div class="cards-grid" id="assign-modal-grid" style="max-height:60vh;overflow-y:auto"></div>
+        <div id="assign-modal-grid" class="pick-wrap"></div>
       `;
 
       const grid = body.querySelector('#assign-modal-grid');
-      CardsRenderer.buildGrid(grid, ownedItems, state.inventory, {
-        compact: true,
+      CardsRenderer.buildPicker(grid, ownedItems, state.inventory, {
+        mode: 'passive',
         onClick: (item) => {
           assignToRoom(roomId, item.id);
           modal.classList.add('hidden');
@@ -2228,6 +2246,7 @@ const EmpireManager = (() => {
         const items = drawEmpirePack('gratuit', state.pityState);
         items.forEach(item => addToInventory(item.id));
         emitPackPrestige(items);
+        if (typeof Prestige !== 'undefined') Prestige.emit('free_pack');
         autoFillRooms();
         saveState();
         openPackReveal(items, EMPIRE_PACKS.gratuit);
@@ -2275,7 +2294,7 @@ const EmpireManager = (() => {
           Object.values(state.priceHistory || {}).forEach(h => { if (h && typeof h.ema === 'number') h.ema = Math.round(h.ema * k); });
           (state.myListings || []).forEach(l => { ['price', 'currentBid', 'minBid'].forEach(f => { if (typeof l[f] === 'number') l[f] = Math.round(l[f] * k); }); });
         }
-        if (saved.balanceVersion !== Balance.VERSION) { state.balanceVersion = Balance.VERSION; saveState(); }
+        if ((saved.balanceVersion || 0) < Balance.VERSION) { state.balanceVersion = Balance.VERSION; saveState(); }
       } else {
         state.balanceVersion = Balance.VERSION;
         saveState();

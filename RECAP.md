@@ -224,3 +224,5 @@ Si rien ne manque après quelques jours de test, le dossier d'archive peut être
 - Reprise automatique d'une partie en cours quand on revient sur l'onglet Jeux ; dernière manche visible à la fin d'un match ; images de cartes qui réessaient avant d'afficher l'emblème.
 - Vitesse : une seule police Google (Rubik), fond d'écran en WebP.
 - **Reste** : poker et machines à sous (reportés), nouvelles cartes (liste à fournir), migration 017 (sécurité) à appliquer, vrais iPhone/Safari à tester.
+
+- **Poker** : Ultimate Poker (contre la banque) + tables multijoueurs avec mise de départ (`023`) ; Course Clandestine retirée de la salle de jeux. Test serveur : 25 mains à 2-5 joueurs, jetons toujours conservés (somme des crédits = 0).

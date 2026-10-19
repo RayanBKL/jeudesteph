@@ -11,7 +11,7 @@ const ctx = { console: { log() {} } };
 ctx.window = ctx;
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ['js/cigarettes_db.js', 'js/empire_db_expansion.js', 'js/cards_extra.js', 'js/cards_season.js', 'js/empire_db.js']) {
+for (const f of ['js/cigarettes_db.js', 'js/empire_db_expansion.js', 'js/cards_extra.js', 'js/cards_season.js', 'js/empire_db.js', 'js/rarity_fix.js']) {
   vm.runInContext(fs.readFileSync(path.join(baseDir, f), 'utf8'), ctx, { filename: f });
 }
 const items = ctx.getAllBaseItemsList();

@@ -15,11 +15,12 @@ const Account = (() => {
   const KEYS = [
     'stephane_v1', 'empire_state', 'empire_clicker', 'empire_free_packs_count', 'empire_next_free_pack_time',
     'empire_last_free_pack', 'ashtray_talents_gow', 'ashtray_talents', 'league_v1', 'prestige_v1', 'ut_squad_v1',
-    'casino_last_result', 'casino_bank_advance_at', 'ashtray_pvp_deck', 'ashtray_audio_enabled', 'ak_click_skin',
+    'casino_last_result', 'casino_bank_advance_at', 'ashtray_pvp_deck', 'ashtray_audio_enabled', 'ak_click_skin', 'ak_quests', 'ak_ach', 'ak_title', 'casino_bj_history',
   ];
   const PREFIXES = ['rules_seen_'];
   const OWNER = 'ak_owner', STAMP = 'ak_stamp', DIRTY = 'ak_dirty', LEFT = 'ak_signed_out';
-  const PUSH_DELAY = 20000;
+  const PUSH_DELAY = 8000;
+  const BASE = 'ak_base';      // chiffres de la dernière version synchronisée (sert à fusionner deux appareils)
 
   let user = null;
   let profile = null;
@@ -139,6 +140,7 @@ const Account = (() => {
         stamp = data.updated_at;
         ls.set(STAMP, stamp);
         ls.del(DIRTY);
+        rememberBase(snapshot());
         setStatus('ok');
       }
     } catch (e) {
@@ -150,16 +152,33 @@ const Account = (() => {
     }
   }
 
+  // À la fermeture / mise en veille de la page : envoi qui survit à la fermeture (limite de 64 Ko pour ce mode), sinon envoi normal
+  let accessToken = null;
+  function trackToken() { const sb = client(); if (sb && sb.auth) { sb.auth.getSession().then(({ data }) => { accessToken = data && data.session ? data.session.access_token : null; }); sb.auth.onAuthStateChange((_e, sess) => { accessToken = sess ? sess.access_token : null; }); } }
+  function pushOnLeave() {
+    if (!user || pushing || applying || blocked) return;
+    try {
+      const body = JSON.stringify({ p_data: snapshot(), p_base: stamp, p_device: deviceName(), p_force: false });
+      if (accessToken && body.length < 60000 && typeof SUPABASE_CONFIG !== 'undefined') {
+        fetch(SUPABASE_CONFIG.url + '/rest/v1/rpc/cloud_save_put', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', apikey: SUPABASE_CONFIG.anonKey, Authorization: 'Bearer ' + accessToken }, body })
+          .then(r => r.json()).then(d => { if (d && d.ok) { stamp = d.updated_at; ls.set(STAMP, stamp); ls.del(DIRTY); rememberBase(snapshot()); } }).catch(() => {});
+        return;
+      }
+    } catch (e) {}
+    push();
+  }
+
   // Le serveur refuse une sauvegarde incohérente (progression impossible) : on revient à la dernière version valide
   async function handleRejected() {
     ls.del(DIRTY);
     const n = +(sessionStorage.getItem('ak_rej') || 0) + 1;
     sessionStorage.setItem('ak_rej', String(n));
+    backup('refusee', snapshot());
     await GameDialog.alert('Les données de cette partie ne sont pas cohérentes (progression impossible). On remet la dernière sauvegarde valide.', { title: 'Sauvegarde refusée' });
     if (n > 2) return;
     try {
       const save = await pull();
-      if (save) { applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); location.reload(); }
+      if (save) { applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); rememberBase(save.data); location.reload(); }
     } catch (e) {}
   }
 
@@ -170,33 +189,109 @@ const Account = (() => {
     return data;
   }
 
-  // Renvoie true si la page va se recharger avec la version en ligne
-  // Mesure de l'avancement d'une sauvegarde (clics, paquets ouverts, cartes, niveau)
-  function progressScore(data) {
+  // ── Chiffres d'une sauvegarde (argent, XP totale, clics, paquets, cartes) ──
+  const xpForLevel = lv => Math.round(300 * Math.pow(1.35, Math.min(lv, 12) - 1) * Math.pow(1.06, Math.max(0, lv - 12)) / 5) * 5;
+  const xpTotalOf = (level, xp) => { let t = xp || 0; for (let i = 1; i < (level || 1); i++) t += xpForLevel(i); return t; };
+  function levelFromXp(total) { let lv = 1, left = Math.max(0, total); while (left >= xpForLevel(lv) && lv < 400) { left -= xpForLevel(lv); lv++; } return { level: lv, xp: left }; }
+  function counters(data) {
     try {
-      const c = JSON.parse((data && data.empire_clicker) || '{}'), e = JSON.parse((data && data.empire_state) || '{}');
-      const copies = Object.values(e.inventory || {}).reduce((a, v) => a + (+v > 0 ? +v : 0), 0);
-      return (c.totalClicks || 0) + 25 * (e.totalPacksOpened || 0) + 5 * copies + 1000 * (c.empireLevel || 1);
-    } catch (err) { return 0; }
+      const c = JSON.parse((data && data.empire_clicker) || '{}'), e = JSON.parse((data && data.empire_state) || '{}'), inv = {};
+      Object.entries(e.inventory || {}).forEach(([k, v]) => { if (+v > 0) inv[k] = +v; });
+      return { cash: +c.cash || 0, totalEarned: +c.totalEarned || 0, totalClicks: +c.totalClicks || 0, xp: xpTotalOf(c.empireLevel || 1, +c.empireXP || 0), packs: +e.totalPacksOpened || 0, inv };
+    } catch (err) { return null; }
+  }
+  function rememberBase(data) { const c = counters(data); if (c) ls.set(BASE, JSON.stringify(c)); }
+  const savedBase = () => { try { return JSON.parse(ls.get(BASE) || 'null'); } catch (e) { return null; } };
+
+  // Avancement : l'XP totale ne baisse jamais ; à égalité, l'argent gagné, les clics puis les cartes
+  function progressScore(data) {
+    const c = counters(data); if (!c) return 0;
+    return c.xp * 1e6 + c.totalEarned + c.totalClicks * 10 + c.packs * 100 + Object.values(c.inv).reduce((a, v) => a + v, 0);
   }
 
-  // Deux versions de la partie (autre appareil ou onglet) : on garde la plus avancée, sans poser de question.
-  // Renvoie true si la page va se recharger avec la version en ligne
+  // Fusion à trois (version commune + appareil A + appareil B) : on ADDITIONNE ce que chaque appareil a fait depuis la version commune.
+  // Rien ne se perd : argent, XP, clics, paquets et cartes des deux côtés sont conservés.
+  function mergeSaves(local, cloud, base) {
+    const L = counters(local), C = counters(cloud); if (!L || !C || !base) return null;
+    const tpl = progressScore(local) >= progressScore(cloud) ? local : cloud;     // le reste (talents, salles…) vient de la version la plus avancée
+    const add = k => Math.max(0, Math.round(L[k] + C[k] - (base[k] || 0)));
+    const c = JSON.parse(tpl.empire_clicker || '{}'), e = JSON.parse(tpl.empire_state || '{}');
+    c.cash = add('cash'); c.totalEarned = add('totalEarned'); c.totalClicks = add('totalClicks');
+    const lv = levelFromXp(add('xp')); c.empireLevel = lv.level; c.empireXP = lv.xp; c.empireXPToNext = xpForLevel(lv.level);
+    e.totalPacksOpened = add('packs');
+    const ids = new Set([...Object.keys(L.inv), ...Object.keys(C.inv), ...Object.keys(base.inv || {})]), inv = {};
+    ids.forEach(id => { const n = Math.max(0, (L.inv[id] || 0) + (C.inv[id] || 0) - ((base.inv || {})[id] || 0)); if (n > 0) inv[id] = n; });
+    e.inventory = inv;
+    return { ...tpl, empire_clicker: JSON.stringify(c), empire_state: JSON.stringify(e) };
+  }
+
+  // Deux versions de la partie (autre appareil ou onglet) : on les FUSIONNE (voir mergeSaves) ; sans version commune connue,
+  // on garde la plus avancée. Une copie de sécurité de l'autre version est gardée dans le navigateur.
+  // Renvoie true si la page va se recharger.
   async function resolveConflict() {
     const save = await pull();
     if (!save) { pushing = false; await push(true); return false; }
-    const keepLocal = progressScore(snapshot()) > progressScore(save.data);
-    if (!keepLocal) {
-      applySnapshot(save.data);
-      ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY);
+    const local = snapshot();
+    backup('avant-fusion', local);
+    const base = savedBase();
+    let result = base ? mergeSaves(local, save.data, base) : null;
+    console.info('[Account] conflit : base', !!base, 'fusion', !!result, base && JSON.stringify({ local: counters(local), cloud: counters(save.data), base: { ...base, inv: undefined } }).slice(0, 300));
+    if (!result) result = progressScore(local) > progressScore(save.data) ? local : save.data;
+    // l'envoi part de la dernière version connue de CET appareil : le contrôle anti-triche mesure le temps depuis ce moment-là
+    const sb = client();
+    applySnapshot(result);
+    const { data, error } = await sb.rpc('cloud_save_put', { p_data: result, p_base: stamp, p_device: deviceName(), p_force: true });
+    if (!error && data && data.ok) {
+      stamp = data.updated_at; ls.set(STAMP, stamp); ls.set(OWNER, user.id); ls.del(DIRTY); rememberBase(result);
+      sessionStorage.setItem('ak_reloaded', user.id + stamp);
+      if (typeof showToast === 'function') showToast('Partie synchronisée : tes deux appareils ont été fusionnés.', 'info');
       location.reload();
       return true;
     }
-    pushing = false;
-    stamp = save.updated_at;
-    await push(true);
-    if (typeof showToast === 'function') showToast('Partie synchronisée : la version la plus avancée a été gardée.', 'info');
+    // le serveur a refusé la fusion : on prend la version en ligne (la copie de sécurité reste dans le navigateur)
+    applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY); rememberBase(save.data);
+    location.reload();
+    return true;
+  }
+
+  // Copie de sécurité locale (les 3 dernières) : de quoi récupérer une partie si une synchronisation tourne mal
+  function backup(label, data) {
+    try {
+      const k = 'ak_backup_' + Date.now() + '_' + label;
+      rawSet.call(localStorage, k, JSON.stringify(data));
+      const all = Object.keys(localStorage).filter(x => x.startsWith('ak_backup_')).sort();
+      all.slice(0, Math.max(0, all.length - 3)).forEach(x => rawRemove.call(localStorage, x));
+    } catch (e) {}
+  }
+
+  // Un autre appareil a envoyé une version plus récente : on s'en aperçoit tout de suite (au retour sur l'onglet, puis toutes les 45 s)
+  // pour ne JAMAIS continuer à jouer — et surtout à écraser — avec une partie périmée.
+  let checking = false;
+  const busyNow = () => {
+    try {
+      if (typeof Casino !== 'undefined' && Casino.bj && ['playing', 'dealer', 'insurance_prompt'].includes(Casino.bj.status)) return true;
+      if (typeof Casino !== 'undefined' && Casino.roulette && Casino.roulette.spinning) return true;
+      if (window.Online && Online.inMatch && Online.inMatch()) return true;
+    } catch (e) {}
     return false;
+  };
+  async function checkCloud() {
+    const sb = client();
+    if (!sb || !user || !live || blocked || pushing || applying || checking || document.hidden) return;
+    checking = true;
+    try {
+      const { data } = await sb.rpc('cloud_save_stamp');
+      if (!data || !data.updated_at || data.updated_at === stamp) return;
+      if (ls.get(DIRTY) === '1') { await push(); return; }       // modifications locales aussi : conflit → fusion
+      if (busyNow()) return;                                      // pas en pleine manche : on recommencera
+      const save = await pull();
+      if (save) {
+        applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY); rememberBase(save.data);
+        sessionStorage.setItem('ak_reloaded', user.id + save.updated_at);
+        if (typeof showToast === 'function') showToast('Partie mise à jour depuis ton autre appareil.', 'info');
+        location.reload();
+      }
+    } catch (e) { /* hors ligne : tant pis */ } finally { checking = false; }
   }
 
   // ── Démarrage ──────────────────────────────────────────────
@@ -237,6 +332,7 @@ const Account = (() => {
     await waitForTabFree();
     startTabGuardOnce();
     user = u;
+    trackToken();
     if (window.CloudSync) { CloudSync.currentUser = u; CloudSync.isOnline = true; }
 
     const { data: prof, error: perr } = await sb.from('profiles').select('id, pseudo, friend_code, avatar, avatar_small, summary, level').eq('id', u.id).maybeSingle();
@@ -253,6 +349,7 @@ const Account = (() => {
       const sameOwner = owner === u.id;
       if (sameOwner && localStamp === cloud.updated_at) {
         stamp = cloud.updated_at;                         // déjà à jour
+        if (!savedBase()) rememberBase(snapshot());
       } else if (sameOwner && dirty && hasLocal) {
         // Changements locaux non envoyés ET version plus récente en ligne : le joueur choisit
         stamp = localStamp;
@@ -264,7 +361,7 @@ const Account = (() => {
         // Autre compte sur ce navigateur, première connexion ici, ou rien à perdre : la version en ligne gagne
         if (owner && owner !== u.id) { ls.del('player_avatar'); ls.del('player_avatar_small'); }
         applySnapshot(cloud.data);
-        ls.set(OWNER, u.id); ls.set(STAMP, cloud.updated_at); ls.del(DIRTY);
+        ls.set(OWNER, u.id); ls.set(STAMP, cloud.updated_at); ls.del(DIRTY); rememberBase(cloud.data);
         sessionStorage.setItem('ak_reloaded', u.id + cloud.updated_at);
         location.reload();
         return;
@@ -298,8 +395,11 @@ const Account = (() => {
     if (typeof PlayerProfile !== 'undefined') await PlayerProfile.syncWithProfile(profile);
     if (typeof League !== 'undefined' && League.syncFromServer) await League.syncFromServer();
 
-    document.addEventListener('visibilitychange', () => { if (document.hidden && ls.get(DIRTY) === '1') push(); });
-    window.addEventListener('pagehide', () => { if (ls.get(DIRTY) === '1') push(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden && ls.get(DIRTY) === '1') pushOnLeave(); else if (!document.hidden) checkCloud(); });
+    window.addEventListener('focus', () => checkCloud());
+    setInterval(checkCloud, 45000);
+    setTimeout(checkCloud, 4000);
+    window.addEventListener('pagehide', () => { if (ls.get(DIRTY) === '1') pushOnLeave(); });
     window.addEventListener('online', () => { if (ls.get(DIRTY) === '1') push(); });
 
     if (typeof startGame === 'function') startGame();
@@ -324,6 +424,8 @@ const Account = (() => {
       ClickerEngine.setCash(Math.max(0, Math.round(next)));
       if (typeof showToast === 'function') {
         const f = typeof ClickerEngine.formatCash === 'function' ? ClickerEngine.formatCash(Math.abs(g.amount)) : g.amount;
+        if (g.kind === 'poker') { showToast(`${g.note || 'Poker'} (${g.amount >= 0 ? '+' : '−'}${f} €)`, g.amount >= 0 ? 'gold' : 'info'); return; }
+        if (g.kind === 'market' && typeof Prestige !== 'undefined') Prestige.emit('market_sale');
         if (g.kind === 'market') { showToast(`${g.note || 'Vente'} : +${f} € (commission de 5 % déduite).`, 'gold'); return; }
         showToast(g.mode === 'set' ? `Ton solde a été fixé à ${f} € par l'administrateur.` : (g.amount >= 0 ? `L'administrateur t'a offert ${f} € !` : `L'administrateur a retiré ${f} € de ton solde.`) + (g.note ? ' ' + g.note : ''), 'gold');
       }
@@ -350,7 +452,7 @@ const Account = (() => {
   }
 
   return {
-    boot, onSignedIn, signOut, push, applyGrants,
+    boot, onSignedIn, signOut, push, applyGrants, checkCloud, mergeSaves, counters,
     get user() { return user; },
     get profile() { return profile; },
     setProfile(p) { profile = { ...(profile || {}), ...p }; },
