@@ -202,8 +202,13 @@ const Casino = {
     this.bindGlobalTabs();
     this.updateHeaderDashboard();
 
+    if (typeof Poker !== 'undefined' && this.currentTab !== 'uth' && this.currentTab !== 'pktable') Poker.stopTable();
     if (this.currentTab === 'blackjack') {
       this.renderBlackjack(content);
+    } else if (this.currentTab === 'uth' && typeof Poker !== 'undefined') {
+      Poker.renderUltimate(content);
+    } else if (this.currentTab === 'pktable' && typeof Poker !== 'undefined') {
+      Poker.renderTable(content);
     } else {
       this.renderRoulette(content);
     }

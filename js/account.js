@@ -324,6 +324,7 @@ const Account = (() => {
       ClickerEngine.setCash(Math.max(0, Math.round(next)));
       if (typeof showToast === 'function') {
         const f = typeof ClickerEngine.formatCash === 'function' ? ClickerEngine.formatCash(Math.abs(g.amount)) : g.amount;
+        if (g.kind === 'poker') { showToast(`${g.note || 'Poker'} (${g.amount >= 0 ? '+' : '−'}${f} €)`, g.amount >= 0 ? 'gold' : 'info'); return; }
         if (g.kind === 'market') { showToast(`${g.note || 'Vente'} : +${f} € (commission de 5 % déduite).`, 'gold'); return; }
         showToast(g.mode === 'set' ? `Ton solde a été fixé à ${f} € par l'administrateur.` : (g.amount >= 0 ? `L'administrateur t'a offert ${f} € !` : `L'administrateur a retiré ${f} € de ton solde.`) + (g.note ? ' ' + g.note : ''), 'gold');
       }

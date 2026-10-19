@@ -847,3 +847,62 @@
 .pick-bar select{flex:1 1 110px;min-width:0}
 .pick-count{font-size:.72rem;opacity:.7;margin:0 0 6px}
 .pick-more{width:100%;margin:10px 0 2px}
+
+/* ── Poker (Ultimate Poker + tables) ── */
+.casino-tabs-european{display:grid !important;grid-template-columns:repeat(4,1fr);gap:6px !important}
+.casino-tabs-european .cas-tab{font-size:.74rem !important;padding:7px 3px !important;line-height:1.1}
+@media (max-width:520px){.casino-tabs-european{grid-template-columns:repeat(2,1fr)}}
+.pk-table{display:flex;flex-direction:column;gap:6px;padding:8px;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+.pk-table::-webkit-scrollbar{display:none}
+.pk-zone{text-align:center}
+.pk-label{font-size:.68rem;opacity:.8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.pk-row{display:flex;gap:5px;justify-content:center;flex-wrap:nowrap}
+.pk-card{width:42px;height:60px;border-radius:6px;background:#fbf0d8;border:2px solid var(--outline);color:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-title);line-height:1;box-shadow:0 2px 0 var(--outline);flex:none}
+.pk-card.is-red{color:#c0261a}
+.pk-card .pk-r{font-size:1.05rem}.pk-card .pk-s{font-size:1.25rem}
+.pk-card.pk-back{background:repeating-linear-gradient(45deg,#7a1f17,#7a1f17 5px,#a4362a 5px,#a4362a 10px);border-color:#120a04}
+.pk-card.pk-empty{background:#0003;border:2px dashed #fff3;box-shadow:none}
+.pk-card.pk-sm{width:26px;height:36px}
+.pk-bets{display:flex;gap:10px;justify-content:center;font-size:.74rem;flex-wrap:wrap}
+.pk-bets b{color:var(--gold)}
+.pk-msg{min-height:1.3em;text-align:center;font-size:.82rem}
+.pk-msg.win{color:#3fcf7a}.pk-msg.lose{color:#ff9b8f}.pk-msg.push{color:var(--gold)}
+.pk-controls{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.pk-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.pk-actions .btn-primary,.pk-actions .btn-secondary{flex:1 1 90px;font-size:.8rem;padding:9px 6px}
+.pk-main-btn{width:100%}
+.pk-bets-row{display:flex;gap:6px}
+.pk-mini{font-size:.7rem !important;padding:5px 8px !important}
+.pk-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.78rem}
+.pk-pot{font-family:var(--font-title);color:var(--gold)}
+.pk-seats{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.pk-seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:78px;padding:5px 6px;border:2px solid var(--outline);border-radius:10px;background:#0004;font-size:.7rem}
+.pk-seat.is-turn,.pk-me.is-turn{border-color:var(--gold);box-shadow:0 0 0 2px #e9c46a66}
+.pk-seat.is-folded{opacity:.45}
+.pk-seat.pk-wait{font-style:italic;opacity:.8}
+.pk-sname{font-weight:700;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-sstack{opacity:.85}
+.pk-scards{display:flex;gap:2px;min-height:36px}
+.pk-sbet{position:absolute;top:-8px;right:-4px;background:var(--gold);color:var(--outline);border-radius:8px;padding:0 6px;font-size:.66rem;font-weight:800}
+.pk-swin{color:#3fcf7a;font-weight:800}
+.pk-btn{background:#fff;color:#111;border-radius:50%;font-style:normal;font-size:.6rem;padding:0 4px;margin-right:3px}
+.pk-clock{font-family:var(--font-title);color:#ffb4a8;font-size:.72rem}
+.pk-me{display:flex;align-items:center;justify-content:center;gap:12px;padding:6px;border:2px solid transparent;border-radius:12px}
+.pk-mestack{position:relative;display:flex;flex-direction:column;gap:2px;font-size:.85rem}
+.pk-raise{display:flex;flex-direction:column;gap:4px}
+.pk-raise input[type=range]{width:100%}
+.pk-presets{display:flex;gap:4px;justify-content:center}
+.pk-wait-line,.pk-result{text-align:center;font-size:.8rem;opacity:.9}
+.pk-result{color:var(--gold);font-weight:700}
+.pk-lobby-head{display:flex;flex-direction:column;gap:2px;text-align:center}
+.pk-lobby-head span{font-size:.72rem;opacity:.75}
+.pk-create{display:flex;gap:6px;flex-wrap:wrap}
+.pk-create input{flex:1 1 140px;min-width:0}
+.pk-create select{flex:1 1 140px}
+.pk-create .btn-primary{flex:1 1 100%}
+.pk-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+.pk-trow{display:flex;align-items:center;gap:8px;padding:7px 9px;border:2px solid var(--outline);border-radius:10px;background:#0004}
+.pk-tname{display:flex;flex-direction:column;min-width:0;flex:1}
+.pk-tname strong{font-size:.85rem}.pk-tname em{font-size:.66rem;opacity:.7;font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-tseats{font-size:.7rem;white-space:nowrap}
+@media (min-width:700px){.pk-card{width:54px;height:76px}.pk-card .pk-r{font-size:1.25rem}.pk-card .pk-s{font-size:1.5rem}.pk-table{max-width:760px;margin:0 auto}}

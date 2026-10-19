@@ -43,7 +43,6 @@ const League = (() => {
     bataille: { name: 'Bataille de Comptoir' },
     des421:   { name: '421' },
     pbc:      { name: 'Pierre-Briquet-Clope' },
-    course:   { name: 'Course Clandestine' },
   };
 
   let data = load();
