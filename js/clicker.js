@@ -163,6 +163,14 @@ const ClickerEngine = (() => {
       </div>
       ${bonusAuditHtml(syn)}
       <div class="help-block">
+        <strong>Pourquoi ×1,5 ici, ×1,25 là ?</strong>
+        <p>C'est la synergie de tes 3 cartes de clic : un seul bonus s'applique, le plus fort qui correspond à ton équipe.</p>
+        <p><b>3 cartes de la même famille</b> (le gros bonus) : Cigarettes, Briquets, Actrices, Footballeurs, Musique ×1,5 · Alcools, Culte ×1,45 · Substances ×1,6 · Reliques Beauf ×1,4 · Mèmes ×1,67.</p>
+        <p><b>2 familles qui vont ensemble</b> : Cigarette + Briquet ×1,3 · Alcool + Actrice ×1,35 · Substance + Alcool ×1,3 · Footballeur + Boisson ×1,3 · Cigarette + Alcool ×1,25 · Cigarette + Beauf ×1,2 · Footballeur + Beauf ×1,2.</p>
+        <p><b>3 familles différentes</b> : ×1,2. Sinon ×1.</p>
+        <p>Les talents sont à part : leur détail est dans le bouton « Bilan » de l'arbre de talents.</p>
+      </div>
+      <div class="help-block">
         <strong>XP et niveau d'Empire</strong>
         <p>1 XP tous les 2 clics, de l'XP à chaque paquet ouvert et à chaque partie. Chaque niveau donne 1 point de talent et débloque de nouvelles salles.</p>
       </div>

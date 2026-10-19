@@ -1969,7 +1969,7 @@ const EmpireManager = (() => {
         showToast('Vous ne possédez aucune carte à vendre pour le moment ! Ouvrez un paquet.', 'warning');
         return;
       }
-      openSellCardModal(ownedIds[0]);
+      openSellPicker();
     });
 
     const salesGrid = container.querySelector('#my-sales-grid');
@@ -2087,6 +2087,35 @@ const EmpireManager = (() => {
     if (window.Account && Account.push) Account.push();
     showToast('Annonce retirée : ta carte est revenue dans ton inventaire.', 'info');
     renderBourse();
+  }
+
+  // Choix de la carte à vendre : toute la collection, avec recherche
+  function openSellPicker() {
+    const modal = document.createElement('div');
+    modal.className = 'bourse-modal-backdrop';
+    modal.innerHTML = `
+      <div class="bourse-modal-box sell-picker">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <h3 style="font-family:var(--font-title);font-size:1.3rem;color:var(--empire-gold)">Quelle carte vendre ?</h3>
+          <button class="btn-empire btn-empire-secondary" data-x style="padding:4px 10px">✕</button>
+        </div>
+        <input type="search" class="game-input" id="sp-q" placeholder="Chercher une carte…" style="width:100%;padding:8px">
+        <div id="sp-grid" class="sell-picker-grid"></div>
+      </div>`;
+    document.body.appendChild(modal);
+    const grid = modal.querySelector('#sp-grid');
+    const draw = () => {
+      const q = (modal.querySelector('#sp-q').value || '').trim().toLowerCase();
+      grid.innerHTML = '';
+      const ids = Object.keys(state.inventory || {}).filter(id => (state.inventory[id] || 0) > 0)
+        .map(id => getEmpireItemById(id)).filter(it => it && (!q || it.name.toLowerCase().includes(q)))
+        .sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 60);
+      if (!ids.length) grid.innerHTML = '<p class="empty-state">Aucune carte.</p>';
+      ids.forEach(it => grid.appendChild(CardsRenderer.buildCard(it, { compact: true, quantity: state.inventory[it.id], onClick: () => { modal.remove(); openSellCardModal(it.id); } })));
+    };
+    modal.querySelector('#sp-q').addEventListener('input', draw);
+    modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-x]')) modal.remove(); });
+    draw();
   }
 
   // ── 5. MODAL DE MISE EN VENTE PAR LE JOUEUR ────────────────
@@ -2349,6 +2378,7 @@ const EmpireManager = (() => {
     autoFillRooms,
     bindPackRevealButtons,
     renderInventory,
+    openSellCardModal,
   };
 
 })();

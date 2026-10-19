@@ -203,14 +203,16 @@ const Poker = (() => {
     T.id = null; renderLobby(content);
   }
 
-  const TFEES = [1000, 5000, 20000, 100000];
   async function renderLobby(content) {
     if (T.view !== 'lobby') T.view = 'lobby';
     const draw = async () => {
       if (!content.isConnected || !content.querySelector('.pk-lobby, .pk-lobby-loading')) return;
-      const { data } = await sb().rpc('poker_tables_list');
-      const rows = (data || []), cash = rows.filter(t => t.kind !== 'tournoi'), tours = rows.filter(t => t.kind === 'tournoi');
-      const keep = { name: content.querySelector('#pk-name')?.value || '', tname: content.querySelector('#pkt-name')?.value || '' };
+      const [{ data }, { data: evData }] = await Promise.all([sb().rpc('poker_tables_list'), sb().rpc('events_list')]);
+      const rows = (data || []), cash = rows.filter(t => t.kind !== 'tournoi'), evs = evData || [];
+      const keep = { name: content.querySelector('#pk-name')?.value || '' };
+      // un évènement auquel je participe vient de démarrer : on m'assoit à la table
+      const mine = evs.find(e => e.table_id);
+      if (mine) { T.id = mine.table_id; return openTable(content); }
       content.innerHTML = `
         <div class="casino-felt-table pk-table pk-lobby">
           <div class="pk-lobby-head"><strong>Poker à table</strong><span>Texas Hold'em entre joueurs</span></div>
@@ -222,22 +224,19 @@ const Poker = (() => {
             </div>
             <div class="pk-list">${cash.length ? cash.map(rowHtml).join('') : '<p class="soc-empty" style="text-align:center;padding:10px">Aucune table ouverte.</p>'}</div>
           </div>
-          <div class="pk-sec"><h4>Tournois · cagnotte pour les 3 premiers <button class="btn-secondary pk-mini" id="pkt-board">Classement</button></h4>
-            <div class="pk-create">
-              <input class="game-input" id="pkt-name" maxlength="24" placeholder="Nom du tournoi (facultatif)" value="${esc(keep.tname)}" />
-              <select class="game-select-empire" id="pkt-fee">${TFEES.map(b => `<option value="${b}">Droit d'entrée ${fmt(b)} €</option>`).join('')}</select>
-              <select class="game-select-empire" id="pkt-max"><option value="3">3 joueurs</option><option value="4">4 joueurs</option><option value="6" selected>6 joueurs</option></select>
-              <button class="btn-primary" id="pkt-open">Créer un tournoi</button>
-            </div>
-            <p class="ig-small">1 500 jetons chacun, blindes +1 niveau toutes les 2 minutes. 60 % du droit d'entrée va dans la cagnotte (3 joueurs : 70/30 ; 4 à 6 : 50/30/20), 40 % est ta PRIME : qui t'élimine la touche tout de suite. Le vainqueur garde sa prime.</p>
-            <div class="pk-list">${tours.length ? tours.map(rowHtml).join('') : '<p class="soc-empty" style="text-align:center;padding:10px">Aucun tournoi en cours.</p>'}</div>
+          <div class="pk-sec"><h4>Évènements · tournois de la maison <button class="btn-secondary pk-mini" id="pkt-board">Classement</button></h4>
+            <p class="ig-small">Un évènement n'est ouvert qu'à certaines dates : inscris-toi avant l'heure, la table s'ouvre toute seule. 1 500 jetons chacun, blindes +1 niveau toutes les 2 minutes. 60 % du droit d'entrée va dans la cagnotte, 40 % est ta PRIME (qui t'élimine la touche tout de suite). La maison peut ajouter une cagnotte.</p>
+            <div class="pk-list">${evs.length ? evs.map(evHtml).join('') : '<p class="soc-empty" style="text-align:center;padding:10px">Aucun évènement de prévu pour le moment.</p>'}</div>
           </div>
         </div>`;
       content.querySelector('#pk-open').addEventListener('click', () => createTable(content));
-      content.querySelector('#pkt-open').addEventListener('click', () => createTourney(content));
       content.querySelector('#pkt-board').addEventListener('click', showBoard);
       content.querySelectorAll('[data-join]').forEach(b => b.addEventListener('click', () => joinTable(content, b.dataset.join)));
+      content.querySelectorAll('[data-ev]').forEach(b => b.addEventListener('click', () => eventAction(content, b.dataset.ev, b.dataset.act)));
     };
+    const when = iso => { const d = new Date(iso); return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
+    const evHtml = e => `<div class="pk-trow"><span class="pk-tname"><strong>${esc(e.title)}</strong><em>${e.status === 'running' ? 'en cours' : when(e.starts_at)} · ${e.fee ? 'entrée ' + fmt(e.fee) + ' €' : 'gratuit'}${e.prize ? ' · cagnotte offerte ' + fmt(e.prize) + ' €' : ''}${e.description ? ' · ' + esc(e.description) : ''}</em></span>
+        <span class="pk-tseats">${e.regs}/${e.max}</span>${e.status !== 'scheduled' ? '<button class="btn-secondary pk-mini" disabled>En cours</button>' : e.mine ? `<button class="btn-secondary pk-mini" data-ev="${e.id}" data-act="out">Se désinscrire</button>` : `<button class="btn-primary pk-mini" data-ev="${e.id}" data-act="in" ${e.regs >= e.max ? 'disabled' : ''}>S'inscrire</button>`}</div>`;
     const rowHtml = t => t.kind === 'tournoi'
       ? `<div class="pk-trow"><span class="pk-tname"><strong>${esc(t.name)}</strong><em>Entrée ${fmt(t.buyin)} € (prime ${fmt(Math.floor(t.buyin * 0.4))} €) · cagnotte ${fmt(t.pool || 0)} € · ${t.status === 'running' ? 'en cours (niveau ' + (t.level || 1) + ')' : 'inscriptions'} · ${esc(t.players.join(', ') || 'vide')}</em></span>
           <span class="pk-tseats">${t.seats}/${t.max_seats}</span><button class="btn-secondary pk-mini" data-join="${t.id}" ${t.status !== 'registering' || t.seats >= t.max_seats ? 'disabled' : ''}>S'inscrire</button></div>`
@@ -276,13 +275,13 @@ const Poker = (() => {
     if (error) return showToast(errMsg(error), 'error');
     await applyCredits(); T.id = data; openTable(content);
   }
-  async function createTourney(content) {
-    const fee = +content.querySelector('#pkt-fee').value, max = +content.querySelector('#pkt-max').value, name = content.querySelector('#pkt-name').value;
-    if (cashNow() < fee) return showToast('Tu n\'as pas assez d\'argent pour ce droit d\'entrée.', 'error');
-    await syncMoney();
-    const { data, error } = await sb().rpc('poker_tourney_create', { p_name: name, p_fee: fee, p_max: max });
+  async function eventAction(content, id, act) {
+    if (act === 'in') await syncMoney();
+    const { error } = await sb().rpc(act === 'in' ? 'event_register' : 'event_unregister', { p_id: id });
     if (error) return showToast(errMsg(error), 'error');
-    await applyCredits(); T.id = data; openTable(content);
+    await applyCredits();
+    showToast(act === 'in' ? 'Inscrit ! La table s\'ouvrira toute seule à l\'heure dite : reviens dans le poker à ce moment.' : 'Désinscrit, droit d\'entrée remboursé.', act === 'in' ? 'success' : 'info');
+    renderLobby(content);
   }
   async function joinTable(content, id) {
     await syncMoney();

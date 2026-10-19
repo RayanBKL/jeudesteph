@@ -4,7 +4,7 @@
 // ============================================================
 
 const Casino = {
-  currentTab: 'lobby', // 'lobby' (menu des jeux) | un identifiant de jeu : blackjack, roulette, uth, pktable, classic, pmu, livre, cascade, scratch, crash
+  currentTab: 'lobby', // 'lobby' (menu des jeux) | un identifiant de jeu : blackjack, roulette, uth, pktable, cendrier, scratch, crash
   cashMise: 50,
   lastResult: null,
 
@@ -230,10 +230,7 @@ const Casino = {
       { id: 'pktable', name: 'Poker à table', desc: 'Ouvre une table, joue contre d\'autres joueurs', art: 'chips' },
     ] },
     { group: 'Machines à sous', games: [
-      { id: 'classic', name: 'Le Tiroir-Caisse', desc: '3 rouleaux, 5 lignes', art: 'slot' },
-      { id: 'pmu', name: 'Le Bar PMU', desc: '5×3, 20 lignes, tours gratuits', art: 'slot' },
-      { id: 'livre', name: 'Le Livre du Buraliste', desc: 'Symbole qui s\'étend, 10 tours gratuits', art: 'slot' },
-      { id: 'cascade', name: 'La Cascade du Cendrier', desc: 'Grappes, chutes et bombes ×25', art: 'slot' },
+      { id: 'cendrier', name: 'Le Grand Cendrier', desc: 'Grappes, bombes ×25, achat de bonus', art: 'slot' },
     ] },
     { group: 'Instantanés', games: [
       { id: 'scratch', name: 'Gratté du Tabac', desc: 'Ticket à gratter, jusqu\'à ×1 000', art: 'ticket' },

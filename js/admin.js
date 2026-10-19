@@ -7,9 +7,9 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = n => { n = Number(n) || 0; if (n >= 1e9) return (n / 1e9).toFixed(1).replace('.', ',') + ' Md'; if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M'; if (n >= 1e4) return Math.round(n / 1e3) + ' k'; return Math.round(n).toLocaleString('fr-FR'); };
-  const GAME_NAMES = { ut: 'Ultimate Comptoir', bataille: 'Bataille', des421: '421', pbc: 'Pierre-Briquet-Clope', quiz: 'Quiz', course: 'Course' };
+  const GAME_NAMES = { ut: 'Ultimate Comptoir', bataille: 'Bataille', des421: '421', pbc: 'Pierre-Briquet-Clope', quiz: 'Quiz (retiré)', course: 'Course (retirée)' };
   const COLORS = { ut: '#4fe08c', bataille: '#ffc43a', des421: '#ff8a4f', pbc: '#e2322b', quiz: '#6aa8ff', course: '#c58bff' };
-  let tab = 'overview', overview = null, reports = null, players = null, sortKey = 'last_seen', sortDir = -1, search = '';
+  let tab = 'overview', events = null, overview = null, reports = null, players = null, sortKey = 'last_seen', sortDir = -1, search = '';
 
   function ago(t) {
     if (!t) return '—';
@@ -182,12 +182,45 @@
     document.querySelectorAll('a[data-open]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); openPlayer(a.dataset.open); }));
   }
 
+  // ── Évènements : tournois de poker programmés par l'admin ──
+  const STATUS = { scheduled: 'à venir', running: 'en cours', done: 'terminé', cancelled: 'annulé' };
+  function viewEvents() {
+    const rows = events || [];
+    const soon = new Date(Date.now() + 3600e3 * 24); soon.setMinutes(soon.getMinutes() - soon.getTimezoneOffset());
+    $('app').innerHTML = `<p class="ad-sub">Un évènement = un tournoi de poker de 2 à 6 joueurs. Les joueurs s'inscrivent à l'avance ; à l'heure dite la table s'ouvre toute seule (moins de 2 inscrits : annulé et remboursé). La cagnotte offerte s'ajoute aux droits d'entrée et se partage entre les premiers.</p>
+      <div class="ad-card"><h3>Créer un évènement</h3>
+        <div class="ad-form" style="display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+          <label>Titre<input id="ev-title" maxlength="40" placeholder="Tournoi du week-end"></label>
+          <label>Départ<input id="ev-start" type="datetime-local" value="${soon.toISOString().slice(0, 16)}"></label>
+          <label>Droit d'entrée (€, 0 = gratuit)<input id="ev-fee" type="number" min="0" value="0"></label>
+          <label>Cagnotte offerte (€)<input id="ev-prize" type="number" min="0" value="100000"></label>
+          <label>Joueurs max<select id="ev-max"><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option></select></label>
+          <label style="grid-column:1/-1">Description (facultatif)<input id="ev-desc" maxlength="240" placeholder="Le gagnant empoche la cagnotte"></label>
+        </div>
+        <p><button class="ad-btn" id="ev-create">Programmer</button> <span id="ev-msg" class="ad-sub"></span></p>
+      </div>
+      <div class="ad-card ad-scroll"><h3>Évènements</h3>${rows.length ? `<table><thead><tr><th>Titre</th><th>Départ</th><th>Entrée</th><th>Cagnotte</th><th>Inscrits</th><th>État</th><th></th></tr></thead><tbody>${rows.map(e => `<tr style="cursor:default${e.status === 'cancelled' ? ';opacity:.5' : ''}"><td>${esc(e.title)}</td><td>${new Date(e.starts_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</td><td>${fmt(e.fee)} €</td><td>${fmt(e.prize)} €</td><td title="${esc((e.players || []).join(', '))}">${e.regs}/${e.max}</td><td>${STATUS[e.status] || e.status}</td><td>${e.status === 'scheduled' ? `<button class="ad-btn" data-cancel-ev="${e.id}">Annuler</button>` : ''}</td></tr>`).join('')}</tbody></table>` : '<p class="ad-sub">Aucun évènement.</p>'}</div>`;
+    $('ev-create').onclick = async () => {
+      const title = $('ev-title').value.trim(), start = $('ev-start').value;
+      if (title.length < 2 || !start) { $('ev-msg').textContent = 'Titre et date obligatoires.'; return; }
+      const { error } = await sb.rpc('admin_event_create', { p_title: title, p_desc: $('ev-desc').value, p_starts: new Date(start).toISOString(), p_fee: +$('ev-fee').value || 0, p_max: +$('ev-max').value, p_prize: +$('ev-prize').value || 0 });
+      if (error) { $('ev-msg').textContent = error.message; return; }
+      events = await load('admin_events'); viewEvents();
+    };
+    document.querySelectorAll('[data-cancel-ev]').forEach(b => b.addEventListener('click', async () => {
+      if (!(await ask({ title: 'Annuler cet évènement ?', text: 'Les inscrits sont remboursés.', ok: 'Annuler l\'évènement', danger: true }))) return;
+      const { error } = await sb.rpc('admin_event_cancel', { p_id: b.dataset.cancelEv }); if (error) await ask({ title: 'Impossible', text: error.message });
+      events = await load('admin_events'); viewEvents();
+    }));
+  }
+
   function show() {
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('is-on', b.dataset.tab === tab));
     if (tab === 'overview' && overview) viewOverview();
     else if (tab === 'players' && players) viewPlayers(false);
     else if (tab === 'flagged' && players) viewPlayers(true);
     else if (tab === 'messages' && reports) viewMessages();
+    else if (tab === 'events' && events) viewEvents();
   }
 
   async function boot() {
@@ -202,6 +235,7 @@
     $('app').innerHTML = '<p class="ad-msg">Chargement…</p>';
     overview = await load('admin_overview'); if (!overview) return;
     players = await load('admin_players', { p_search: search, p_limit: 300, p_offset: 0 }); if (!players) return;
+    events = await load('admin_events') || [];
     reports = await load('admin_chat_reports') || []; $('msg-count').textContent = reports.filter(r => !r.handled && !r.deleted).length ? `(${reports.filter(r => !r.handled && !r.deleted).length})` : '';
     show();
   }

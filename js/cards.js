@@ -250,6 +250,7 @@ const CardsRenderer = (() => {
           <div class="card-modal-actions">
             <button class="btn-empire btn-empire-secondary btn-assign-passive" data-id="${item.id}">Assigner en Passif</button>
             <button class="btn-empire btn-empire-primary btn-equip-click" data-id="${item.id}">Équiper au Clic</button>
+            ${(typeof EmpireManager !== 'undefined' && (EmpireManager.getInventory()[item.id] || 0) > 0 && !item.noSale) ? `<button class="btn-empire btn-empire-secondary btn-sell-card" data-id="${item.id}">Vendre à un joueur</button>` : ''}
           </div>
       </div>
     `;
@@ -264,6 +265,11 @@ const CardsRenderer = (() => {
       ClickerEngine.equipClickCard(item.id);
       ClickerEngine.showToast(`👆 ${item.name} équipée pour le clic !`, 'success');
       modal.classList.add('hidden');
+    });
+
+    body.querySelector('.btn-sell-card')?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      if (typeof EmpireManager !== 'undefined' && EmpireManager.openSellCardModal) EmpireManager.openSellCardModal(item.id);
     });
 
     modal.classList.remove('hidden');
