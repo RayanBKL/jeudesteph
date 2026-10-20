@@ -192,7 +192,7 @@ const InstantGames = (() => {
     content.innerHTML = `
       <div class="casino-felt-table ig-table ig-mines">
         <div class="sl-head"><span class="ig-sub">Évite les briquets piégés · retour 97 %</span><button class="btn-secondary pk-mini" id="mn-rules">Règles</button></div>
-        <div class="mn-grid">${cells}</div>
+        <div class="mn-wrap"><div class="mn-grid">${cells}</div></div>
         <div class="pk-msg ${g.phase === 'cashed' ? 'win' : g.phase === 'lost' ? 'lose' : ''}">${g.phase === 'run' ? `Gain actuel <b>${fmt(Math.round(g.staked * cur))} €</b> (×${cur.toFixed(2)}) · prochain ×${next.toFixed(2)}` : g.phase === 'cashed' ? `Encaissé : +${fmt(g.gain)} € (×${(g.gain / g.staked).toFixed(2)})` : g.phase === 'lost' ? 'Boum ! Un briquet piégé : mise perdue' : 'Choisis ta mise et le nombre de pièges'}</div>
         <div class="sl-controls">
           <div class="sl-bet"><button class="btn-secondary" id="mn-minus" ${run ? 'disabled' : ''}>−</button><span id="mn-betv"><small>Mise</small><b>${fmt(MB[g.bet])} €</b></span><button class="btn-secondary" id="mn-plus" ${run ? 'disabled' : ''}>+</button></div>
