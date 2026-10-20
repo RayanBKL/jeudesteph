@@ -28,7 +28,7 @@ const Slots = (() => {
   const REELS = [...REG_ORDER.slice(0, 8), 'etoile'];
   const META = { cendrier: { cols: 6, rows: 5, sample: ['sept', 'cloche', 'etoile'] } };
   const BETS = [5, 10, 25, 50, 100, 250, 500, 1000, 5000, 25000, 100000];
-  const st = { bet: 2, spinning: false, fsLeft: 0, fsWin: 0, acc: 0, sup: false, turbo: false, auto: 0, last: 0, grid: null };
+  const st = { bet: 2, all: false, spinning: false, fsLeft: 0, fsWin: 0, acc: 0, sup: false, turbo: false, auto: 0, last: 0, grid: null };
   const sleep = ms => new Promise(r => setTimeout(r, st.turbo ? Math.max(40, ms / 3.5) : ms));
   const rnd = a => a[Math.floor(Math.random() * a.length)];
   let alive = false;     // l'écran est affiché (sert à arrêter les animations quand on quitte)
@@ -37,6 +37,8 @@ const Slots = (() => {
   function tile() { return `<span class="sl-tile-art">${META[ID].sample.map(symSvg).join('')}</span>`; }
   const randomGrid = () => Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => rnd(REELS)));
   const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t); };
+  const curBet = () => st.all ? Math.max(1, Math.floor(cashNow())) : BETS[st.bet];      // « Tapis » : tout le solde
+  const betLabel = () => `<small>${st.all ? 'Tapis' : 'Mise'}</small><b>${fmt(curBet())} €</b>`;
   const cashNow = () => (window.ClickerEngine && ClickerEngine.getCash) ? ClickerEngine.getCash() : 0;
 
   function render(content) {
@@ -50,9 +52,9 @@ const Slots = (() => {
         <div class="sl-board"><div class="sl-grid" id="sl-grid">${gridHtml(st.grid)}</div><div class="sl-big hidden" id="sl-big"></div></div>
         <div class="sl-win" id="sl-win">${st.last ? 'Dernier gain : ' + fmt(st.last) + ' €' : 'Fais tourner la machine'}</div>
         <div class="sl-controls">
-          <div class="sl-bet"><button class="btn-secondary" id="sl-minus" aria-label="Moins">−</button><span id="sl-betv"><small>Mise</small><b>${fmt(BETS[st.bet])} €</b></span><button class="btn-secondary" id="sl-plus" aria-label="Plus">+</button></div>
+          <div class="sl-bet"><button class="btn-secondary" id="sl-minus" aria-label="Moins">−</button><span id="sl-betv">${betLabel()}</span><button class="btn-secondary" id="sl-plus" aria-label="Plus">+</button><button class="btn-secondary pk-mini sl-all ${st.all ? 'is-on' : ''}" id="sl-all">Tapis</button></div>
           <button class="btn-primary sl-spin" id="sl-spin">Tourner</button>
-          <div class="sl-side"><button class="btn-secondary pk-mini ${st.turbo ? 'is-on' : ''}" id="sl-turbo">Turbo</button><select class="game-select-empire" id="sl-auto"><option value="0">Auto</option><option value="10">10 tours</option><option value="25">25 tours</option><option value="50">50 tours</option><option value="100">100 tours</option></select></div>
+          <div class="sl-side"><div class="sl-side-row"><button class="btn-secondary pk-mini ${st.turbo ? 'is-on' : ''}" id="sl-turbo">Turbo</button></div><select class="game-select-empire" id="sl-auto"><option value="0">Auto</option><option value="10">10 tours</option><option value="25">25 tours</option><option value="50">50 tours</option><option value="100">100 tours</option></select></div>
         </div>
         <div class="sl-buy">
           <button class="btn-secondary sl-buy-btn" id="sl-buy1"><b>Acheter le bonus</b><small id="sl-buy1p"></small></button>
@@ -62,7 +64,7 @@ const Slots = (() => {
     bind(content); updatePrices(content); updateFs(content);
   }
   function updatePrices(content) {
-    const g = G(), bet = BETS[st.bet], q = s => content.querySelector(s);
+    const g = G(), bet = curBet(), q = s => content.querySelector(s);
     if (q('#sl-buy1p')) q('#sl-buy1p').textContent = `10 tours · ${fmt(g.price('bonus') * bet)} € (×${g.price('bonus')})`;
     if (q('#sl-buy2p')) q('#sl-buy2p').textContent = `15 tours, bombes en folie · ${fmt(g.price('super') * bet)} € (×${g.price('super')})`;
   }
@@ -80,10 +82,11 @@ const Slots = (() => {
 
   function bind(content) {
     const $ = s => content.querySelector(s);
-    const setBet = d => { st.bet = Math.max(0, Math.min(BETS.length - 1, st.bet + d)); $('#sl-betv').innerHTML = `<small>Mise</small><b>${fmt(BETS[st.bet])} €</b>`; updatePrices(content); if (window.SoundFX) SoundFX.click(); };
+    const setBet = d => { st.all = false; $('#sl-all')?.classList.remove('is-on'); st.bet = Math.max(0, Math.min(BETS.length - 1, st.bet + d)); $('#sl-betv').innerHTML = betLabel(); updatePrices(content); if (window.SoundFX) SoundFX.click(); };
     $('#sl-minus').addEventListener('click', () => !st.spinning && setBet(-1));
     $('#sl-plus').addEventListener('click', () => !st.spinning && setBet(1));
     $('#sl-spin').addEventListener('click', () => { if (st.spinning) { st.auto = 0; return; } play(content); });
+    $('#sl-all').addEventListener('click', e => { if (st.spinning) return; st.all = !st.all; e.currentTarget.classList.toggle('is-on', st.all); $('#sl-betv').innerHTML = betLabel(); updatePrices(content); if (window.SoundFX) SoundFX.click(); });
     $('#sl-turbo').addEventListener('click', e => { st.turbo = !st.turbo; e.currentTarget.classList.toggle('is-on', st.turbo); });
     $('#sl-auto').addEventListener('change', e => { const n = +e.target.value; e.target.value = '0'; if (!n || st.spinning) return; st.auto = n; play(content); });
     $('#sl-pay').addEventListener('click', showPaytable);
@@ -93,23 +96,23 @@ const Slots = (() => {
 
   async function buyBonus(content, sup) {
     if (st.spinning || st.fsLeft > 0) return;
-    const g = G(), bet = BETS[st.bet], cost = g.price(sup ? 'super' : 'bonus') * bet;
+    const g = G(), bet = curBet(), cost = g.price(sup ? 'super' : 'bonus') * bet;
     const ok = await GameDialog.confirm(`${sup ? 'Super bonus : 15 tours gratuits avec beaucoup plus de bombes' : 'Bonus : 10 tours gratuits'} pour ${fmt(cost)} € ?`, { title: 'Acheter un bonus', ok: 'Acheter', cancel: 'Non' });
     if (!ok || !alive) return;
     if (!spendMoney(cost)) return toast('Solde insuffisant pour acheter ce bonus.', 'error');
     if (typeof Casino !== 'undefined') Casino.recordBet();
-    st.bought = cost; st.fsLeft = sup ? 15 : g.fsCount; st.sup = sup; st.acc = 0; st.fsWin = 0;
+    st.bonusBet = bet; st.bought = cost; st.fsLeft = sup ? 15 : g.fsCount; st.sup = sup; st.acc = 0; st.fsWin = 0;
     updateFs(content); await bonusIntro(content, st.fsLeft, sup); if (alive) play(content);
   }
 
   async function play(content) {
     if (st.spinning) return;
-    const g = G(), free = st.fsLeft > 0, bet = BETS[st.bet];
+    const g = G(), free = st.fsLeft > 0, bet = free && st.bonusBet ? st.bonusBet : curBet();
     if (!free) {
       if (!spendMoney(bet)) { st.auto = 0; return toast('Solde insuffisant pour cette mise. Baisse la mise.', 'error'); }
       if (typeof Casino !== 'undefined') Casino.recordBet();
     } else st.fsLeft--;
-    st.spinning = true;
+    st.spinning = true; st.betPlaying = bet;
     const spinBtn = content.querySelector('#sl-spin'); if (spinBtn) { spinBtn.textContent = st.auto ? 'Stop auto' : free ? 'Tour gratuit…' : '…'; if (!st.auto) spinBtn.disabled = true; }
     if (window.SoundFX) SoundFX.click();
     const res = g.spin({ free, sup: st.sup, acc: st.acc });
@@ -132,7 +135,7 @@ const Slots = (() => {
       if (typeof Casino !== 'undefined') Casino.recordResult(net > 0 ? 'win' : 'lose', Math.abs(net), `${g.name} : ${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}`);
     }
     // déclenchement du bonus par 4 étoiles ou plus
-    if (res.fs && !free) { st.fsLeft += res.fs; st.sup = false; st.acc = 0; st.fsWin = win; st.bought = bet; await bonusIntro(content, res.fs, false); }
+    if (res.fs && !free) { st.fsLeft += res.fs; st.sup = false; st.acc = 0; st.fsWin = win; st.bought = bet; st.bonusBet = bet; await bonusIntro(content, res.fs, false); }
     else if (res.fs && free) { st.fsLeft += res.fs; toast(`+${res.fs} tours gratuits`, 'gold'); }
     updateFs(content);
     if (typeof saveGame === 'function') saveGame();
@@ -140,12 +143,13 @@ const Slots = (() => {
     if (st.fsLeft > 0) { await sleep(900); if (alive) return play(content); return; }
     if (free) {
       // fin du bonus
-      const total = st.fsWin, paid = st.bought || 0; st.fsWin = 0; st.acc = 0; st.sup = false; updateFs(content);
+      const total = st.fsWin, paid = st.bought || 0; st.fsWin = 0; st.acc = 0; st.sup = false; st.bonusBet = 0; updateFs(content);
       if (typeof Casino !== 'undefined') Casino.recordResult(total > paid ? 'win' : 'lose', Math.abs(total - paid), `${g.name} bonus : ${total >= paid ? '+' : '−'}${fmt(Math.abs(total - paid))}`);
       await endBonus(content, total, total / bet);
     }
     if (st.auto > 0) { st.auto--; if (st.auto > 0 && !res.fs) { await sleep(450); if (alive) return play(content); } else st.auto = 0; }
     const sb = content.querySelector('#sl-spin'); if (sb) sb.textContent = 'Tourner';
+    if (st.all) { const bv = content.querySelector('#sl-betv'); if (bv) bv.innerHTML = betLabel(); updatePrices(content); }
   }
 
   // Le gain défile jusqu'à sa valeur
@@ -212,7 +216,7 @@ const Slots = (() => {
   // Petit gain flottant à chaque chute
   function showTumbleGain(content, mult, cm) {
     const board = content.querySelector('.sl-board'); if (!board || !(mult > 0)) return;
-    const bet = BETS[st.bet], el = document.createElement('div'); el.className = 'sl-float'; el.textContent = '+' + fmt(Math.round(mult * bet)) + ' €' + (cm > 1 ? '  ×' + cm : '');
+    const bet = st.betPlaying || curBet(), el = document.createElement('div'); el.className = 'sl-float'; el.textContent = '+' + fmt(Math.round(mult * bet)) + ' €' + (cm > 1 ? '  ×' + cm : '');
     board.appendChild(el); setTimeout(() => el.remove(), 1100);
   }
   // Annonce du bonus

@@ -1163,3 +1163,12 @@
 
 /* Poker : bouton « Tout miser » */
 .pk-allin{background:linear-gradient(#ff6a4d,#c4261b) !important;color:#fff !important}
+
+.sl-side-row{display:flex;gap:4px}
+.sl-side-row .btn-secondary{flex:1;padding-left:2px;padding-right:2px}
+.sl-all.is-on{background:#e2322b !important;color:#fff !important}
+
+.sl-bet{display:grid;grid-template-columns:auto auto auto;align-items:center;justify-items:center;gap:4px 6px}
+.sl-bet .sl-all{grid-column:1 / -1;width:100%}
+.sl-bet{flex:none}
+.sl-bet .sl-all{padding:3px 6px;font-size:.7rem;min-width:0}

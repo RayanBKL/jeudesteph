@@ -55,7 +55,7 @@ const Poker = (() => {
 
   function renderUltimate(content) {
     stopTable();
-    const bet = (typeof Casino !== 'undefined' ? Casino.cashMise : 50);
+    const bet = (typeof Casino !== 'undefined' ? Casino.wager(1, 6) : 50);   // « Tapis » : de quoi suivre jusqu'à la mise ×4
     if (U.phase === 'bet' && !U.ante) U.ante = bet;
     const shown = U.phase === 'bet' ? 0 : U.phase === 'pre' ? 0 : U.phase === 'flop' ? 3 : 5;
     const revealDealer = U.phase === 'end';
@@ -98,8 +98,8 @@ const Poker = (() => {
     const $ = s => content.querySelector(s);
     if (U.phase === 'bet') {
       Casino.bindWagerEvents(content);
-      content.querySelectorAll('.casino-chip').forEach(b => b.addEventListener('click', () => { U.ante = Casino.cashMise; renderUltimate(content); }));
-      $('#uth-trips')?.addEventListener('click', () => { const cyc = [0, Casino.cashMise, Casino.cashMise * 2]; U.trips = cyc[(cyc.indexOf(U.trips) + 1) % cyc.length]; renderUltimate(content); });
+      content.querySelectorAll('.casino-chip').forEach(b => b.addEventListener('click', () => { U.ante = Casino.wager(1, 6); renderUltimate(content); }));
+      $('#uth-trips')?.addEventListener('click', () => { const unit = typeof Casino.cashMise === 'number' ? Casino.cashMise : Math.max(5, Math.floor(U.ante / 10)); const cyc = [0, unit, unit * 2]; U.trips = cyc[(cyc.indexOf(U.trips) + 1) % cyc.length]; renderUltimate(content); });
       $('#uth-rules')?.addEventListener('click', showRules);
       $('#uth-deal')?.addEventListener('click', () => uthDeal(content));
     }

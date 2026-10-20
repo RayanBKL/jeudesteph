@@ -5,8 +5,15 @@
 
 const Casino = {
   currentTab: 'lobby', // 'lobby' (menu des jeux) | un identifiant de jeu : blackjack, roulette, uth, pktable, cendrier, scratch, crash
-  cashMise: 50,
+  cashMise: 50,            // montant du jeton choisi, ou 'all' = « Tapis » (tout le solde)
   lastResult: null,
+
+  // Montant à miser pour le jeton choisi. « Tapis » = tout le solde, réparti entre `split` mains / `worst` fois la mise (mises qu'il faudra peut-être suivre).
+  wager(split = 1, worst = 1) {
+    if (this.cashMise !== 'all') return this.cashMise;
+    const cash = (typeof ClickerEngine !== 'undefined' && ClickerEngine.getCash) ? ClickerEngine.getCash() : 0;
+    return Math.max(1, Math.floor(cash / Math.max(1, split * worst)));
+  },
 
   // Blackjack State (Sabot de 6 jeux = 312 cartes, ENHC, 2 mains max & Side Bets)
   bj: {
@@ -167,6 +174,7 @@ const Casino = {
             <button class="casino-chip ${this.cashMise === 5000 ? 'active' : ''}" data-v="5000" style="background:#06b6d4;color:#000">5K€</button>
             <button class="casino-chip ${this.cashMise === 25000 ? 'active' : ''}" data-v="25000" style="background:#eab308;color:#000">25K€</button>
             <button class="casino-chip ${this.cashMise === 100000 ? 'active' : ''}" data-v="100000" style="background:#ffffff;color:#000">100K€</button>
+            <button class="casino-chip ${this.cashMise === 'all' ? 'active' : ''}" data-v="all" style="background:#e2322b;color:#fff;font-weight:800">TAPIS</button>
           </div>
         </div>
       </div>
@@ -176,7 +184,7 @@ const Casino = {
   bindWagerEvents(content) {
     content.querySelectorAll('.casino-chip').forEach(btn => {
       btn.onclick = () => {
-        this.cashMise = parseInt(btn.dataset.v);
+        this.cashMise = btn.dataset.v === 'all' ? 'all' : parseInt(btn.dataset.v);
         content.querySelectorAll('.casino-chip').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         if (window.SoundFX) SoundFX.click();
@@ -657,7 +665,8 @@ const Casino = {
           if (!this.bj.spots.some(s => s.active)) {
             spot.active = true;
           }
-          if (spot.active && spot.bet <= 0) spot.bet = this.cashMise;
+          if (spot.active && spot.bet <= 0) spot.bet = this.wager(this.bj.spots.filter(x => x.active).length);
+          this.shareAllIn();
           if (window.SoundFX) SoundFX.click();
           this.render();
         };
@@ -666,10 +675,10 @@ const Casino = {
       // Bouton Jouer 2 mains
       content.querySelector('#btn-bj-all-hands')?.addEventListener('click', () => {
         const anyInactive = this.bj.spots.some(s => !s.active);
-        this.bj.spots.forEach(s => {
-          s.active = anyInactive;
-          if (s.active && s.bet <= 0) s.bet = this.cashMise;
-        });
+        this.bj.spots.forEach(s => { s.active = anyInactive; });
+        const nActive = Math.max(1, this.bj.spots.filter(x => x.active).length);
+        this.bj.spots.forEach(s => { if (s.active && s.bet <= 0) s.bet = this.wager(nActive); });
+        this.shareAllIn();
         if (window.SoundFX) SoundFX.click();
         this.render();
       });
@@ -707,7 +716,8 @@ const Casino = {
           if (e.target.classList.contains('bj-spot-toggle-btn')) return;
           const spot = this.bj.spots[idx];
           spot.active = true;
-          spot.bet = this.cashMise;
+          spot.bet = this.wager(this.bj.spots.filter(x => x.active).length);
+          this.shareAllIn();
           if (window.SoundFX) SoundFX.click();
           this.render();
         };
@@ -777,7 +787,7 @@ const Casino = {
       s.side213Rating = null;
       s.outcome = null;
       s.status = s.active ? 'idle' : 'inactive';
-      if (s.active && (!s.bet || s.bet < 5)) s.bet = this.cashMise;
+      if (s.active && (!s.bet || s.bet < 5)) s.bet = this.wager(this.bj.spots.filter(x => x.active).length);
       s.baseBet = s.bet;
     });
 
@@ -1305,7 +1315,7 @@ const Casino = {
   blackjackClearBets() {
     if (this.bj.status !== 'finished' && this.bj.status !== 'idle') return;
     this.bj.spots.forEach((s, idx) => {
-      s.bet = (idx === 0 ? this.cashMise : 0);
+      s.bet = (idx === 0 ? this.wager(1) : 0);
       s.baseBet = s.bet;
       s.active = (idx === 0);
       s.sidePP = 0;
@@ -1651,9 +1661,16 @@ const Casino = {
     return `<div class="tapis-chip-badge">${val >= 1000 ? (val/1000)+'k' : val}</div>`;
   },
 
+  // « Tapis » au blackjack : le solde est réparti à égalité entre les mains jouées
+  shareAllIn() {
+    if (this.cashMise !== 'all') return;
+    const act = this.bj.spots.filter(x => x.active), each = this.wager(Math.max(1, act.length));
+    act.forEach(x => { x.bet = each; });
+  },
+
   placeRouletteBet(betKey) {
     if (this.roulette.spinning) return;
-    const addAmount = this.cashMise;
+    const addAmount = this.wager();
     if (!spendMoney(addAmount)) {
       showToast('Solde insuffisant ! Utilisez "+ Avance de Banque" en haut.', 'error');
       return;
