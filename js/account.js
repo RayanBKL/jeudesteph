@@ -19,7 +19,7 @@ const Account = (() => {
   ];
   const PREFIXES = ['rules_seen_'];
   const OWNER = 'ak_owner', STAMP = 'ak_stamp', DIRTY = 'ak_dirty', LEFT = 'ak_signed_out';
-  const PUSH_DELAY = 4000;
+  const PUSH_DELAY = 2500;
   const BASE = 'ak_base';      // chiffres de la dernière version synchronisée (sert à fusionner deux appareils)
 
   let user = null;
@@ -293,7 +293,7 @@ const Account = (() => {
       if (typeof Casino !== 'undefined' && Casino.bj && ['playing', 'dealer', 'insurance_prompt'].includes(Casino.bj.status)) return true;
       if (typeof Casino !== 'undefined' && Casino.roulette && Casino.roulette.spinning) return true;
       if (window.Online && Online.inMatch && Online.inMatch()) return true;
-      if (typeof ClickerEngine !== 'undefined' && ClickerEngine.msSinceManualClick && ClickerEngine.msSinceManualClick() < 3000) return true;   // le joueur est en train de cliquer : on ne recharge pas sous ses doigts
+      if (typeof ClickerEngine !== 'undefined' && ClickerEngine.msSinceManualClick && ClickerEngine.msSinceManualClick() < 1500) return true;   // le joueur est en train de cliquer : on ne recharge pas sous ses doigts
     } catch (e) {}
     return false;
   };
@@ -424,7 +424,8 @@ const Account = (() => {
 
     document.addEventListener('visibilitychange', () => { if (document.hidden && ls.get(DIRTY) === '1') pushOnLeave(); else if (!document.hidden) checkCloud(); });
     window.addEventListener('focus', () => checkCloud());
-    setInterval(checkCloud, 15000);
+    window.addEventListener('pageshow', e => { if (e.persisted) checkCloud(); });     // iPhone : la page revient du « congélateur » sans rechargement
+    setInterval(checkCloud, 6000);
     setTimeout(checkCloud, 4000);
     window.addEventListener('pagehide', () => { if (ls.get(DIRTY) === '1') pushOnLeave(); });
     window.addEventListener('online', () => { if (ls.get(DIRTY) === '1') push(); });
