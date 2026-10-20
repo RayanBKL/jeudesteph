@@ -978,12 +978,12 @@
 
 /* ── Arbre de talents en cercle ── */
 #talents-content .gow-tree-scroll{overflow:auto;overscroll-behavior:contain;border-radius:16px;border:2px solid #32261d;min-height:0;max-height:100%;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
-#talents-content .gow-radial{width:1200px !important;height:1200px !important;max-width:none !important;flex:none;border:0 !important;border-radius:0 !important;
+#talents-content .gow-radial{width:1560px !important;height:1560px !important;max-width:none !important;flex:none;border:0 !important;border-radius:0 !important;
   background:radial-gradient(circle at 50% 50%,rgba(245,158,11,.16) 0%,rgba(239,68,68,.08) 18%,transparent 52%),linear-gradient(180deg,#130e0a,#0a0806) !important}
 #talents-content .gow-radial .gow-diamond-outer{transform:rotate(45deg) scale(.78) !important}
 #talents-content .gow-radial .gow-ribbon-banner{display:none}
 #talents-content .gow-radial .gow-ring{fill:none;stroke:#ffffff10;stroke-width:.25;vector-effect:non-scaling-stroke;stroke-width:1px}
-@media (max-width:600px){#talents-content .gow-radial{width:1050px !important;height:1050px !important}}
+@media (max-width:600px){#talents-content .gow-radial{width:1400px !important;height:1400px !important}}
 #talents-content .gow-radial .gow-line-channel{vector-effect:non-scaling-stroke;stroke-width:9px !important}
 #talents-content .gow-radial .gow-line-lit{vector-effect:non-scaling-stroke;stroke-width:4px !important}
 #talents-content .gow-tree-wrapper{grid-template-rows:auto minmax(150px,1fr) auto !important;height:100%;max-height:100%}
@@ -1219,3 +1219,8 @@
 .casino-last-result-badge .result-info{min-width:0;flex:1 1 auto}
 .casino-last-result-badge .result-amount{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .casino-last-result-badge .gn-open{flex:none;margin-left:0}
+
+/* Space KO : tokens */
+.pk-token{font-style:normal;font-size:.62rem;margin-left:4px;padding:0 4px;border-radius:6px;border:1.5px solid var(--outline);background:#cfd3d8;color:var(--outline);font-weight:800}
+.pk-token.is-gold{background:#ffc43a}.pk-token.is-legend{background:linear-gradient(#ff6a4d,#ffc43a);color:#fff;box-shadow:0 0 6px #ffc43a}
+.pk-tbanner small{opacity:.9}

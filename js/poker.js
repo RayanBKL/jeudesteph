@@ -225,7 +225,7 @@ const Poker = (() => {
             <div class="pk-list">${cash.length ? cash.map(rowHtml).join('') : '<p class="soc-empty" style="text-align:center;padding:10px">Aucune table ouverte.</p>'}</div>
           </div>
           <div class="pk-sec"><h4>Évènements · tournois de la maison <button class="btn-secondary pk-mini" id="pkt-board">Classement</button></h4>
-            <p class="ig-small">Un évènement n'est ouvert qu'à certaines dates : inscris-toi avant l'heure, la table s'ouvre toute seule. 1 500 jetons chacun, blindes +1 niveau toutes les 2 minutes. 60 % du droit d'entrée va dans la cagnotte, 40 % est ta PRIME (qui t'élimine la touche tout de suite). La maison peut ajouter une cagnotte.</p>
+            <p class="ig-small">Un évènement n'est ouvert qu'à certaines dates : inscris-toi avant l'heure, la table s'ouvre toute seule. Format Space KO : 6 joueurs max, 20 000 jetons, blindes de 100/200 qui montent à chaque niveau. Le droit d'entrée se répartit en 40 % classement, 50 % primes et 10 % commission. Chacun a un token (◆ niveau 1 à 14, légendaire dès 11) : quand tu élimines quelqu'un, la prime est tirée au sort (de ×0,4 à ×100 la valeur de SON token), la moitié te revient en cash, l'autre moitié fait monter TON token. Le vainqueur touche sa propre prime. La maison peut ajouter une cagnotte.</p>
             <div class="pk-list">${evs.length ? evs.map(evHtml).join('') : '<p class="soc-empty" style="text-align:center;padding:10px">Aucun évènement de prévu pour le moment.</p>'}</div>
           </div>
         </div>`;
@@ -235,10 +235,10 @@ const Poker = (() => {
       content.querySelectorAll('[data-ev]').forEach(b => b.addEventListener('click', () => eventAction(content, b.dataset.ev, b.dataset.act)));
     };
     const when = iso => { const d = new Date(iso); return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) + ' à ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
-    const evHtml = e => `<div class="pk-trow"><span class="pk-tname"><strong>${esc(e.title)}</strong><em>${e.status === 'running' ? 'en cours' : when(e.starts_at)} · ${e.fee ? 'entrée ' + fmt(e.fee) + ' €' : 'gratuit'}${e.prize ? ' · cagnotte offerte ' + fmt(e.prize) + ' €' : ''}${e.description ? ' · ' + esc(e.description) : ''}</em></span>
+    const evHtml = e => `<div class="pk-trow"><span class="pk-tname"><strong>${esc(e.title)}</strong><em>${e.status === 'running' ? 'en cours' : when(e.starts_at)} · ${e.fee ? 'entrée ' + fmt(e.fee) + ' €' : 'gratuit'} · niveaux de ${e.level_min || 5} min${e.prize ? ' · cagnotte offerte ' + fmt(e.prize) + ' €' : ''}${e.description ? ' · ' + esc(e.description) : ''}</em></span>
         <span class="pk-tseats">${e.regs}/${e.max}</span>${e.status !== 'scheduled' ? '<button class="btn-secondary pk-mini" disabled>En cours</button>' : e.mine ? `<button class="btn-secondary pk-mini" data-ev="${e.id}" data-act="out">Se désinscrire</button>` : `<button class="btn-primary pk-mini" data-ev="${e.id}" data-act="in" ${e.regs >= e.max ? 'disabled' : ''}>S'inscrire</button>`}</div>`;
     const rowHtml = t => t.kind === 'tournoi'
-      ? `<div class="pk-trow"><span class="pk-tname"><strong>${esc(t.name)}</strong><em>Entrée ${fmt(t.buyin)} € (prime ${fmt(Math.floor(t.buyin * 0.4))} €) · cagnotte ${fmt(t.pool || 0)} € · ${t.status === 'running' ? 'en cours (niveau ' + (t.level || 1) + ')' : 'inscriptions'} · ${esc(t.players.join(', ') || 'vide')}</em></span>
+      ? `<div class="pk-trow"><span class="pk-tname"><strong>${esc(t.name)}</strong><em>Entrée ${fmt(t.buyin)} € · classement ${fmt(t.pool || 0)} € · ${t.status === 'running' ? 'en cours (niveau ' + (t.level || 1) + ')' : 'inscriptions'} · ${esc(t.players.join(', ') || 'vide')}</em></span>
           <span class="pk-tseats">${t.seats}/${t.max_seats}</span><button class="btn-secondary pk-mini" data-join="${t.id}" ${t.status !== 'registering' || t.seats >= t.max_seats ? 'disabled' : ''}>S'inscrire</button></div>`
       : `<div class="pk-trow"><span class="pk-tname"><strong>${esc(t.name)}</strong><em>${fmt(t.buyin)} € · blindes ${fmt(t.sb)}/${fmt(t.bb)} · ${esc(t.players.join(', ') || 'vide')}</em></span>
           <span class="pk-tseats">${t.seats}/${t.max_seats}${t.playing ? ' · en jeu' : ''}</span><button class="btn-secondary pk-mini" data-join="${t.id}" ${t.seats >= t.max_seats ? 'disabled' : ''}>Rejoindre</button></div>`;
@@ -337,13 +337,21 @@ const Poker = (() => {
     if (pl.place <= 3 && typeof Prestige !== 'undefined') Prestige.emit('tourney_podium');
     const el = document.createElement('div'); el.className = 'soc-modal';
     el.innerHTML = `<div class="soc-modal-card pp-card"><h3>${pl.place === 1 ? 'Tu gagnes le tournoi !' : 'Tournoi terminé'}</h3>
-      <p class="soc-empty">${esc(data.name)}</p><p style="font-size:1.1rem">Tu finis <b>${pl.place}${pl.place === 1 ? 'er' : 'e'}</b> sur ${(data.tourney.players || []).length}${pl.prize || pl.bounty ? ` · <b style="color:var(--gold)">+${fmt((pl.prize || 0) + (pl.bounty || 0))} €</b>` : ' · pas de gain'}${pl.bounty ? ` (dont ${fmt(pl.bounty)} € de primes, ${pl.kills || 0} élimination${(pl.kills || 0) > 1 ? 's' : ''})` : ''}</p>
+      <p class="soc-empty">${esc(data.name)}</p><p style="font-size:1.1rem">Tu finis <b>${pl.place}${pl.place === 1 ? 'er' : 'e'}</b> sur ${(data.tourney.players || []).length}${pl.prize || pl.bounty ? ` · <b style="color:var(--gold)">+${fmt((pl.prize || 0) + (pl.bounty || 0))} €</b>` : ' · pas de gain'}${data.tourney.own && data.tourney.own.uid === me && data.tourney.own.b > 0 ? ` · ta prime de vainqueur : ×${data.tourney.own.m} = ${fmt(data.tourney.own.b)} €` : ''}${pl.bounty ? ` (dont ${fmt(pl.bounty)} € de primes, ${pl.kills || 0} élimination${(pl.kills || 0) > 1 ? 's' : ''})` : ''}</p>
       <div class="bj-hist-list">${(data.tourney.places || []).slice().sort((a, b) => a.place - b.place).map(p => `<div class="pk-trow"><span class="pk-tseats">${p.place}</span><span class="pk-tname"><strong>${esc(p.pseudo)}</strong></span><span class="pk-tseats">${(p.prize || p.bounty) ? '+' + fmt((p.prize || 0) + (p.bounty || 0)) + ' €' : ''}${p.kills ? ' · ' + p.kills + ' ✕' : ''}</span></div>`).join('')}</div>
       <button class="btn-empire btn-empire-secondary soc-wide" data-x>Fermer</button></div>`;
     el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-x]')) el.remove(); });
     document.body.appendChild(el);
   }
 
+  // Space KO : niveau du token d'après sa valeur moyenne (multiples du droit d'entrée : 0,5 = niveau 1 ... 250 = niveau 14 ; 11 à 14 = légendaires)
+  const KO_LEVELS = [0.5, 0.75, 1, 1.5, 2, 3, 4.5, 7, 10, 15, 25, 50, 100, 250];
+  const koLevel = (avg, fee) => Math.max(1, fee > 0 ? KO_LEVELS.filter(x => x * fee <= avg + 0.0001).length : 1);
+  const tokenChip = (tr, uid) => {
+    if (!tr || !tr.fee || !tr.tokens || tr.tokens[uid] == null) return '';
+    const avg = +tr.tokens[uid], lv = koLevel(avg, +tr.fee);
+    return `<i class="pk-token ${lv >= 11 ? 'is-legend' : lv >= 6 ? 'is-gold' : ''}" title="Token niveau ${lv}${lv >= 11 ? ' (légendaire)' : ''} : prime moyenne ${fmt(Math.round(avg))} €">◆ ${lv}</i>`;
+  };
   function legal(d) {
     const h = d.hand; if (!h || h.phase === 'done') return null;
     const me = d.seats.find(s => s.seat === d.me.seat); if (!me || !h.players[me.seat] ) return null;
@@ -357,7 +365,7 @@ const Poker = (() => {
     const d = T.data; if (!d) return;
     const h = d.hand, t = d.table, now = Date.parse(d.now), isT = t.kind === 'tournoi', tr = d.tourney, UN = isT ? '' : ' €';
     const myHole = d.me.hole, L = legal(d);
-    const sig = JSON.stringify([d.seats.map(s => [s.seat, s.stack, s.bet, s.folded, s.allin]), h && [h.no, h.phase, h.board, h.to_act, h.cur, h.pot], myHole, d.next_hand_at && 1, tr && [tr.status, tr.level, tr.pool], d.seats.length]);
+    const sig = JSON.stringify([d.seats.map(s => [s.seat, s.stack, s.bet, s.folded, s.allin]), h && [h.no, h.phase, h.board, h.to_act, h.cur, h.pot], myHole, d.next_hand_at && 1, tr && [tr.status, tr.level, tr.pool, tr.tokens, (tr.log || []).length], d.seats.length]);
     // compte à rebours : mis à jour sans tout redessiner
     const dl = h && h.deadline ? Math.max(0, Math.ceil((Date.parse(h.deadline) - now) / 1000)) : null;
     if (sig === T.sig) { const c = content.querySelector('.pk-clock'); if (c && dl != null) c.textContent = dl + ' s'; return; }
@@ -372,7 +380,7 @@ const Poker = (() => {
       const cards = s.in_hand && !s.folded ? (shown ? shown.map(c => cardHtml(c)).join('') : '<div class="pk-card pk-back pk-sm"></div><div class="pk-card pk-back pk-sm"></div>') : '';
       const win = res && res.payouts && res.payouts[s.seat];
       return `<div class="pk-seat ${turn ? 'is-turn' : ''} ${s.folded ? 'is-folded' : ''}">
-        <span class="pk-sname">${h && h.dealer === s.seat ? '<i class="pk-btn">D</i>' : ''}${esc(s.pseudo)}</span>
+        <span class="pk-sname">${h && h.dealer === s.seat ? '<i class="pk-btn">D</i>' : ''}${esc(s.pseudo)}${isT ? tokenChip(tr, s.user_id) : ''}</span>
         <span class="pk-sstack">${fmt(s.stack)}${UN}${s.allin ? ' · tapis' : ''}</span>
         <span class="pk-scards">${cards}</span>
         ${s.bet ? `<span class="pk-sbet">${fmt(s.bet)}</span>` : ''}${win ? `<span class="pk-swin">+${fmt(win)}</span>` : ''}${turn && dl != null ? `<span class="pk-clock">${dl} s</span>` : ''}</div>`;
@@ -402,12 +410,12 @@ const Poker = (() => {
     content.innerHTML = `
       <div class="casino-felt-table pk-table pk-game">
         <div class="pk-top"><span><strong>${esc(t.name)}</strong> · ${fmt(t.sb)}/${fmt(t.bb)}</span><span class="pk-pot">Pot ${fmt(h ? h.pot : 0)}${UN}</span><button class="btn-secondary pk-mini" id="pk-leave">${isT ? 'Abandonner' : 'Quitter'}</button></div>
-        ${isT && tr ? `<div class="pk-tbanner">${tr.status === 'registering' ? `Inscriptions ${d.seats.length}/${t.max_seats} · le tournoi démarre quand la table est complète` : `Niveau ${tr.level || 1} · blindes ${fmt(t.sb)}/${fmt(t.bb)}`} · cagnotte <b>${fmt((tr.pool || 0) + (tr.forfeit || 0))} €</b> · prime <b>${fmt(tr.bounty_each || 0)} €</b> par joueur${tr.kills && me && tr.kills[me.user_id] ? ` · tes éliminations : <b>${tr.kills[me.user_id]}</b>` : ''}</div>` : ''}
+        ${isT && tr ? `<div class="pk-tbanner">${tr.status === 'registering' ? `Inscriptions ${d.seats.length}/${t.max_seats} · le tournoi démarre quand la table est complète` : `Niveau ${tr.level || 1} · blindes ${fmt(t.sb)}/${fmt(t.bb)}`} · classement <b>${fmt((tr.pool || 0) + (tr.forfeit || 0))} €</b>${tr.kills && me && tr.kills[me.user_id] ? ` · tes éliminations : <b>${tr.kills[me.user_id]}</b>` : ''}${(tr.log || []).slice(-2).map(l => `<br><small>${esc(l.k)} sort ${esc(l.v)} : prime ×${l.m} = <b>${fmt(l.b)} €</b> (moitié en cash, moitié sur son token)</small>`).join('')}</div>` : ''}
         <div class="pk-seats">${seatsHtml}</div>
         <div class="pk-zone"><div class="pk-row">${boardCells}</div></div>
         <div class="pk-me ${L && L.myTurn ? 'is-turn' : ''}">
           <div class="pk-row">${myHole && h ? myHole.map(c => cardHtml(c)).join('') : slotHtml() + slotHtml()}</div>
-          <div class="pk-mestack"><b>${fmt(me ? me.stack : 0)}${UN}</b>${h && me && h.players[me.seat] && h.players[me.seat].bet ? `<span class="pk-sbet">${fmt(h.players[me.seat].bet)}</span>` : ''}${L && L.myTurn && dl != null ? `<span class="pk-clock">${dl} s</span>` : ''}</div>
+          <div class="pk-mestack"><b>${fmt(me ? me.stack : 0)}${UN}</b>${isT && me ? tokenChip(tr, me.user_id) : ''}${h && me && h.players[me.seat] && h.players[me.seat].bet ? `<span class="pk-sbet">${fmt(h.players[me.seat].bet)}</span>` : ''}${L && L.myTurn && dl != null ? `<span class="pk-clock">${dl} s</span>` : ''}</div>
         </div>
         <div class="pk-controls">${controls}</div>
       </div>`;
@@ -416,7 +424,7 @@ const Poker = (() => {
     content.querySelector('#pk-slider')?.addEventListener('input', e => { T.raise = +e.target.value; const b = content.querySelector('[data-act="raise"]'); if (b && L) b.textContent = `${L.cur > 0 ? 'Relancer à' : 'Miser'} ${fmt(T.raise)}`; });
     content.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => { T.raise = +b.dataset.preset; T.sig = ''; drawTable(content); }));
     // fin de main : musique et argent à jour
-    if (h && h.phase === 'done' && h.no !== T.lastNo) { T.lastNo = h.no; applyCredits(); if (res && res.payouts && me && res.payouts[me.seat] && typeof Prestige !== 'undefined') Prestige.emit('poker_win'); }
+    if (h && h.phase === 'done' && h.no !== T.lastNo) { T.lastNo = h.no; if (typeof Casino !== 'undefined' && Casino.roundXp) Casino.roundXp(10); applyCredits(); if (res && res.payouts && me && res.payouts[me.seat] && typeof Prestige !== 'undefined') Prestige.emit('poker_win'); }
   }
 
   async function tableAct(content, act) {

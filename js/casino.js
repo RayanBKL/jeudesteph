@@ -139,7 +139,23 @@ const Casino = {
     }
   },
 
+  // XP des jeux d'argent : 10 XP par manche terminée (blackjack, roulette, machine à sous, crash, mines, ticket, Ultimate Poker, main de poker à table),
+  // plafonné à 2 500 XP par heure pour que la machine à sous en turbo ne devienne pas la façon la plus rapide de monter de niveau.
+  roundXp(n = 10) {
+    if (typeof ClickerEngine === 'undefined' || !ClickerEngine.gainXP) return 0;
+    const CAP = 2500, key = Math.floor(Date.now() / 3600000);
+    let st = {}; try { st = JSON.parse(localStorage.getItem('ak_casino_xp') || '{}'); } catch (e) {}
+    if (st.h !== key) st = { h: key, n: 0 };
+    const give = Math.max(0, Math.min(n, CAP - (st.n || 0)));
+    if (!give) return 0;
+    st.n = (st.n || 0) + give;
+    try { localStorage.setItem('ak_casino_xp', JSON.stringify(st)); } catch (e) {}
+    ClickerEngine.gainXP(give);
+    return give;
+  },
+
   recordResult(type, amount, text) {
+    this.roundXp(10);
     if (type === 'win' && typeof Prestige !== 'undefined') Prestige.emit('casino_win', { amount });
     if (typeof Gains !== 'undefined') Gains.add({ game: 'casino', label: text, type, amount });
     this.lastResult = { type, amount: Math.abs(amount || 0), text: text || '' };
