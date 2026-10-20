@@ -385,6 +385,7 @@ const Poker = (() => {
           <button class="btn-secondary" data-act="fold">Se coucher</button>
           ${L.toCall > 0 ? `<button class="btn-primary" data-act="call">Suivre ${fmt(L.toCall)}</button>` : `<button class="btn-primary" data-act="check">Check</button>`}
           ${L.canRaise ? `<button class="btn-primary" data-act="raise">${L.cur > 0 ? 'Relancer à' : 'Miser'} ${fmt(T.raise)}</button>` : ''}
+          ${L.canRaise ? `<button class="btn-primary pk-allin" data-act="allin">Tout miser (${fmt(L.stack)})</button>` : ''}
         </div>
         ${L.canRaise ? `<div class="pk-raise"><input type="range" id="pk-slider" min="${L.minTo}" max="${L.maxTo}" step="${Math.max(1, Math.round(t.bb / 2))}" value="${T.raise}">
           <div class="pk-presets">${presets.map(p => `<button class="btn-secondary pk-mini" data-preset="${p[1]}">${p[0]}</button>`).join('')}</div></div>` : ''}`;
@@ -420,7 +421,7 @@ const Poker = (() => {
     if (T.busy) return; T.busy = true;
     try {
       const L = legal(T.data);
-      const amount = act === 'raise' ? (T.raise >= L.maxTo ? L.maxTo : T.raise) : 0;
+      const amount = act === 'raise' ? (T.raise >= L.maxTo ? L.maxTo : T.raise) : act === 'allin' ? L.maxTo : 0;
       const { data, error } = await sb().rpc('poker_action', { p_table: T.id, p_action: act === 'raise' && amount >= L.maxTo ? 'allin' : act, p_amount: amount });
       if (error) showToast(errMsg(error), 'error'); else { T.data = data; T.sig = ''; drawTable(content); }
     } finally { T.busy = false; }

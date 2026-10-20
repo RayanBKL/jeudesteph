@@ -1160,3 +1160,6 @@
 .sl-intro em{color:#fff}
 .sl-fs-mult b.bump{animation:slbump .35s ease-out}
 @keyframes slbump{40%{transform:scale(1.7);color:#fff}}
+
+/* Poker : bouton « Tout miser » */
+.pk-allin{background:linear-gradient(#ff6a4d,#c4261b) !important;color:#fff !important}

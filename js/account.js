@@ -259,6 +259,37 @@ const Account = (() => {
     return c.xp * 1e6 + c.totalEarned + c.totalClicks * 10 + c.packs * 100 + Object.values(c.inv).reduce((a, v) => a + v, 0);
   }
 
+  // Défis, quêtes et succès : à la fusion on garde le MEILLEUR de chaque appareil (avant, seuls ceux de la partie « la plus avancée » survivaient,
+  // donc des défis avancés sur l'autre appareil repartaient de zéro)
+  const jparse = str => { try { return JSON.parse(str || 'null'); } catch (e) { return null; } };
+  const maxMap = (x, y) => { const o = { ...(x || {}) }; Object.keys(y || {}).forEach(k => { o[k] = Math.max(o[k] || 0, y[k] || 0); }); return o; };
+  const unionMap = (x, y) => { const o = { ...(x || {}) }; Object.keys(y || {}).forEach(k => { o[k] = o[k] ? Math.min(o[k], y[k]) : y[k]; }); return o; };
+  function mergeExtras(local, cloud) {
+    const out = {};
+    try {
+      const a = jparse(local.prestige_v1), b = jparse(cloud.prestige_v1);
+      if (a && b) {
+        const m = a.week === b.week ? { ...a, progress: maxMap(a.progress, b.progress), done: unionMap(a.done, b.done) } : ((a.week || '') > (b.week || '') ? { ...a } : { ...b });
+        const seen = new Set(); m.trophies = [...(a.trophies || []), ...(b.trophies || [])].filter(t => t && !seen.has(t.id) && seen.add(t.id)).sort((x, y) => (x.at || 0) - (y.at || 0));
+        out.prestige_v1 = JSON.stringify(m);
+      }
+    } catch (e) {}
+    try {
+      const a = jparse(local.ak_quests), b = jparse(cloud.ak_quests);
+      if (a && b) {
+        const m = a.day === b.day ? { ...a, progress: maxMap(a.progress, b.progress), claimed: unionMap(a.claimed, b.claimed) } : ((a.day || '') > (b.day || '') ? { ...a } : { ...b });
+        m.streak = Math.max(a.streak || 0, b.streak || 0);
+        if ((a.completedDay || '') > (b.completedDay || '')) m.completedDay = a.completedDay; else if (b.completedDay) m.completedDay = b.completedDay;
+        out.ak_quests = JSON.stringify(m);
+      }
+    } catch (e) {}
+    try {
+      const a = jparse(local.ak_ach), b = jparse(cloud.ak_ach);
+      if (a && b) out.ak_ach = JSON.stringify({ ...a, c: maxMap(a.c, b.c), u: unionMap(a.u, b.u) });
+    } catch (e) {}
+    return out;
+  }
+
   // Fusion à trois (version commune + appareil A + appareil B) : on ADDITIONNE ce que chaque appareil a fait depuis la version commune.
   // Rien ne se perd : argent, XP, clics, paquets et cartes des deux côtés sont conservés.
   function mergeSaves(local, cloud, base) {
@@ -272,7 +303,7 @@ const Account = (() => {
     const ids = new Set([...Object.keys(L.inv), ...Object.keys(C.inv), ...Object.keys(base.inv || {})]), inv = {};
     ids.forEach(id => { const n = Math.max(0, (L.inv[id] || 0) + (C.inv[id] || 0) - ((base.inv || {})[id] || 0)); if (n > 0) inv[id] = n; });
     e.inventory = inv;
-    return { ...tpl, empire_clicker: JSON.stringify(c), empire_state: JSON.stringify(e) };
+    return { ...tpl, ...mergeExtras(local, cloud), empire_clicker: JSON.stringify(c), empire_state: JSON.stringify(e) };
   }
 
   // Deux versions de la partie (autre appareil ou onglet) : on les FUSIONNE (voir mergeSaves) ; sans version commune connue,
