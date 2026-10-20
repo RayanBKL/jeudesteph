@@ -4,9 +4,9 @@
 
 const TalentsEngine = (() => {
 
-  // ── L'arbre : 5 branches de 8 talents qui partent du bord vers le centre, reliées par 15 « ponts » (3 anneaux × 5 paires de branches voisines) ──
+  // ── L'arbre : 5 branches de 8 talents qui partent du bord vers le centre, reliées par 25 « ponts » (5 anneaux × 5 paires de branches voisines) ──
   // Chaque talent d'une branche demande le précédent. Un pont demande les DEUX talents voisins du même anneau (donc deux branches avancées à la même hauteur).
-  // Le Roi du Cendrier, au centre, demande les 5 ponts du dernier anneau. Coûts : 1-1-1-2-2-2-3-3 par branche, ponts 2 / 3 / 4, Roi 8 = 128 points (≈ niveau 100).
+  // Le Roi du Cendrier, au centre, demande les 5 ponts du dernier anneau. Coûts : 1-1-1-2-2-2-3-3 par branche, ponts 1 / 1 / 2 / 3 / 4, Roi 8 = 138 points (≈ niveau 110).
   const BRANCHES = [
     { id: 'clic', label: 'Clics', angle: 0, nodes: [
       { name: 'Pouce Échauffé', icon: '👆', type: 'click', mult: 1.06, desc: 'Clics : +6 % d\'argent par clic.', lore: 'Il suffit de chauffer le pouce.' },
@@ -59,30 +59,41 @@ const TalentsEngine = (() => {
       { name: 'Sage du Comptoir', icon: '🦉', type: 'xp', mult: 1.08, desc: 'XP : +8 % (en plus).', lore: 'On vient le consulter avant de parier.' },
     ] },
   ];
-  // 3 anneaux de ponts (3, 5, 7) × 5 paires de branches voisines : (clic, auto), (auto, rente), (rente, paquets), (paquets, rep), (rep, clic)
+  // 5 anneaux de ponts (1, 2, 3, 5, 7) × 5 paires de branches voisines : (clic, auto), (auto, rente), (rente, paquets), (paquets, rep), (rep, clic)
+  // Les ponts des anneaux 1 et 2 sont bon marché : dès 3 à 5 points on mélange deux branches.
   const BRIDGES = [
     [ // clic + auto
+      { name: 'Premier Réflexe', icon: '☝️', type: 'click', mult: 1.04, desc: 'Clics : +4 % d\'argent par clic (en plus).', lore: 'Le doigt commence à penser tout seul.' },
+      { name: 'Doigts Entraînés', icon: '🎹', type: 'click', mult: 1.05, desc: 'Clics : +5 % d\'argent par clic (en plus).', lore: 'Des gammes de clics tous les matins.' },
       { name: 'Pouce Mécanique', icon: '🤖', type: 'click', mult: 1.08, desc: 'Clics : +8 % d\'argent par clic (en plus).', lore: 'Le pouce et la machine, main dans la main.' },
       { name: 'Clic en Chaîne', icon: '⛓️', type: 'click', mult: 1.10, desc: 'Clics : +10 % d\'argent par clic (en plus).', lore: 'Un clic en appelle un autre.' },
       { name: 'Réflexe Automatique', icon: '⚡', type: 'click', mult: 1.14, desc: 'Clics : +14 % d\'argent par clic (en plus).', lore: 'Le doigt part avant la tête.' } ],
     [ // auto + rente
+      { name: 'Petite Rente', icon: '🪙', type: 'passive', mult: 1.02, desc: 'Revenu des cartes : +2 % (en plus).', lore: 'Quelques pièces qui rentrent sans rien faire.' },
+      { name: 'Compte en Banque', icon: '🏦', type: 'passive', mult: 1.03, desc: 'Revenu des cartes : +3 % (en plus).', lore: 'Un vrai compte, avec un vrai conseiller.' },
       { name: 'Rente Automatique', icon: '💸', type: 'passive', mult: 1.03, desc: 'Revenu des cartes : +3 % (en plus).', lore: 'Le tiroir-caisse se remplit tout seul.' },
       { name: 'Loyers Indexés', icon: '📈', type: 'passive', mult: 1.04, desc: 'Revenu des cartes : +4 % (en plus).', lore: 'Ça monte tous les ans, c\'est la loi.' },
       { name: 'Caisse Enregistreuse', icon: '🧮', type: 'passive', mult: 1.06, desc: 'Revenu des cartes : +6 % (en plus).', lore: 'Elle ne dort jamais non plus.' } ],
     [ // rente + paquets
+      { name: 'Petit Colis', icon: '📬', type: 'pack', cooldown: 0.98, desc: 'Paquet gratuit : arrive 2 % plus vite (en plus).', lore: 'Une enveloppe glissée sous la porte.' },
+      { name: 'Tournée Régulière', icon: '🛵', type: 'pack', cooldown: 0.98, desc: 'Paquet gratuit : arrive 2 % plus vite (en plus).', lore: 'Il passe à heure fixe, enfin presque.' },
       { name: 'Grossiste Fidèle', icon: '🚚', type: 'pack', cooldown: 0.97, desc: 'Paquet gratuit : arrive 3 % plus vite (en plus).', lore: 'Il te réserve les meilleurs cartons.' },
       { name: 'Camion Prioritaire', icon: '🚛', type: 'pack', cooldown: 0.96, desc: 'Paquet gratuit : arrive 4 % plus vite (en plus).', lore: 'Un camion entier, garé en double file.' },
       { name: 'Dépôt Personnel', icon: '🏪', type: 'pack', cooldown: 0.94, desc: 'Paquet gratuit : arrive 6 % plus vite (en plus).', lore: 'Plus besoin d\'attendre le livreur.' } ],
     [ // paquets + rep
+      { name: 'Premier Souhait', icon: '🕯️', type: 'drop', pityReduce: 1, desc: 'Paquets : la carte garantie arrive 1 paquet plus tôt (en plus).', lore: 'Une bougie, un vœu, une carte.' },
+      { name: 'Nez Fin', icon: '🧐', type: 'drop', dropRare: 1.05, desc: 'Paquets : 5 % de chances en plus de tomber sur des Rares (en plus).', lore: 'Le patron sent les bons coups.' },
       { name: 'Bonne Étoile', icon: '⭐', type: 'drop', pityReduce: 2, desc: 'Paquets : la carte garantie arrive 2 paquets plus tôt (en plus).', lore: 'Tout le quartier te veut du bien.' },
       { name: 'Chance du Quartier', icon: '🍀', type: 'drop', dropEpic: 1.12, desc: 'Paquets : +12 % de chances d\'Épiques et de Légendaires (en plus).', lore: 'Les voisins gardent leurs meilleures cartes pour toi.' },
       { name: 'Étoile Filante', icon: '🌠', type: 'drop', mythicMult: 1.3, desc: 'Paquets : les cartes Mythiques tombent 1,3 fois plus souvent (en plus).', lore: 'Fais un vœu, il y a du monde.' } ],
     [ // rep + clic
+      { name: 'Bon Début', icon: '🌱', type: 'xp', mult: 1.02, desc: 'XP : +2 % (en plus).', lore: 'On te salue en entrant.' },
+      { name: 'Réputation Naissante', icon: '🗣️', type: 'xp', mult: 1.03, desc: 'XP : +3 % (en plus).', lore: 'Les clients commencent à parler de toi.' },
       { name: 'Cérémonie de Comptoir', icon: '🎖️', type: 'xp', mult: 1.04, desc: 'XP : +4 % (en plus).', lore: 'On t\'a remis une médaille en carton.' },
       { name: 'Légende Locale', icon: '📰', type: 'xp', mult: 1.05, desc: 'XP : +5 % (en plus).', lore: 'Ton nom est dans le journal du quartier.' },
       { name: 'Panthéon du Bar', icon: '🥇', type: 'xp', mult: 1.07, desc: 'XP : +7 % (en plus).', lore: 'Ta photo, au-dessus du flipper.' } ],
   ];
-  const BR_COST = [1, 1, 1, 2, 2, 2, 3, 3], BRIDGE_RINGS = [3, 5, 7], BRIDGE_COST = [2, 3, 4];
+  const BR_COST = [1, 1, 1, 2, 2, 2, 3, 3], BRIDGE_RINGS = [1, 2, 3, 5, 7], BRIDGE_COST = [1, 1, 2, 3, 4];
   const NODES = [];
   BRANCHES.forEach((br) => br.nodes.forEach((n, k) => {
     NODES.push({ ...n, id: `${br.id}_${k + 1}`, branch: br.id, branchLabel: br.label, ring: k + 1, angle: br.angle, cost: BR_COST[k], prereqs: k === 0 ? [] : [`${br.id}_${k}`] });
