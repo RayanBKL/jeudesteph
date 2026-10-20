@@ -32,6 +32,14 @@ const Account = (() => {
   let blocked = false;       // true si un autre onglet a pris la main : cet onglet n'envoie plus rien
   let frozen = false;        // true dès qu'une version reçue d'un autre appareil est écrite : la page va se recharger, le jeu en cours ne doit plus rien écrire (sinon il écrase la version reçue avec ses vieux chiffres)
   const TAB_KEY = 'ak_tab_lock', TAB_ID = Math.random().toString(36).slice(2);
+  // Appareil principal : chaque onglet / appareil a un identifiant de session (gardé quand la page se recharge, nouveau à chaque nouvelle ouverture).
+  // La dernière session ouverte « prend la main » côté serveur (session_claim) ; les autres affichent « déjà connecté ailleurs ».
+  let sid = null;
+  try { sid = sessionStorage.getItem('ak_sid'); } catch (e) {}
+  if (!sid) {
+    sid = 's' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try { sessionStorage.setItem('ak_sid', sid); } catch (e) {}
+  }
   const rawSet = Storage.prototype.setItem;
   const rawRemove = Storage.prototype.removeItem;
 
@@ -126,6 +134,36 @@ const Account = (() => {
   function deviceName() {
     const ua = navigator.userAgent;
     return /iPhone|iPad/.test(ua) ? 'iPhone/iPad' : /Android/.test(ua) ? 'Android' : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'Navigateur';
+  }
+
+  // ── Appareil principal ─────────────────────────────────────
+  async function claimSession() {
+    const sb = client(); if (!sb) return;
+    try { const { error } = await sb.rpc('session_claim', { p_sid: sid, p_device: deviceName() }); if (!error) sessionStorage.setItem('ak_sid_claimed', '1'); } catch (e) {}
+  }
+  // Un autre appareil a pris la main : on envoie une dernière fois ce qui n'est pas encore parti, puis on bloque cet appareil
+  async function loseControl(otherDevice) {
+    if (blocked) return;
+    try { if (ls.get(DIRTY) === '1') await push(); } catch (e) {}
+    blocked = true; live = false; window.AkBlocked = true;
+    clearTimeout(timer); timer = null;
+    const where = otherDevice ? ` (${otherDevice})` : '';
+    blockScreen('Tu es déjà connecté sur un autre appareil', `Ta partie est ouverte sur un autre appareil${where}. Un seul appareil à la fois, sinon la sauvegarde se mélange.`, 'Jouer sur cet appareil', takeOver);
+  }
+  // « Jouer sur cet appareil » : cet appareil devient le principal ; l'autre envoie sa dernière version et se bloque à son tour
+  async function takeOver() {
+    const btn = document.querySelector('#tab-block button');
+    if (btn) { btn.disabled = true; btn.textContent = 'Synchronisation…'; }
+    try {
+      await claimSession();
+      await new Promise(r => setTimeout(r, 7000));          // l'autre appareil voit le changement (≤ 6 s) et envoie sa dernière version
+      const save = await pull();
+      if (save) {
+        applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY); rememberBase(save.data);
+        sessionStorage.setItem('ak_reloaded', user.id + save.updated_at);
+      }
+    } catch (e) { /* hors ligne : on recharge quand même, la page se resynchronisera */ }
+    location.reload();
   }
 
   // ── Envoi ──────────────────────────────────────────────────
@@ -304,6 +342,7 @@ const Account = (() => {
     try {
       try { if (typeof ClickerEngine !== 'undefined' && ClickerEngine.flushSave) ClickerEngine.flushSave(); } catch (e) {}   // les derniers clics (écriture différée) comptent comme des modifications locales
       const { data } = await sb.rpc('cloud_save_stamp');
+      if (data && data.sid && data.sid !== sid) { await loseControl(data.sid_device); return; }   // un autre appareil est devenu le principal
       if (!data || !data.updated_at || data.updated_at === stamp) return;
       if (busyNow()) return;                                      // en pleine manche / en train de cliquer : on recommencera dans quelques secondes
       if (ls.get(DIRTY) === '1') { await push(); if (ls.get(DIRTY) === '1' || data.updated_at === stamp) return; if (stamp !== data.updated_at && document.hidden) return; }   // modifications locales aussi : conflit → fusion ; si rien à envoyer on continue
@@ -417,6 +456,11 @@ const Account = (() => {
     ls.set(OWNER, u.id);
     live = true;
     applying = false;
+    // Dernier appareil ouvert = appareil principal. Une page rechargée garde sa session : si un autre appareil a pris la main entre-temps, elle reste bloquée.
+    if (sessionStorage.getItem('ak_sid_claimed') !== '1') await claimSession();
+    else {
+      try { const { data: st } = await sb.rpc('cloud_save_stamp'); if (st && st.sid && st.sid !== sid) await loseControl(st.sid_device); } catch (e) {}
+    }
 
     // Photo de profil : celle du serveur, ou on envoie celle de ce navigateur
     if (typeof PlayerProfile !== 'undefined') await PlayerProfile.syncWithProfile(profile);

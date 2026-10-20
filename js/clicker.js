@@ -404,6 +404,7 @@ const ClickerEngine = (() => {
   ['pointerdown', 'pointermove', 'keydown', 'touchstart', 'wheel', 'click'].forEach(ev =>
     window.addEventListener(ev, () => { lastActivity = Date.now(); }, { passive: true, capture: true }));
   function isPlayerActive() {
+    if (window.AkBlocked) return false;      // partie ouverte sur un autre appareil : rien ne tourne ici
     return document.visibilityState === 'visible' && document.hasFocus() && (Date.now() - lastActivity) < IDLE_LIMIT_MS;
   }
 
