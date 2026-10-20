@@ -275,11 +275,7 @@ const ClickerEngine = (() => {
     queueClickEvent();
 
     // Petit retour visuel sur le compteur
-    if (els.cashDisplay) {
-      els.cashDisplay.classList.remove('bump');
-      void els.cashDisplay.offsetWidth;
-      els.cashDisplay.classList.add('bump');
-    }
+    bumpCash();
 
     // Pop-up visual
     spawnPopup(e, earned);
@@ -332,7 +328,19 @@ const ClickerEngine = (() => {
     return { name: 'Équipe Standard', multiplier: 1.0, icon: '✨', desc: 'Associez des cartes de même famille ou duos complémentaires !' };
   }
 
+  // La partie « fixe » du gain d'un clic (cartes équipées × talents × synergie) ne change que si les cartes ou les talents changent :
+  // on la garde en mémoire au lieu de la recalculer à chaque clic (surtout avec 5 doigts)
+  let clickBaseCache = null;
   function getNominalClickPower() {
+    const T = typeof TalentsEngine !== 'undefined' ? TalentsEngine : null;
+    const key = (state.equippedClickCards || []).join(',') + '|' + (T && T.getVersion ? T.getVersion() : 0);
+    if (!clickBaseCache || clickBaseCache.key !== key) clickBaseCache = { key, value: computeClickBase() };
+    let total = clickBaseCache.value;
+    // Talent Toucher de Midas : bonus passif direct au clic (dépend du revenu du moment)
+    if (T && T.getPassiveToClickRate) total += state.passivePerSec * T.getPassiveToClickRate();
+    return Math.max(1, Math.round(total));
+  }
+  function computeClickBase() {
     let base = (typeof Balance !== 'undefined') ? Balance.BASE_CLICK : 1.0; // Gain de base garanti
     const items = state.equippedClickCards.map(id => (typeof getEmpireItemById === 'function' ? getEmpireItemById(id) : null)).filter(Boolean);
     let cardBonus = 0;
@@ -349,12 +357,7 @@ const ClickerEngine = (() => {
     const synergy = getCardSynergy(state.equippedClickCards);
     total *= synergy.multiplier;
 
-    // Talent 5 Toucher de Midas : bonus passif direct au clic
-    if (typeof TalentsEngine !== 'undefined' && TalentsEngine.getPassiveToClickRate) {
-      total += (state.passivePerSec * TalentsEngine.getPassiveToClickRate());
-    }
-
-    return Math.max(1, Math.round(total));
+    return total;
   }
 
   function computeClickEarnings(isAuto = false) {
@@ -591,14 +594,25 @@ const ClickerEngine = (() => {
   }
 
   // ── Visual Popups ──────────────────────────────────────────
+  // Petit rebond du compteur : au plus une fois par image, sans lecture de mise en page (qui forçait un recalcul à chaque clic)
+  let bumpPending = false;
+  function bumpCash() {
+    if (!els.cashDisplay || bumpPending) return;
+    bumpPending = true;
+    requestAnimationFrame(() => { els.cashDisplay.classList.remove('bump'); requestAnimationFrame(() => { els.cashDisplay.classList.add('bump'); bumpPending = false; }); });
+  }
+  let popRect = null, popRectAt = 0, livePopups = 0;
   function spawnPopup(e, amount) {
     if (!els.popContainer) return;
+    if (livePopups >= 14) return;                       // 5 doigts qui spamment : pas plus de 14 « +1 € » à l'écran en même temps
     const pop = document.createElement('div');
     pop.className = 'click-popup' + (amount > 1000 ? ' pop-big' : '');
     pop.textContent = '+' + formatCash(amount) + ' €';
 
     // Position relative to click
-    const rect = els.popContainer.getBoundingClientRect();
+    const nowT = performance.now();
+    if (!popRect || nowT - popRectAt > 400) { popRect = els.popContainer.getBoundingClientRect(); popRectAt = nowT; }
+    const rect = popRect;
     const x = ((e.clientX || 0) - rect.left) || 50;
     const y = ((e.clientY || 0) - rect.top) || 50;
     pop.style.left = Math.max(5, Math.min(90, (x / rect.width) * 100)) + '%';
@@ -608,7 +622,8 @@ const ClickerEngine = (() => {
     pop.style.setProperty('--drift', (Math.random() > 0.5 ? 1 : -1) * (20 + Math.random() * 40) + 'px');
 
     els.popContainer.appendChild(pop);
-    setTimeout(() => pop.remove(), 1200);
+    livePopups++;
+    setTimeout(() => { pop.remove(); livePopups--; }, 1200);
   }
 
   function spawnCritText() {
@@ -642,12 +657,15 @@ const ClickerEngine = (() => {
   // ── Render ─────────────────────────────────────────────────
   // Rendu de chaque clic : seulement les chiffres qui bougent (les emplacements de cartes et la synergie sont refaits par render())
   let fastQueued = false;
+  // Le solde « officiel » (utilisé par les dépenses) est mis à jour tout de suite ; seul l'affichage attend la prochaine image
+  const syncMoney = () => { if (typeof GameState !== 'undefined') GameState.money = state.cash; };
   function renderFast() {
-    renderCash();
+    syncMoney();
     if (fastQueued) return;
     fastQueued = true;
     requestAnimationFrame(() => {
       fastQueued = false;
+      renderCash();
       updateEmpireDisplay();
       if (els.totalClicks) els.totalClicks.textContent = formatNumber(state.totalClicks);
       if (els.subClicks) els.subClicks.textContent = `${formatNumber(state.clicksFromManual || 0)} manuels · ${formatNumber(state.clicksFromAuto || 0)} auto`;

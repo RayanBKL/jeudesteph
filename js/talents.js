@@ -219,21 +219,27 @@ const TalentsEngine = (() => {
   }
 
   // ── Effets des talents forgés, lus par le reste du jeu ────────
+  // Les effets sont lus à CHAQUE clic : on les garde en mémoire jusqu'à ce que l'arbre change (saveState / loadState vident `memo`)
+  let memo = {}, version = 0;
+  const memoized = (key, compute) => () => (key in memo ? memo[key] : (memo[key] = compute()));
   const active = fn => NODES.filter(n => isNodeUnlocked(n.id) && fn(n));
   const prod = (list, key) => list.reduce((m, n) => m * (n[key] || 1), 1);
 
-  function getAutoClicksPerSec() { return active(n => n.type === 'auto').reduce((m, n) => Math.max(m, n.val), 0); }
-  function getClickPowerMult() { return prod(active(n => n.type === 'click' || n.type === 'apex'), 'mult'); }
-  function getXPMult() { return prod(active(n => n.type === 'xp'), 'mult'); }
-  function getPassiveMultiplier() { return prod(active(n => n.type === 'passive'), 'mult') * prod(active(n => n.type === 'apex'), 'passiveMult'); }
+  function getAutoClicksPerSec_() { return active(n => n.type === 'auto').reduce((m, n) => Math.max(m, n.val), 0); }
+  function getClickPowerMult_() { return prod(active(n => n.type === 'click' || n.type === 'apex'), 'mult'); }
+  function getXPMult_() { return prod(active(n => n.type === 'xp'), 'mult'); }
+  function getPassiveMultiplier_() { return prod(active(n => n.type === 'passive'), 'mult') * prod(active(n => n.type === 'apex'), 'passiveMult'); }
   // Multiplicateur du délai des paquets gratuits (0,8 = 20 % plus rapide)
-  function getFreePackCooldownMult() { return prod(active(n => n.type === 'pack'), 'cooldown'); }
-  function getCritChance() { return active(n => n.critChance).reduce((m, n) => Math.max(m, n.critChance), 0.05); }
-  function getCritMult() { return active(n => n.critMult).reduce((m, n) => Math.max(m, n.critMult), 2); }
-  function getPassiveToClickRate() { return active(n => n.type === 'midas').reduce((m, n) => Math.max(m, n.passiveToClick), 0); }
+  function getFreePackCooldownMult_() { return prod(active(n => n.type === 'pack'), 'cooldown'); }
+  function getCritChance_() { return active(n => n.critChance).reduce((m, n) => Math.max(m, n.critChance), 0.05); }
+  function getCritMult_() { return active(n => n.critMult).reduce((m, n) => Math.max(m, n.critMult), 2); }
+  function getPassiveToClickRate_() { return active(n => n.type === 'midas').reduce((m, n) => Math.max(m, n.passiveToClick), 0); }
   function getPityReduction() { return active(n => n.pityReduce).reduce((a, n) => a + n.pityReduce, 0); }
   function getMythicChanceMult() { return prod(active(n => n.mythicMult), 'mythicMult'); }
   function getFoilChanceBonus() { return 0; }
+  const getAutoClicksPerSec = memoized('auto', getAutoClicksPerSec_), getClickPowerMult = memoized('click', getClickPowerMult_), getXPMult = memoized('xp', getXPMult_),
+    getPassiveMultiplier = memoized('passive', getPassiveMultiplier_), getCritChance = memoized('cc', getCritChance_), getCritMult = memoized('cm', getCritMult_),
+    getPassiveToClickRate = memoized('midas', getPassiveToClickRate_), getFreePackCooldownMult = memoized('pack', getFreePackCooldownMult_);
   // Modificateurs de tirage des paquets (utilisés par drawEmpirePack)
   function getDropMods() {
     return { rare: prod(active(n => n.dropRare), 'dropRare'), epic: prod(active(n => n.dropEpic), 'dropEpic'), mythic: getMythicChanceMult(), pity: getPityReduction() };
@@ -387,10 +393,12 @@ const TalentsEngine = (() => {
   }
 
   function saveState() {
+    memo = {}; version++;
     localStorage.setItem('ashtray_talents_gow', JSON.stringify(state));
   }
 
   function loadState() {
+    memo = {}; version++;
     try {
       const saved = localStorage.getItem('ashtray_talents_gow');
       if (saved) {
@@ -432,6 +440,7 @@ const TalentsEngine = (() => {
     prestigePoints,
     syncPointsWithPlayer,
     openSummary,
+    getVersion: () => version,
     getState: () => ({ ...state }),
     getNodes: () => NODES
   };
