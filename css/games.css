@@ -1051,8 +1051,9 @@
 .ig-cig-ember{position:absolute;top:0;bottom:0;left:calc(var(--burn)*100%);width:6px;background:#ff6a2b;box-shadow:0 0 8px #ff6a2b}
 .ig-flake{position:absolute;top:-6px;width:6px;height:6px;border-radius:50%;background:#bdb7ae;animation:ig-fall 1.2s ease-in forwards}
 @keyframes ig-fall{to{transform:translateY(190px) rotate(120deg);opacity:0}}
-.mn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1;min-height:0;align-content:center;width:min(100%,46vh);margin:0 auto}
-.mn-cell{aspect-ratio:1;border:3px solid var(--outline);border-radius:10px;background:var(--cream);box-shadow:0 3px 0 var(--outline);padding:4px;cursor:pointer}
+.mn-wrap{flex:1;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
+.mn-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:min(100cqw,100cqh);height:min(100cqw,100cqh)}
+.mn-cell{min-width:0;min-height:0;border:3px solid var(--outline);border-radius:10px;background:var(--cream);box-shadow:0 3px 0 var(--outline);padding:4px;cursor:pointer}
 .mn-cell:disabled{cursor:default}
 .mn-cell.is-safe{background:#8fe3a5}.mn-cell.is-bomb{background:#ffb3a8}.mn-cell.is-hit{background:#ff5a4d}.mn-cell.is-dim{opacity:.45}
 .mn-cell span,.mn-cell svg{display:block;width:100%;height:100%}
@@ -1102,3 +1103,38 @@
 .sl-cendrier .sl-side{flex:none;width:78px}
 .sl-cendrier .sl-side .btn-secondary,.sl-cendrier .sl-side select{width:100%;box-sizing:border-box;padding:5px 4px;font-size:.72rem}
 .sl-cendrier .sl-bet span{min-width:54px}
+
+.sell-picker-filters{display:flex;gap:6px;flex-wrap:wrap}
+.sell-picker-filters select{flex:1 1 40%;min-width:0;padding:6px}
+.sp-dbl{display:flex;align-items:center;gap:4px;font-size:.8rem}
+.sell-picker-grid{gap:4px}
+.sell-picker-grid .card,.sell-picker-grid > *{zoom:.72}
+
+/* Le Grand Cendrier : look « vraie machine » */
+.sl-cendrier{background:radial-gradient(120% 80% at 50% 0%,#5a1620 0%,#2a0a12 55%,#150609 100%) !important;border:4px solid #ffc43a !important;box-shadow:0 0 0 3px var(--outline),inset 0 0 40px #000a !important;border-radius:18px;gap:6px}
+.sl-marquee{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border:3px solid var(--outline);border-radius:12px;background:linear-gradient(#ffd75e,#e09a1c);box-shadow:inset 0 2px 0 #fff8,0 3px 0 var(--outline);position:relative}
+.sl-marquee::before,.sl-marquee::after{content:"";position:absolute;top:50%;width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 6px 2px #fff9;transform:translateY(-50%);animation:slbulb 1s steps(2) infinite}
+.sl-marquee::before{left:-1px}.sl-marquee::after{right:-1px;animation-delay:.5s}
+@keyframes slbulb{50%{opacity:.25}}
+.sl-marquee span{font-family:Cendrier,sans-serif;color:var(--outline);font-size:1.05rem;letter-spacing:.04em;text-shadow:0 1px 0 #fff7}
+.sl-cendrier .sl-grid{background:linear-gradient(180deg,#1a0d2e,#0c0614) !important;border:4px solid #ffc43a !important;border-radius:14px;box-shadow:0 0 0 3px var(--outline),inset 0 0 24px #000,0 0 18px #ffc43a55 !important}
+.sl-cendrier .sl-cell{background:linear-gradient(160deg,#fffaf0 0%,#f0dfb8 60%,#dcc590 100%);border:2px solid var(--outline);box-shadow:inset 0 -3px 0 #0002,inset 0 2px 0 #fff9}
+.sl-cendrier .sl-sym{filter:drop-shadow(0 2px 1px #0006)}
+.sl-cendrier .sl-cell.is-win{background:linear-gradient(160deg,#fff7c2,#ffd75e);box-shadow:0 0 0 3px #ffc43a,0 0 16px 4px #ffc43a}
+.sl-cendrier .sl-win{color:#fff;font-weight:700;text-shadow:0 2px 0 #000}
+.sl-cendrier .sl-win.is-ok{color:#7dffa8}.sl-cendrier .sl-win.is-big{color:var(--gold)}
+.sl-cendrier .sl-spin{background:linear-gradient(#ff6a4d,#c4261b) !important;color:#fff !important;border:3px solid var(--outline) !important;box-shadow:inset 0 2px 0 #fff6,0 4px 0 var(--outline) !important;font-family:Cendrier,sans-serif;letter-spacing:.05em;font-size:1.15rem;border-radius:14px}
+.sl-cendrier .sl-spin:disabled{filter:grayscale(.5) brightness(.8)}
+.sl-cendrier .sl-fs{background:linear-gradient(#ffd75e,#e09a1c);color:var(--outline);border:3px solid var(--outline);font-weight:700}
+.sl-cendrier .sl-fs b{color:#8a1010}
+.sl-cendrier .sl-buy-btn{background:linear-gradient(#3b2a1a,#1f140a);color:#ffe9b0;border:2px solid #ffc43a}
+.sl-cendrier .sl-buy-super{background:linear-gradient(#7a1a20,#3d0a10);box-shadow:0 0 10px #ff6a4d55}
+.sl-cendrier .sl-bet b{color:#ffd75e}
+.mn-grid{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr))}
+.mn-cell{overflow:hidden}
+.ig-table .sl-controls{gap:6px}
+.ig-table .sl-spin{min-width:0;padding:10px 4px}
+.ig-table .sl-side{flex:none;width:92px}
+.ig-table .sl-side .btn-secondary,.ig-table .sl-side select{width:100%;box-sizing:border-box;padding:5px 4px;font-size:.72rem}
+.ig-table .sl-bet span{min-width:54px}
+.ig-table .sl-spin{font-size:.9rem}

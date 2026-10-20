@@ -45,7 +45,7 @@ const Slots = (() => {
     const g = G();
     content.innerHTML = `
       <div class="casino-felt-table sl-machine sl-cendrier">
-        <div class="sl-head"><span class="ig-sub">8 symboles identiques ou plus : ça paie, ça tombe, ça recommence.</span><button class="btn-secondary pk-mini" id="sl-pay">Gains</button></div>
+        <div class="sl-marquee"><span>Le Grand Cendrier</span><button class="btn-secondary pk-mini" id="sl-pay">Gains</button></div>
         <div class="sl-fs hidden" id="sl-fs"></div>
         <div class="sl-board"><div class="sl-grid" id="sl-grid">${gridHtml(st.grid)}</div><div class="sl-big hidden" id="sl-big"></div></div>
         <div class="sl-win" id="sl-win">${st.last ? 'Dernier gain : ' + fmt(st.last) + ' €' : 'Fais tourner la machine'}</div>

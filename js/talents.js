@@ -5,8 +5,8 @@
 const TalentsEngine = (() => {
 
   // ── L'arbre : 5 branches (clics, auto-clic, revenu, paquets, réputation) qui partent du bord et montent vers le centre ──
-  // Chaque branche = 5 talents à la suite (chacun demande le précédent). Les talents du 3e anneau se relient aussi à la branche voisine.
-  // 5 « ponts » entre branches voisines demandent LES DEUX bouts ; le Roi du Cendrier, au centre, demande 3 ponts sur 5.
+  // Chaque branche = 5 talents à la suite (chacun demande le précédent). 
+  // 5 « ponts » entre branches voisines demandent LES DEUX bouts ; le Roi du Cendrier, au centre, demande les 5 ponts.
   const BRANCHES = [
     { id: 'clic', label: 'Clics', angle: 0, nodes: [
       { name: 'Pouce Échauffé', icon: '👆', type: 'click', mult: 1.10, desc: 'Clics : +10 % d\'argent par clic.', lore: 'Il suffit de chauffer le pouce.' },
@@ -56,14 +56,12 @@ const TalentsEngine = (() => {
   BRANCHES.forEach((br, bi) => br.nodes.forEach((n, k) => {
     NODES.push({ ...n, id: `${br.id}_${k + 1}`, branch: br.id, branchLabel: br.label, ring: k + 1, angle: br.angle, cost: BR_COST[k], prereqs: k === 0 ? [] : [`${br.id}_${k}`] });
   }));
-  // Lien entre branches voisines : un talent du 3e anneau peut aussi s'atteindre depuis le 3e anneau de la branche d'à côté
-  BRANCHES.forEach((br, bi) => { const nb = BRANCHES[(bi + 1) % BRANCHES.length]; NODES.find(n => n.id === `${br.id}_3`).prereqs.push(`${nb.id}_3`); NODES.find(n => n.id === `${nb.id}_3`).prereqs.push(`${br.id}_3`); });
   BRIDGES.forEach((n, i) => NODES.push({ ...n, id: `pont_${i + 1}`, branch: 'pont', branchLabel: 'Pont entre deux branches', ring: 6, angle: i * 72 + 36, cost: 3, need: 2,
     prereqs: [`${BRANCHES[i].id}_5`, `${BRANCHES[(i + 1) % 5].id}_5`] }));
-  NODES.push({ id: 'roi', name: 'Roi du Cendrier', icon: '👑', branch: 'centre', branchLabel: 'Le sommet', ring: 0, angle: 0, cost: 6, type: 'apex', mult: 1.5, passiveMult: 1.5, critChance: 0.35, critMult: 6, need: 3,
-    prereqs: BRIDGES.map((_, i) => `pont_${i + 1}`), desc: 'Clics ×1,5, revenu des cartes ×1,5 et 35 % de critiques à ×6. Demande 3 ponts sur 5.', lore: 'Stéphane n\'est plus le roi du cendrier. Il est l\'empereur.' });
+  NODES.push({ id: 'roi', name: 'Roi du Cendrier', icon: '👑', branch: 'centre', branchLabel: 'Le sommet', ring: 0, angle: 0, cost: 6, type: 'apex', mult: 1.5, passiveMult: 1.5, critChance: 0.35, critMult: 6, need: 5,
+    prereqs: BRIDGES.map((_, i) => `pont_${i + 1}`), desc: 'Clics ×1,5, revenu des cartes ×1,5 et 35 % de critiques à ×6. Demande les 5 ponts.', lore: 'Stéphane n\'est plus le roi du cendrier. Il est l\'empereur.' });
 
-  // Un talent est « atteignable » quand il a assez de prérequis forgés (1 pour une chaîne, tous pour un pont, 3 sur 5 pour le centre)
+  // Un talent est « atteignable » quand il a assez de prérequis forgés (1 pour une chaîne, les 2 bouts pour un pont, les 5 ponts pour le centre)
   const needOf = n => n.need || 1;
 
   let state = {
@@ -122,7 +120,7 @@ const TalentsEngine = (() => {
   function metIn(node, set) {
     if (!node.prereqs || node.prereqs.length === 0) return true;
     const have = node.prereqs.filter(p => set[p]).length;
-    return have >= (node.need === 2 ? node.prereqs.length : needOf(node));
+    return have >= (needOf(node));
   }
   const arePrereqsMet = node => metIn(node, state.unlocked);
 
@@ -153,7 +151,7 @@ const TalentsEngine = (() => {
     if (isNodeUnlocked(nodeId)) return;
     if (!arePrereqsMet(node)) {
       const names = node.prereqs.map(p => nodeById(p).name).join(' · ');
-      return say(node.need === 2 ? `Il faut les deux : ${names}.` : node.need === 3 ? `Il faut 3 ponts sur 5.` : `Il faut d'abord : ${names}.`, 'warning');
+      return say(node.need === 2 ? `Il faut les deux : ${names}.` : node.need === 5 ? `Il faut les 5 ponts.` : `Il faut d'abord : ${names}.`, 'warning');
     }
     if (state.pointsAvailable < node.cost) return say(`Il te faut ${node.cost} point${node.cost > 1 ? 's' : ''} de talent.`, 'error');
     state.pointsAvailable -= node.cost;
@@ -272,7 +270,7 @@ const TalentsEngine = (() => {
     const sel = nodeById(state.selectedNodeId) || NODES[0];
     const selOn = isNodeUnlocked(sel.id);
     const prereqNames = (sel.prereqs || []).map(p => nodeById(p).name);
-    const reqText = !prereqNames.length ? 'Aucun prérequis : tu peux commencer par là.' : sel.need === 2 ? `Demande les deux : ${prereqNames.join(' et ')}.` : sel.need === 3 ? 'Demande 3 ponts sur 5.' : prereqNames.length > 1 ? `Demande l'un de : ${prereqNames.join(' ou ')}.` : `Demande : ${prereqNames[0]}.`;
+    const reqText = !prereqNames.length ? 'Aucun prérequis : tu peux commencer par là.' : sel.need === 2 ? `Demande les deux : ${prereqNames.join(' et ')}.` : sel.need === 5 ? 'Demande les 5 ponts.' : prereqNames.length > 1 ? `Demande l'un de : ${prereqNames.join(' ou ')}.` : `Demande : ${prereqNames[0]}.`;
     const hint = selOn ? 'Double-clic pour le retirer (points rendus)' : arePrereqsMet(sel) ? (state.pointsAvailable >= sel.cost ? 'Double-clic pour le forger' : `Il te manque ${sel.cost - state.pointsAvailable} point${sel.cost - state.pointsAvailable > 1 ? 's' : ''}`) : 'Verrouillé';
 
     container.innerHTML = `
@@ -385,17 +383,17 @@ const TalentsEngine = (() => {
     try {
       const saved = localStorage.getItem('ashtray_talents_gow');
       if (saved) {
-        state = { ...state, ...JSON.parse(saved) };
-        if (state.treeV !== 2) {
-          // Nouvel arbre : les anciens talents n'existent plus, on rend tous les points
-          state.unlocked = {};
-          state.pointsAvailable = state.totalPointsEarned;
-          state.selectedNodeId = 'clic_1';
-          state.treeV = 2;
-          saveState();
-          setTimeout(() => say('L\'arbre de talents a été refait : tes points ont été rendus, refais ton arbre.', 'gold'), 2500);
-        }
-        if (!nodeById(state.selectedNodeId)) state.selectedNodeId = 'clic_1';
+        const parsed = JSON.parse(saved), old = parsed.treeV !== 2;
+        state = { ...state, ...parsed };
+        // talents qui n'existent plus (ancien arbre) : retirés ; les points dépensés sont toujours recalculés = total gagné − talents forgés
+        Object.keys(state.unlocked || {}).forEach(id => { if (!nodeById(id)) delete state.unlocked[id]; });
+        if (old) state.unlocked = {};
+        const spent = Object.keys(state.unlocked).reduce((a, id) => a + nodeById(id).cost, 0);
+        const before = state.pointsAvailable;
+        state.pointsAvailable = Math.max(0, state.totalPointsEarned - spent);
+        state.treeV = 2; state.selectedNodeId = nodeById(state.selectedNodeId) ? state.selectedNodeId : 'clic_1';
+        saveState();
+        if (old || state.pointsAvailable !== before) setTimeout(() => say('L\'arbre de talents a été refait : tes points sont rendus, refais ton arbre.', 'gold'), 2500);
       }
     } catch (e) {
       console.error('Error loading talents state', e);

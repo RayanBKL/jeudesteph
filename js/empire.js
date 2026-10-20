@@ -2089,10 +2089,11 @@ const EmpireManager = (() => {
     renderBourse();
   }
 
-  // Choix de la carte à vendre : toute la collection, avec recherche
+  // Choix de la carte à vendre : toute la collection, avec les mêmes filtres que l'onglet Cartes
   function openSellPicker() {
     const modal = document.createElement('div');
     modal.className = 'bourse-modal-backdrop';
+    const RAR = { commune: 0, 'peu-commune': 1, rare: 2, epique: 3, legendaire: 4, mythique: 5 };
     modal.innerHTML = `
       <div class="bourse-modal-box sell-picker">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -2100,20 +2101,28 @@ const EmpireManager = (() => {
           <button class="btn-empire btn-empire-secondary" data-x style="padding:4px 10px">✕</button>
         </div>
         <input type="search" class="game-input" id="sp-q" placeholder="Chercher une carte…" style="width:100%;padding:8px">
+        <div class="sell-picker-filters">
+          <select class="game-select-empire" id="sp-cat"><option value="all">Toutes les familles</option><option value="tabac">Tabac &amp; accessoires</option><option value="alcool">Boissons</option><option value="drogue">Substances</option><option value="actrice">VIP</option><option value="beauf">Terroirs</option><option value="foot">Football</option><option value="refs">Mèmes</option><option value="chanteur">Musique</option><option value="culte">Culte</option><option value="saison">Saison</option></select>
+          <select class="game-select-empire" id="sp-rar"><option value="all">Toutes raretés</option><option value="commune">Commune</option><option value="peu-commune">Peu commune</option><option value="rare">Rare</option><option value="epique">Épique</option><option value="legendaire">Légendaire</option><option value="mythique">Mythique</option></select>
+          <select class="game-select-empire" id="sp-sort"><option value="value">Les plus chères</option><option value="rarity">Les plus rares</option><option value="qty">Les plus nombreuses</option><option value="name">Nom A-Z</option><option value="cheap">Les moins chères</option></select>
+          <label class="sp-dbl"><input type="checkbox" id="sp-dbl"> Doubles</label>
+        </div>
         <div id="sp-grid" class="sell-picker-grid"></div>
       </div>`;
     document.body.appendChild(modal);
-    const grid = modal.querySelector('#sp-grid');
+    const grid = modal.querySelector('#sp-grid'), $ = q => modal.querySelector(q);
     const draw = () => {
-      const q = (modal.querySelector('#sp-q').value || '').trim().toLowerCase();
+      const q = ($('#sp-q').value || '').trim().toLowerCase(), cat = $('#sp-cat').value, rar = $('#sp-rar').value, dbl = $('#sp-dbl').checked, sort = $('#sp-sort').value;
       grid.innerHTML = '';
-      const ids = Object.keys(state.inventory || {}).filter(id => (state.inventory[id] || 0) > 0)
-        .map(id => getEmpireItemById(id)).filter(it => it && (!q || it.name.toLowerCase().includes(q)))
-        .sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 60);
-      if (!ids.length) grid.innerHTML = '<p class="empty-state">Aucune carte.</p>';
-      ids.forEach(it => grid.appendChild(CardsRenderer.buildCard(it, { compact: true, quantity: state.inventory[it.id], onClick: () => { modal.remove(); openSellCardModal(it.id); } })));
+      let items = Object.keys(state.inventory || {}).filter(id => (state.inventory[id] || 0) > 0).map(id => getEmpireItemById(id))
+        .filter(it => it && (!q || it.name.toLowerCase().includes(q)) && catMatches(it.cat, cat) && (rar === 'all' || it.rarity === rar) && (!dbl || state.inventory[it.id] > 1));
+      const qty = it => state.inventory[it.id] || 0;
+      items.sort(sort === 'rarity' ? (a, b) => (RAR[b.rarity] || 0) - (RAR[a.rarity] || 0) || b.value - a.value : sort === 'qty' ? (a, b) => qty(b) - qty(a) : sort === 'name' ? (a, b) => a.name.localeCompare(b.name, 'fr') : sort === 'cheap' ? (a, b) => a.value - b.value : (a, b) => b.value - a.value);
+      if (!items.length) grid.innerHTML = '<p class="empty-state">Aucune carte ne correspond.</p>';
+      items.slice(0, 80).forEach(it => grid.appendChild(CardsRenderer.buildCard(it, { compact: true, quantity: qty(it), onClick: () => { modal.remove(); openSellCardModal(it.id); } })));
     };
-    modal.querySelector('#sp-q').addEventListener('input', draw);
+    ['#sp-q'].forEach(i => $(i).addEventListener('input', draw));
+    ['#sp-cat', '#sp-rar', '#sp-sort', '#sp-dbl'].forEach(i => $(i).addEventListener('change', draw));
     modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-x]')) modal.remove(); });
     draw();
   }
