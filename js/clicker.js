@@ -190,7 +190,7 @@ const ClickerEngine = (() => {
   let clickGaps = [];
   let lastClickAt = 0;
   let botStrikes = [];
-  const MAX_CPS = 80;           // limite absolue (clics par seconde)
+  const MAX_CPS = 100;          // limite absolue (clics par seconde)
   const MIN_GAP_MS = 7;         // écart minimum entre deux clics
   function looksAutomated(gaps) {
     if (!gaps || gaps.length < 40) return false;
@@ -250,11 +250,8 @@ const ClickerEngine = (() => {
     recentManualClicks = recentManualClicks.filter(t => now - t < 1000);
     const lastClickTime = recentManualClicks[recentManualClicks.length - 1] || 0;
 
-    // Trop vite : moins de 7 ms d'écart ou plus de 80 clics sur la dernière seconde
-    if ((!multi && lastClickTime > 0 && now - lastClickTime < MIN_GAP_MS) || recentManualClicks.length >= MAX_CPS) {
-      triggerBotLockout('Toux suspecte : tu cliques trop vite pour un fumeur (max 80 clics/s).');
-      return;
-    }
+    // Trop vite (plus de 100 clics sur la dernière seconde, ou moins de 7 ms d'écart pour un même doigt) : le clic en trop est simplement ignoré, sans pause
+    if ((!multi && lastClickTime > 0 && now - lastClickTime < MIN_GAP_MS) || recentManualClicks.length >= MAX_CPS) return;
     // Trop régulier : cadence de machine
     // Seuls les clics d'un même doigt/curseur comptent pour la cadence (deux doigts posés ensemble ne sont pas un robot)
     if (!multi && lastClickAt && now - lastClickAt < 1500 && now - lastClickAt >= 15) clickGaps.push(now - lastClickAt); else if (!multi && !(lastClickAt && now - lastClickAt < 15)) clickGaps = [];
