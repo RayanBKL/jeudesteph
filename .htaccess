@@ -4,11 +4,27 @@
 
 Options -Indexes
 RewriteEngine On
-RewriteBase /
+# (pas de RewriteBase : ce même fichier sert aussi la version de test, installée dans un sous-dossier caché)
 
 # HTTPS forcé
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# MAINTENANCE : tant que le fichier « maintenance.on » existe à la racine du site, tout le monde voit « maintenance.html » (code 503).
+# Restent accessibles : l'écran de maintenance lui-même, le fichier-drapeau, le tableau de bord admin, les images/CSS/JS, et tout sous-dossier
+# qui contient son propre index.html (= la version de test cachée).
+ErrorDocument 503 /maintenance.html
+RewriteCond %{DOCUMENT_ROOT}/maintenance.on -f
+RewriteCond %{REQUEST_URI} !^/(maintenance\.html|maintenance\.on|admin\.html|favicon\.ico)$
+RewriteCond %{REQUEST_URI} !^/(assets|css|js)/
+RewriteCond %{REQUEST_URI} ^/([^/]+)/
+RewriteCond %{DOCUMENT_ROOT}/%1/index.html !-f
+RewriteRule ^ - [R=503,L]
+RewriteCond %{DOCUMENT_ROOT}/maintenance.on -f
+RewriteCond %{REQUEST_URI} !^/(maintenance\.html|maintenance\.on|admin\.html|favicon\.ico)$
+RewriteCond %{REQUEST_URI} !^/(assets|css|js)/
+RewriteCond %{REQUEST_URI} !^/[^/]+/
+RewriteRule ^ - [R=503,L]
 
 # Jamais servis au public : dépôt git, secrets, scripts, base de données, notes de travail
 RewriteRule ^(\.git|\.github|scripts|supabase|data|node_modules)(/|$) - [R=404,L]
@@ -17,14 +33,10 @@ RewriteRule ^(CLAUDE|RECAP|README)\.md$ - [R=404,L]
 RewriteRule ^supabase_schema\.sql$ - [R=404,L]
 RewriteRule \.(py|sh|sql|bak|log|env|map|md)$ - [R=404,L]
 
-# Clean URL (pas de /index.html)
-RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.html[\s?] [NC]
-RewriteRule ^index\.html$ / [R=301,L]
-
-# SPA fallback
+# SPA fallback (chemin relatif : marche à la racine comme dans le sous-dossier de test)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [L]
+RewriteRule . index.html [L]
 
 # === EN-TÊTES DE SÉCURITÉ ===
 <IfModule mod_headers.c>
