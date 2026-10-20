@@ -1172,3 +1172,26 @@
 .sl-bet .sl-all{grid-column:1 / -1;width:100%}
 .sl-bet{flex:none}
 .sl-bet .sl-all{padding:3px 6px;font-size:.7rem;min-width:0}
+
+/* ── Rond du clic : léger sur iPhone ──
+   Avant, chaque appui changeait une ombre très floue (50-60 px) et l'animait : Safari la redessinait à chaque tap (5 doigts = 5 fois).
+   Maintenant les ombres sont fixes et nettes (pas de flou) ; seule la taille bouge, sur sa propre couche (rien à redessiner). */
+#clicker-target,
+#clicker-target:active,
+#clicker-target.clicking,
+#clicker-target.frenzy-active {
+  box-shadow:
+    inset 0 0 0 10px var(--tabac),
+    inset 0 0 0 13px var(--outline),
+    0 0 0 6px var(--gold),
+    0 0 0 10px var(--outline),
+    0 12px 0 10px var(--outline) !important;
+  transition: transform 0.06s ease-out !important;
+  will-change: transform;
+  transform: translateZ(0);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#clicker-target:active,
+#clicker-target.clicking { transform: translateZ(0) scale(0.97) !important; }
+#clicker-target.frenzy-active { animation: none !important; }

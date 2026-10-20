@@ -33,7 +33,8 @@ const Quests = (() => {
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = n => (typeof formatCash === 'function' ? formatCash(n) : Math.round(n).toLocaleString('fr-FR'));
-  const dayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+  const DAY_FMT = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' });     // créé une seule fois (le recréer à chaque appel est lent)
+  const dayKey = () => DAY_FMT.format(new Date());
   const addDays = (k, n) => { const d = new Date(k + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   function seeded(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
