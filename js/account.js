@@ -19,7 +19,7 @@ const Account = (() => {
   ];
   const PREFIXES = ['rules_seen_'];
   const OWNER = 'ak_owner', STAMP = 'ak_stamp', DIRTY = 'ak_dirty', LEFT = 'ak_signed_out';
-  const PUSH_DELAY = 8000;
+  const PUSH_DELAY = 4000;
   const BASE = 'ak_base';      // chiffres de la dernière version synchronisée (sert à fusionner deux appareils)
 
   let user = null;
@@ -30,6 +30,7 @@ const Account = (() => {
   let live = false;          // true une fois connecté : les changements locaux déclenchent l'envoi
   let applying = false;      // true pendant le remplacement des données locales (aucun envoi)
   let blocked = false;       // true si un autre onglet a pris la main : cet onglet n'envoie plus rien
+  let frozen = false;        // true dès qu'une version reçue d'un autre appareil est écrite : la page va se recharger, le jeu en cours ne doit plus rien écrire (sinon il écrase la version reçue avec ses vieux chiffres)
   const TAB_KEY = 'ak_tab_lock', TAB_ID = Math.random().toString(36).slice(2);
   const rawSet = Storage.prototype.setItem;
   const rawRemove = Storage.prototype.removeItem;
@@ -57,7 +58,7 @@ const Account = (() => {
   }
   function clearGameData() { gameKeysPresent().forEach(ls.del); }
   function applySnapshot(data) {
-    applying = true;
+    applying = true; frozen = true;
     clearGameData();
     Object.entries(data || {}).forEach(([k, v]) => { if (isGameKey(k) && typeof v === 'string') ls.set(k, v); });
   }
@@ -65,10 +66,12 @@ const Account = (() => {
   // Tout changement d'une clé du jeu → envoi différé
   function hook() {
     Storage.prototype.setItem = function (k, v) {
+      if (frozen && this === localStorage && isGameKey(k)) return;
       rawSet.call(this, k, v);
       if (this === localStorage && live && !applying && isGameKey(k)) markDirty();
     };
     Storage.prototype.removeItem = function (k) {
+      if (frozen && this === localStorage && isGameKey(k)) return;
       rawRemove.call(this, k);
       if (this === localStorage && live && !applying && isGameKey(k)) markDirty();
     };
@@ -129,9 +132,11 @@ const Account = (() => {
   async function push(force = false) {
     const sb = client();
     if (!sb || !user || pushing || applying || blocked) return;
+    if (!force && stamp && ls.get(DIRTY) === '1' && sameCounters(counters(snapshot()), savedBase())) { ls.del(DIRTY); return; }   // rien de nouveau : on n'envoie pas (sinon l'autre appareil croit à une nouveauté)
     pushing = true;
     try {
-      const { data, error } = await sb.rpc('cloud_save_put', { p_data: snapshot(), p_base: stamp, p_device: deviceName(), p_force: force });
+      const sent = snapshot();       // ce qui part vraiment : la « version commune » retenue sera CELLE-LÀ (pas l'état du moment où la réponse arrive)
+      const { data, error } = await sb.rpc('cloud_save_put', { p_data: sent, p_base: stamp, p_device: deviceName(), p_force: force });
       if (error) throw error;
       if (data && data.conflict) {
         await resolveConflict();
@@ -140,8 +145,10 @@ const Account = (() => {
       } else if (data && data.ok) {
         stamp = data.updated_at;
         ls.set(STAMP, stamp);
-        ls.del(DIRTY);
-        rememberBase(snapshot());
+        rememberBase(sent);
+        // des clics ont pu arriver PENDANT l'envoi : ils ne sont pas dans la version envoyée, on garde donc « à envoyer »
+        const nowSig = (ls.get('empire_clicker') || '') + (ls.get('empire_state') || '');
+        if (nowSig === (sent.empire_clicker || '') + (sent.empire_state || '')) ls.del(DIRTY); else markDirty();
         setStatus('ok');
       }
     } catch (e) {
@@ -159,28 +166,23 @@ const Account = (() => {
   function pushOnLeave() {
     if (!user || pushing || applying || blocked) return;
     try {
-      const body = JSON.stringify({ p_data: snapshot(), p_base: stamp, p_device: deviceName(), p_force: false });
+      const sent = snapshot();
+      const body = JSON.stringify({ p_data: sent, p_base: stamp, p_device: deviceName(), p_force: false });
       if (accessToken && body.length < 60000 && typeof SUPABASE_CONFIG !== 'undefined') {
         fetch(SUPABASE_CONFIG.url + '/rest/v1/rpc/cloud_save_put', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', apikey: SUPABASE_CONFIG.anonKey, Authorization: 'Bearer ' + accessToken }, body })
-          .then(r => r.json()).then(d => { if (d && d.ok) { stamp = d.updated_at; ls.set(STAMP, stamp); ls.del(DIRTY); rememberBase(snapshot()); } }).catch(() => {});
+          .then(r => r.json()).then(d => { if (d && d.ok) { stamp = d.updated_at; ls.set(STAMP, stamp); ls.del(DIRTY); rememberBase(sent); } }).catch(() => {});
         return;
       }
     } catch (e) {}
     push();
   }
 
-  // Le serveur refuse une sauvegarde incohérente (progression impossible) : on revient à la dernière version valide
+  // Le serveur refuse une sauvegarde absurde (progression impossible, format cassé) : on NE touche PAS à la partie du joueur
+  // (avant, on rechargeait la dernière version en ligne et on perdait de l'XP). Copie de sécurité locale + nouvel essai plus tard.
   async function handleRejected() {
-    ls.del(DIRTY);
-    const n = +(sessionStorage.getItem('ak_rej') || 0) + 1;
-    sessionStorage.setItem('ak_rej', String(n));
     backup('refusee', snapshot());
-    await GameDialog.alert('Les données de cette partie ne sont pas cohérentes (progression impossible). On remet la dernière sauvegarde valide.', { title: 'Sauvegarde refusée' });
-    if (n > 2) return;
-    try {
-      const save = await pull();
-      if (save) { applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); rememberBase(save.data); location.reload(); }
-    } catch (e) {}
+    console.warn('[Account] sauvegarde refusée par le serveur, la partie locale est conservée');
+    if (!timer) timer = setTimeout(() => { timer = null; push(); }, 120000);
   }
 
   async function pull() {
@@ -200,6 +202,15 @@ const Account = (() => {
       Object.entries(e.inventory || {}).forEach(([k, v]) => { if (+v > 0) inv[k] = +v; });
       return { cash: +c.cash || 0, totalEarned: +c.totalEarned || 0, totalClicks: +c.totalClicks || 0, xp: xpTotalOf(c.empireLevel || 1, +c.empireXP || 0), packs: +e.totalPacksOpened || 0, inv };
     } catch (err) { return null; }
+  }
+  // Deux parties ont-elles exactement les mêmes chiffres de progression ?
+  function sameCounters(a, b) {
+    if (!a || !b) return false;
+    for (const k of ['cash', 'totalEarned', 'totalClicks', 'xp', 'packs']) if (Math.round(a[k] || 0) !== Math.round(b[k] || 0)) return false;
+    const ia = a.inv || {}, ib = b.inv || {};
+    const ids = new Set([...Object.keys(ia), ...Object.keys(ib)]);
+    for (const id of ids) if ((ia[id] || 0) !== (ib[id] || 0)) return false;
+    return true;
   }
   function rememberBase(data) { const c = counters(data); if (c) ls.set(BASE, JSON.stringify(c)); }
   const savedBase = () => { try { return JSON.parse(ls.get(BASE) || 'null'); } catch (e) { return null; } };
@@ -233,8 +244,17 @@ const Account = (() => {
     const save = await pull();
     if (!save) { pushing = false; await push(true); return false; }
     const local = snapshot();
-    backup('avant-fusion', local);
     const base = savedBase();
+    const Lc = counters(local), Cc = counters(save.data);
+    // Mêmes chiffres des deux côtés : il n'y a rien à fusionner, on note simplement la version en ligne (pas de rechargement, pas d'envoi)
+    if (sameCounters(Lc, Cc)) { stamp = save.updated_at; ls.set(STAMP, stamp); ls.set(OWNER, user.id); ls.del(DIRTY); rememberBase(save.data); return false; }
+    // Cet appareil n'a rien fait depuis la dernière synchro : la version en ligne gagne
+    if (base && sameCounters(Lc, base)) {
+      applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY); rememberBase(save.data);
+      sessionStorage.setItem('ak_reloaded', user.id + save.updated_at);
+      location.reload(); return true;
+    }
+    backup('avant-fusion', local);
     let result = base ? mergeSaves(local, save.data, base) : null;
     console.info('[Account] conflit : base', !!base, 'fusion', !!result, base && JSON.stringify({ local: counters(local), cloud: counters(save.data), base: { ...base, inv: undefined } }).slice(0, 300));
     if (!result) result = progressScore(local) > progressScore(save.data) ? local : save.data;
@@ -273,6 +293,7 @@ const Account = (() => {
       if (typeof Casino !== 'undefined' && Casino.bj && ['playing', 'dealer', 'insurance_prompt'].includes(Casino.bj.status)) return true;
       if (typeof Casino !== 'undefined' && Casino.roulette && Casino.roulette.spinning) return true;
       if (window.Online && Online.inMatch && Online.inMatch()) return true;
+      if (typeof ClickerEngine !== 'undefined' && ClickerEngine.msSinceManualClick && ClickerEngine.msSinceManualClick() < 3000) return true;   // le joueur est en train de cliquer : on ne recharge pas sous ses doigts
     } catch (e) {}
     return false;
   };
@@ -281,11 +302,16 @@ const Account = (() => {
     if (!sb || !user || !live || blocked || pushing || applying || checking || document.hidden) return;
     checking = true;
     try {
+      try { if (typeof ClickerEngine !== 'undefined' && ClickerEngine.flushSave) ClickerEngine.flushSave(); } catch (e) {}   // les derniers clics (écriture différée) comptent comme des modifications locales
       const { data } = await sb.rpc('cloud_save_stamp');
       if (!data || !data.updated_at || data.updated_at === stamp) return;
-      if (ls.get(DIRTY) === '1') { await push(); return; }       // modifications locales aussi : conflit → fusion
+      if (busyNow()) return;                                      // en pleine manche / en train de cliquer : on recommencera dans quelques secondes
+      if (ls.get(DIRTY) === '1') { await push(); if (ls.get(DIRTY) === '1' || data.updated_at === stamp) return; if (stamp !== data.updated_at && document.hidden) return; }   // modifications locales aussi : conflit → fusion ; si rien à envoyer on continue
       if (busyNow()) return;                                      // pas en pleine manche : on recommencera
       const save = await pull();
+      try { if (typeof ClickerEngine !== 'undefined' && ClickerEngine.flushSave) ClickerEngine.flushSave(); } catch (e) {}
+      if (ls.get(DIRTY) === '1') { await push(); return; }        // le joueur a cliqué pendant qu'on regardait : on fusionne au lieu d'écraser
+      if (save && sameCounters(counters(snapshot()), counters(save.data))) { stamp = save.updated_at; ls.set(STAMP, stamp); rememberBase(save.data); return; }   // même progression : pas de rechargement
       if (save) {
         applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY); rememberBase(save.data);
         sessionStorage.setItem('ak_reloaded', user.id + save.updated_at);
@@ -398,7 +424,7 @@ const Account = (() => {
 
     document.addEventListener('visibilitychange', () => { if (document.hidden && ls.get(DIRTY) === '1') pushOnLeave(); else if (!document.hidden) checkCloud(); });
     window.addEventListener('focus', () => checkCloud());
-    setInterval(checkCloud, 45000);
+    setInterval(checkCloud, 15000);
     setTimeout(checkCloud, 4000);
     window.addEventListener('pagehide', () => { if (ls.get(DIRTY) === '1') pushOnLeave(); });
     window.addEventListener('online', () => { if (ls.get(DIRTY) === '1') push(); });
@@ -418,6 +444,12 @@ const Account = (() => {
         if (typeof EmpireManager !== 'undefined' && EmpireManager.giveCard) EmpireManager.giveCard(g.card);
         const it = typeof getEmpireItemById === 'function' ? getEmpireItemById(g.card) : null;
         if (typeof showToast === 'function') showToast(`${g.note || 'Échange'} : « ${it ? it.name : 'une carte'} » est dans ta collection.`, 'gold');
+        return;
+      }
+      if (g.kind === 'level') {
+        ClickerEngine.setLevel(Number(g.amount));
+        if (typeof TalentsEngine !== 'undefined' && TalentsEngine.syncPointsWithPlayer) TalentsEngine.syncPointsWithPlayer();
+        if (typeof showToast === 'function') showToast(`L'administrateur a fixé ton niveau à ${g.amount}.`, 'gold');
         return;
       }
       const cash = ClickerEngine.getCash();

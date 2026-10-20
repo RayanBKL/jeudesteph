@@ -190,8 +190,8 @@ const ClickerEngine = (() => {
   let clickGaps = [];
   let lastClickAt = 0;
   let botStrikes = [];
-  const MAX_CPS = 100;          // limite absolue (clics par seconde)
-  const MIN_GAP_MS = 7;         // écart minimum entre deux clics
+  const MAX_CPS = 1000;         // plus de limite de vitesse : seuls les robots (clics non fiables, cadence de machine) sont refusés
+  const MIN_GAP_MS = 2;         // écart minimum entre deux clics d'un même doigt (évite les doublons d'événements)
   function looksAutomated(gaps) {
     if (!gaps || gaps.length < 40) return false;
     const g = gaps.slice(-40);
@@ -219,6 +219,7 @@ const ClickerEngine = (() => {
   }
 
   // Les défis, quêtes et succès sont prévenus par paquets (tous les 0,5 s) : les prévenir à chaque clic faisait ramer le jeu
+  let lastManualAt = 0;
   let pendingClicks = 0, clickFlushTimer = null;
   function queueClickEvent() {
     pendingClicks++;
@@ -262,7 +263,7 @@ const ClickerEngine = (() => {
       return;
     }
 
-    recentManualClicks.push(now);
+    recentManualClicks.push(now); lastManualAt = Date.now();
 
     const earned = computeClickEarnings(false);
     state.cash += earned;
@@ -371,17 +372,19 @@ const ClickerEngine = (() => {
     return total;
   }
 
-  function triggerClick(spawnVisual = false) {
+  function triggerClick(spawnVisual = false, count = 1) {
     // 1. Ne rien compter si l'onglet du navigateur est masqué / inactif
     if (!isPlayerActive()) return;   // auto-clic : seulement si le joueur utilise la fenêtre
 
     // L'auto-clic continue sur toutes les pages (casino, mini-jeux, bourse…) : seul compte le fait d'être présent
-    const earned = computeClickEarnings(true);
-    state.cash += earned;
-    state.totalClicks++;
-    state.clicksFromAuto = (state.clicksFromAuto || 0) + 1;
-    state.earnedFromClicks = (state.earnedFromClicks || 0) + earned;
-    state.totalEarned += earned;
+    for (let i = 0; i < count; i++) {
+      const earned = computeClickEarnings(true);
+      state.cash += earned;
+      state.totalClicks++;
+      state.clicksFromAuto = (state.clicksFromAuto || 0) + 1;
+      state.earnedFromClicks = (state.earnedFromClicks || 0) + earned;
+      state.totalEarned += earned;
+    }
 
 
     renderFast();
@@ -827,10 +830,12 @@ const ClickerEngine = (() => {
 
   // ── Save / Load ────────────────────────────────────────────
   // Écriture locale différée (au plus une fois toutes les 400 ms) : écrire à chaque clic coûte cher ; forcée quand on quitte la page
-  let saveTimer = null;
-  function saveToStorage() { if (!saveTimer) saveTimer = setTimeout(flushSave, 400); }
+  let saveTimer = null, savePending = false;
+  function saveToStorage() { savePending = true; if (!saveTimer) saveTimer = setTimeout(flushSave, 400); }
   function flushSave() {
     if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    if (!savePending) return;           // rien de nouveau : on ne réécrit pas (sinon le moindre envoi en ligne se croit « modifié »)
+    savePending = false;
     localStorage.setItem('empire_clicker', JSON.stringify({
       cash: state.cash,
       totalClicks: state.totalClicks,
@@ -893,6 +898,9 @@ const ClickerEngine = (() => {
   // ── Public API ─────────────────────────────────────────────
   return {
     flushSave,
+    msSinceManualClick: () => Date.now() - lastManualAt,
+    // Niveau fixé par l'administrateur : l'XP du niveau repart de 0
+    setLevel: (lv) => { state.empireLevel = Math.max(1, Math.round(lv)); state.empireXP = 0; state.empireXPToNext = xpForLevel(state.empireLevel); try { if (typeof EmpireManager !== 'undefined' && EmpireManager.autoFillRooms) EmpireManager.autoFillRooms(); } catch (e) {} render(); saveToStorage(); },
     init,
     getState: () => ({ ...state }),
     getCash: () => state.cash,

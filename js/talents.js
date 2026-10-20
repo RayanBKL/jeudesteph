@@ -196,13 +196,16 @@ const TalentsEngine = (() => {
     const cps = getAutoClicksPerSec();
     if (cps <= 0) return;
 
-    const intervalMs = Math.max(35, Math.floor(1000 / cps));
+    // un tick toutes les 50 ms ; au-delà de 20 clics/s, plusieurs clics par tick (plus de plafond technique)
+    const intervalMs = cps >= 20 ? 50 : Math.max(35, Math.floor(1000 / cps)), perTick = cps >= 20 ? cps * 0.05 : 1;
+    let carry = 0;
     autoClickTimer = setInterval(() => {
       // Ne pas compter si le navigateur/onglet est en arrière-plan ou minimisé
       if (document.hidden || document.visibilityState !== 'visible') return;
       // L'auto-clic tourne sur toutes les pages (casino, jeux, bourse…) tant que le joueur utilise la fenêtre (vérifié dans triggerClick)
       if (typeof ClickerEngine !== 'undefined' && ClickerEngine.triggerClick) {
-        ClickerEngine.triggerClick(false);
+        carry += perTick; const n = Math.floor(carry); carry -= n;
+        if (n > 0) ClickerEngine.triggerClick(false, n);
       }
     }, intervalMs);
   }
