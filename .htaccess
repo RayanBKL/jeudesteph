@@ -11,13 +11,15 @@ RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # MAINTENANCE : tant que « maintenance.on » existe à la racine, l'accueil et les pages du jeu à la racine renvoient « maintenance.html » (503).
-# Ne bloquent PAS : les images/CSS/JS, admin.html, les fichiers avec un point, et les sous-dossiers (la version de test cachée).
+# Ne bloquent PAS : les images/CSS/JS, admin.html, les fichiers existants, et les dossiers existants (la version de test cachée).
+# Toute autre adresse inconnue (qui retomberait sur le jeu) est bloquée aussi.
 ErrorDocument 503 /maintenance.html
 RewriteCond %{DOCUMENT_ROOT}/maintenance.on -f
 RewriteCond %{REQUEST_URI} ^/(index\.html)?$
 RewriteRule ^ - [R=503,L]
 RewriteCond %{DOCUMENT_ROOT}/maintenance.on -f
-RewriteCond %{REQUEST_URI} ^/[^/.]+$
+RewriteCond %{REQUEST_URI} !^/(maintenance\.html|maintenance\.on|admin\.html|favicon\.ico|assets/|css/|js/)
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ - [R=503,L]
 
