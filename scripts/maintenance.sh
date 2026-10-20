@@ -29,4 +29,13 @@ gh pr merge "$N" --merge --delete-branch >/dev/null
 git checkout -q dev
 git branch -q -D "$BR" 2>/dev/null || true
 git fetch -q origin && git merge origin/main -m "chore: synchroniser dev avec main" >/dev/null 2>&1 || true
-echo "Maintenance : $MODE. Hostinger redéploie main dans quelques instants."
+# Côté serveur : les pages déjà ouvertes rechargent et tombent sur l'écran de maintenance (migration 032).
+# On ne l'active qu'une fois le site fermé en ligne (sinon le rechargement retomberait sur le jeu).
+if [ "$MODE" = "on" ]; then
+  for _ in $(seq 1 60); do
+    [ "$(curl -s -o /dev/null -w '%{http_code}' https://theastrayking.bklvision.fr/)" = "503" ] && break
+    sleep 5
+  done
+fi
+scripts/supabase.sh "update public.site_flags set value='$MODE' where key='maintenance'" >/dev/null
+echo "Maintenance : $MODE (en ligne et côté serveur)."
