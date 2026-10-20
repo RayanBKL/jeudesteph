@@ -294,10 +294,12 @@ const Poker = (() => {
     const tk = T.data && T.data.table.kind === 'tournoi', st = tk && T.data.tourney && T.data.tourney.status;
     const msg = !tk ? 'Tu te couches s\'il y a une main en cours, et tes jetons te reviennent.' : st === 'registering' ? 'Ton droit d\'entrée te sera remboursé.' : 'Tu abandonnes le tournoi : le droit d\'entrée est perdu.';
     if (!(await GameDialog.confirm(msg, { title: tk ? 'Quitter le tournoi ?' : 'Quitter la table ?', ok: 'Quitter', danger: tk && st !== 'registering' }))) return;
-    stopTable();
+    // On coupe d'abord la vérification automatique (sinon elle pouvait revenir après le départ et afficher « tu n'es plus à la table »)
+    stopTable(); T.id = null; T.data = null;
+    for (let i = 0; i < 40 && T.busy; i++) await new Promise(r => setTimeout(r, 50));
     const { error } = await sb().rpc('poker_leave');
     if (error) showToast(errMsg(error), 'error');
-    await applyCredits(); T.id = null; T.data = null; renderLobby(content);
+    await applyCredits(); renderLobby(content);
   }
 
   function openTable(content) {

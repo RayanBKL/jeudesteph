@@ -15,7 +15,7 @@ const Account = (() => {
   const KEYS = [
     'stephane_v1', 'empire_state', 'empire_clicker', 'empire_free_packs_count', 'empire_next_free_pack_time',
     'empire_last_free_pack', 'ashtray_talents_gow', 'ashtray_talents', 'league_v1', 'prestige_v1', 'ut_squad_v1',
-    'casino_last_result', 'casino_bank_advance_at', 'ashtray_pvp_deck', 'ashtray_audio_enabled', 'ak_click_skin', 'ak_quests', 'ak_ach', 'ak_title', 'casino_bj_history',
+    'casino_last_result', 'casino_bank_advance_at', 'ashtray_pvp_deck', 'ashtray_audio_enabled', 'ak_click_skin', 'ak_quests', 'ak_ach', 'ak_title', 'casino_bj_history', 'ak_gains',
   ];
   const PREFIXES = ['rules_seen_'];
   const OWNER = 'ak_owner', STAMP = 'ak_stamp', DIRTY = 'ak_dirty', LEFT = 'ak_signed_out';

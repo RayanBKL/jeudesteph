@@ -455,6 +455,7 @@ const Online = (() => {
     else pre = League.applyResult(d.game, lp, result);
     // Défis : « sans encaisser de point » (avant, seuls les anciens moteurs locaux envoyaient cet évènement : les parties en ligne ne comptaient jamais)
     if (result === 'win' && reason !== 'forfait' && reason !== 'abandon' && s.scores && s.scores[opp] === 0 && (d.game === 'bataille' || d.game === 'pbc') && typeof Prestige !== 'undefined') Prestige.emit('perfect', { game: d.game });
+    if (reason !== 'abandon' && typeof Gains !== 'undefined') Gains.add({ game: 'online', label: `${({ pbc: 'Pierre-Briquet-Clope', des421: '421', bataille: 'Bataille de Comptoir', ut: 'Ultimate Comptoir' })[d.game] || d.game} contre ${r.opp.pseudo}`, type: result === 'win' ? 'win' : result === 'loss' ? 'lose' : 'push', amount: 0 });
     GameUI.showResult(screen, d.game, reason === 'abandon' ? 'draw' : result, detail, again, pre);
     const recap = lastRoundHtml(r);
     if (recap) { const box = screen.querySelector('.mg-result') || screen; box.insertAdjacentHTML('beforeend', recap); }

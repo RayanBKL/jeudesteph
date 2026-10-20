@@ -445,14 +445,14 @@ const EmpireManager = (() => {
     booster.classList.add('is-torn');
     flashScreen('rgba(255,226,160,0.30)');
 
-    setTimeout(() => booster.closest('.po-booster-drop')?.classList.add('is-dropping'), 520);
+    setTimeout(() => booster.closest('.po-booster-drop')?.classList.add('is-dropping'), 340);
     setTimeout(() => {
       document.getElementById('empire-booster-stage')?.classList.add('hidden');
       document.getElementById('empire-reveal-stage')?.classList.remove('hidden');
       document.getElementById('empire-pack-overlay')?.classList.add('is-revealing');
       renderRevealDots();
       showNextCard();
-    }, 1050);
+    }, 680);
   }
 
   function flashScreen(color) {
@@ -547,7 +547,7 @@ const EmpireManager = (() => {
       }
       if (nextBtn) nextBtn.textContent = revealIndex + 1 >= pendingPackResults.length ? 'Voir le tirage' : 'Carte suivante';
       revealBusy = false;
-    }, 380);
+    }, 200);
   }
 
   // Révélation : une lueur douce derrière la carte, des rayons lents et quelques étincelles qui montent
@@ -612,7 +612,6 @@ const EmpireManager = (() => {
       document.getElementById('empire-pack-overlay')?.classList.add('hidden');
       // Recalc passives in case new cards were added
       recalcAllPassives();
-      ClickerEngine.showToast('✅ Cartes ajoutées à votre collection !', 'success');
       // On reste dans la boutique pour pouvoir enchaîner les paquets
       if (currentPage === 'paquets') updateFreePackDisplay(); else navigateTo('paquets');
     });

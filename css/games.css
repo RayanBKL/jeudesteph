@@ -1195,3 +1195,27 @@
 #clicker-target:active,
 #clicker-target.clicking { transform: translateZ(0) scale(0.97) !important; }
 #clicker-target.frenzy-active { animation: none !important; }
+
+/* Historique des gains */
+.gn-card{max-height:88vh;display:flex;flex-direction:column;gap:8px;width:min(480px,94vw)}
+.gn-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.gn-tabs .is-on{background:var(--gold);color:var(--outline)}
+.gn-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.gn-stats div{border:2px solid var(--outline);border-radius:10px;padding:6px 4px;background:#0000002b}
+.gn-stats span{display:block;font-size:.66rem;opacity:.8;text-transform:uppercase}
+.gn-stats b{font-family:var(--font-title);font-size:.95rem;color:var(--gold)}
+.gn-stats b.pos{color:#3fcf7a}.gn-stats b.neg{color:#ff6a5c}
+.gn-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.gn-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px;align-items:center;font-size:.78rem;border-left:4px solid #8a7a66;padding:4px 6px;border-radius:6px;background:#00000026}
+.gn-row.is-win{border-left-color:#3fcf7a}.gn-row.is-lose{border-left-color:#e2322b}
+.gn-when{opacity:.7;font-size:.68rem;white-space:nowrap}
+.gn-what{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gn-amt{font-family:var(--font-title);white-space:nowrap}
+.gn-row.is-win .gn-amt{color:#3fcf7a}.gn-row.is-lose .gn-amt{color:#ff6a5c}
+.gn-open{margin-left:6px}
+.hub-gains{margin:0 0 8px auto;display:block}
+/* Bannière « dernier résultat » + bouton Historique : tient dans la largeur d'un téléphone */
+.casino-last-result-badge{min-width:0 !important;max-width:100%;flex-wrap:wrap;justify-content:space-between}
+.casino-last-result-badge .result-info{min-width:0;flex:1 1 auto}
+.casino-last-result-badge .result-amount{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.casino-last-result-badge .gn-open{flex:none;margin-left:0}
