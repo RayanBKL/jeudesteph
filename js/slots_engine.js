@@ -17,15 +17,15 @@ const SlotEngine = (() => {
 
   // ── Tables CALIBRÉES : node scripts/sim_slots.js recalcule le retour au joueur (≈ 95 %) et réécrit ce bloc ──
   /*BAKED-START*/
-  const BAKED = {"pay":{"verre":[0.15,0.4,1.05],"cig":[0.15,0.55,1.35],"briquet":[0.3,0.55,1.6],"paquet":[0.3,0.8,2.15],"des":[0.4,1.35,4.3],"cerise":[0.55,2.7,8.05],"cloche":[1.05,5.35,13.4],"sept":[2.7,13.4,53.5]},"scatterPay":{"4":1.6,"5":2.7,"6":53.5},"buy":{"bonus":82,"super":225,"ante":2.7}};
+  const BAKED = {"pay":{"verre":[0.1,0.3,0.75],"cig":[0.1,0.4,0.95],"briquet":[0.2,0.4,1.15],"paquet":[0.2,0.55,1.55],"des":[0.3,0.95,3.05],"cerise":[0.4,1.95,5.75],"cloche":[0.75,3.8,9.55],"sept":[1.95,9.55,38]},"scatterPay":{"4":1.15,"5":1.95,"6":38},"buy":{"bonus":37,"super":170,"ante":2.25}};
   /*BAKED-END*/
 
   const GRAND = {
     id: 'cendrier', name: 'Le Grand Cendrier', cols: 6, rows: 5,
     reg: { verre: 20, cig: 18, briquet: 16, paquet: 14, des: 12, cerise: 9, cloche: 6, sept: 4 },
     pay: BAKED.pay, scatterPay: BAKED.scatterPay, buy: BAKED.buy,
-    fsCount: 10, retrigger: 5, scatterW: 2.0, anteScatter: 1.5, bombW: 3.2, superBombW: 5,
-    bombs: { 2: 30, 3: 24, 4: 18, 5: 12, 8: 8, 10: 5, 15: 2, 25: 1 },
+    fsCount: 10, retrigger: 5, scatterW: 2.4, anteScatter: 1.5, bombW: 1.0, superBombW: 3.0,
+    bombs: { 2: 36, 3: 28, 4: 18, 5: 10, 8: 5, 10: 2, 15: 0.8, 25: 0.3 },
     // prix d'achat des bonus en multiples de la mise de base
     price(kind) { return this.buy[kind] || 0; },
     _total(o) { return Object.values(this.reg).reduce((a, b) => a + b, 0) + this.scatterW * (o.ante ? this.anteScatter : 1) + (o.free ? (o.sup ? this.superBombW : this.bombW) : 0); },
@@ -47,7 +47,9 @@ const SlotEngine = (() => {
         if (!hit.length) break;
         let stepMult = 0; const removed = [];
         hit.forEach(([s, n]) => { stepMult += this.pay[s][n >= 12 ? 2 : n >= 10 ? 1 : 0]; removed.push(s); });
-        mult += stepMult; steps.push({ grid: grid.map(c => c.slice()), removed, mult: stepMult });
+        // chaque chute d'affilée paie plus : ×1, ×2, ×3, ×4, ×5 (plafond)
+        const cm = Math.min(5, steps.length + 1); stepMult *= cm;
+        mult += stepMult; steps.push({ grid: grid.map(c => c.slice()), removed, mult: stepMult, cm });
         grid = grid.map(col => { const keep = col.filter(s => !removed.includes(s)); return Array.from({ length: this.rows - keep.length }, () => this._pick(opt)).concat(keep); });
         scatters = Math.max(scatters, countSym(grid, 'etoile'));
       }

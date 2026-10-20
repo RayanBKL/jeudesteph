@@ -235,3 +235,5 @@ Si rien ne manque après quelques jours de test, le dossier d'archive peut être
 - **Arbre de talents refait** (5 branches, ponts, Roi au centre, double-clic pour forger ET retirer, bouton Bilan), vrais effets sur les paquets ; l'ancien arbre est remis à zéro (points rendus). Explication des synergies ×1,25/×1,5/×1,6 dans l'aide « ? ».
 - **Évènements** (`028`) : tournois de poker programmés par l'admin (panneau admin > Évènements), inscriptions à l'avance, cagnotte offerte ; les joueurs ne créent plus de tournoi (les tables d'argent restent).
 - **Reste** : migration 017 (sécurité) toujours à appliquer, tests sur vrais iPhone/Safari.
+- **Migration 017 (sécurité) appliquée le 20/10** : fonctions internes non appelables, search_path figé, limite de 3 Mo sur les sauvegardes. Sauvegarde de la base faite avant (backups/2026-10-20_0237).
+- **Clic plus fluide** (écritures groupées), **slot plus vivant** (chutes ×1 à ×5, étoiles qui font monter la tension, bombes qui explosent une à une, pluie de pièces, annonce du bonus, sons), bonus ×37 / super ×170.

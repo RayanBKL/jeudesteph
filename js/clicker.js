@@ -215,6 +215,17 @@ const ClickerEngine = (() => {
     showToast(`${reason} Pause de ${long ? 30 : 2} secondes.`, 'danger');
   }
 
+  // Les défis, quêtes et succès sont prévenus par paquets (tous les 0,5 s) : les prévenir à chaque clic faisait ramer le jeu
+  let pendingClicks = 0, clickFlushTimer = null;
+  function queueClickEvent() {
+    pendingClicks++;
+    if (clickFlushTimer) return;
+    clickFlushTimer = setTimeout(() => {
+      clickFlushTimer = null; const n = pendingClicks; pendingClicks = 0;
+      if (n && typeof Prestige !== 'undefined') Prestige.emit('click', { n });
+    }, 500);
+  }
+
   // ── Click Handler ──────────────────────────────────────────
   function handleClick(e, opts) {
     const now = performance.now();
@@ -259,7 +270,7 @@ const ClickerEngine = (() => {
     state.earnedFromClicks = (state.earnedFromClicks || 0) + earned;
     state.totalEarned += earned;
     clickLog.push({ t: now, v: earned });
-    if (typeof Prestige !== 'undefined') Prestige.emit('click');
+    queueClickEvent();
 
     // Petit retour visuel sur le compteur
     if (els.cashDisplay) {
@@ -275,7 +286,7 @@ const ClickerEngine = (() => {
     // 0,5 XP par clic manuel (2 clics = 1 XP), quel que soit le gain : l'XP récompense le jeu, pas l'argent
     gainEmpireXP(0.5);
 
-    render();
+    renderFast();
     saveToStorage();
   }
 
@@ -372,7 +383,7 @@ const ClickerEngine = (() => {
     state.totalEarned += earned;
 
 
-    render();
+    renderFast();
     saveToStorage();
   }
 
@@ -624,6 +635,22 @@ const ClickerEngine = (() => {
   }
 
   // ── Render ─────────────────────────────────────────────────
+  // Rendu de chaque clic : seulement les chiffres qui bougent (les emplacements de cartes et la synergie sont refaits par render())
+  let fastQueued = false;
+  function renderFast() {
+    renderCash();
+    if (fastQueued) return;
+    fastQueued = true;
+    requestAnimationFrame(() => {
+      fastQueued = false;
+      updateEmpireDisplay();
+      if (els.totalClicks) els.totalClicks.textContent = formatNumber(state.totalClicks);
+      if (els.subClicks) els.subClicks.textContent = `${formatNumber(state.clicksFromManual || 0)} manuels · ${formatNumber(state.clicksFromAuto || 0)} auto`;
+      if (els.clicksEarned) els.clicksEarned.textContent = formatCash(state.earnedFromClicks || 0) + ' €';
+      if (els.totalEarned) els.totalEarned.textContent = formatCash(state.totalEarned) + ' €';
+    });
+  }
+
   function render() {
     renderCash();
     renderCombo();
@@ -798,7 +825,11 @@ const ClickerEngine = (() => {
   }
 
   // ── Save / Load ────────────────────────────────────────────
-  function saveToStorage() {
+  // Écriture locale différée (au plus une fois toutes les 400 ms) : écrire à chaque clic coûte cher ; forcée quand on quitte la page
+  let saveTimer = null;
+  function saveToStorage() { if (!saveTimer) saveTimer = setTimeout(flushSave, 400); }
+  function flushSave() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
     localStorage.setItem('empire_clicker', JSON.stringify({
       cash: state.cash,
       totalClicks: state.totalClicks,
@@ -815,6 +846,9 @@ const ClickerEngine = (() => {
       balanceVersion: state.balanceVersion,
     }));
   }
+
+  window.addEventListener('pagehide', flushSave, true);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); }, true);
 
   function loadFromStorage() {
     try {
@@ -857,6 +891,7 @@ const ClickerEngine = (() => {
 
   // ── Public API ─────────────────────────────────────────────
   return {
+    flushSave,
     init,
     getState: () => ({ ...state }),
     getCash: () => state.cash,

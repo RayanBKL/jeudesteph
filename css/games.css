@@ -1138,3 +1138,25 @@
 .ig-table .sl-side .btn-secondary,.ig-table .sl-side select{width:100%;box-sizing:border-box;padding:5px 4px;font-size:.72rem}
 .ig-table .sl-bet span{min-width:54px}
 .ig-table .sl-spin{font-size:.9rem}
+
+/* Grand Cendrier : effets */
+.sl-cendrier .sl-cell{position:relative}
+.sl-sp{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3px;border-radius:50%;background:#ffd75e;box-shadow:0 0 6px 2px #ffc43a;animation:slsp .38s ease-out forwards;transform:rotate(var(--a)) translateX(0)}
+@keyframes slsp{to{transform:rotate(var(--a)) translateX(calc(var(--cell)*.8));opacity:0}}
+.sl-grid.is-tense{animation:sltense .35s ease-in-out infinite alternate}
+@keyframes sltense{to{box-shadow:0 0 0 3px var(--outline),inset 0 0 24px #000,0 0 30px 8px #ffc43a}}
+.sl-board.is-shake{animation:slshake .12s linear 5}
+@keyframes slshake{25%{transform:translate(4px,-3px)}75%{transform:translate(-4px,3px)}}
+.sl-float{position:absolute;left:50%;top:40%;transform:translateX(-50%);font:normal 800 1.3rem Cendrier,sans-serif;color:#fff;text-shadow:0 0 8px #ffc43a,0 3px 0 #000;animation:slfloat 1.1s ease-out forwards;pointer-events:none;z-index:4}
+@keyframes slfloat{from{transform:translate(-50%,20px) scale(.6);opacity:0}20%{opacity:1;transform:translate(-50%,0) scale(1.2)}to{transform:translate(-50%,-50px);opacity:0}}
+.sl-rays{position:absolute;left:50%;top:50%;width:260%;height:260%;margin:-130% 0 0 -130%;background:repeating-conic-gradient(#ffc43a33 0 8deg,transparent 8deg 24deg);animation:slrays 8s linear infinite;pointer-events:none;mask-image:radial-gradient(circle,#000 10%,transparent 60%);-webkit-mask-image:radial-gradient(circle,#000 10%,transparent 60%)}
+@keyframes slrays{to{transform:rotate(360deg)}}
+.sl-big{overflow:hidden}
+.sl-big > *{position:relative}
+.sl-big > .sl-rays{position:absolute}
+.sl-coin{position:absolute !important;top:-30px;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff4b0,#ffc43a 55%,#b5790e);border:2px solid var(--outline);animation:slcoin 1.5s linear infinite}
+@keyframes slcoin{to{transform:translateY(520px) rotateY(540deg)}}
+.sl-intro b{font-size:clamp(1.6rem,8vw,2.8rem);text-align:center}
+.sl-intro em{color:#fff}
+.sl-fs-mult b.bump{animation:slbump .35s ease-out}
+@keyframes slbump{40%{transform:scale(1.7);color:#fff}}
