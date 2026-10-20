@@ -9,25 +9,25 @@ const TalentsEngine = (() => {
   // 5 « ponts » entre branches voisines demandent LES DEUX bouts ; le Roi du Cendrier, au centre, demande les 5 ponts.
   const BRANCHES = [
     { id: 'clic', label: 'Clics', angle: 0, nodes: [
-      { name: 'Pouce Échauffé', icon: '👆', type: 'click', mult: 1.10, desc: 'Clics : +10 % d\'argent par clic.', lore: 'Il suffit de chauffer le pouce.' },
-      { name: 'Pouce Calleux', icon: '💪', type: 'click', mult: 1.12, desc: 'Clics : +12 % d\'argent par clic (en plus).', lore: 'Plus rien ne le fait mal.' },
-      { name: 'Coup Sec', icon: '💥', type: 'crit', critChance: 0.10, critMult: 3, desc: 'Critiques : 10 % de tes clics rapportent ×3 (au lieu de 5 % à ×2).', lore: 'Un clic, et le comptoir tremble.' },
-      { name: 'Doigt de Fer', icon: '🔨', type: 'click', mult: 1.2, desc: 'Clics : +20 % d\'argent par clic (en plus).', lore: 'Forgé par dix mille parties de baby-foot.' },
-      { name: 'Coup du Patron', icon: '👊', type: 'crit', critChance: 0.25, critMult: 5, desc: 'Critiques : 25 % de tes clics rapportent ×5.', lore: 'Quand le patron tape, tout le monde paie.' },
+      { name: 'Pouce Échauffé', icon: '👆', type: 'click', mult: 1.25, desc: 'Clics : +25 % d\'argent par clic.', lore: 'Il suffit de chauffer le pouce.' },
+      { name: 'Pouce Calleux', icon: '💪', type: 'click', mult: 1.3, desc: 'Clics : +30 % d\'argent par clic (en plus).', lore: 'Plus rien ne le fait mal.' },
+      { name: 'Coup Sec', icon: '💥', type: 'crit', critChance: 0.12, critMult: 3, desc: 'Critiques : 12 % de tes clics rapportent ×3 (au lieu de 5 % à ×2).', lore: 'Un clic, et le comptoir tremble.' },
+      { name: 'Doigt de Fer', icon: '🔨', type: 'click', mult: 1.4, desc: 'Clics : +40 % d\'argent par clic (en plus).', lore: 'Forgé par dix mille parties de baby-foot.' },
+      { name: 'Coup du Patron', icon: '👊', type: 'crit', critChance: 0.4, critMult: 6, desc: 'Critiques : 40 % de tes clics rapportent ×6.', lore: 'Quand le patron tape, tout le monde paie.' },
     ] },
     { id: 'auto', label: 'Auto-clic', angle: 72, nodes: [
       { name: 'Clope au Bec', icon: '🚬', type: 'auto', val: 1, desc: 'Auto-clic : 1 clic gratuit par seconde (tant que tu joues).', lore: 'Les mains dans les poches, le jeu tourne.' },
-      { name: 'Tic Nerveux', icon: '⚡', type: 'auto', val: 2, desc: 'Auto-clic : 2 clics par seconde.', lore: 'Le doigt ne s\'arrête plus.' },
-      { name: 'Cendrier Rotatif', icon: '🔄', type: 'auto', val: 4, desc: 'Auto-clic : 4 clics par seconde.', lore: 'Un engrenage qui récolte sans râler.' },
-      { name: 'Machine à Clics', icon: '⚙️', type: 'auto', val: 8, desc: 'Auto-clic : 8 clics par seconde.', lore: 'Même le comptable a du mal à suivre.' },
-      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 16, desc: 'Auto-clic : 16 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
+      { name: 'Tic Nerveux', icon: '⚡', type: 'auto', val: 3, desc: 'Auto-clic : 3 clics par seconde.', lore: 'Le doigt ne s\'arrête plus.' },
+      { name: 'Cendrier Rotatif', icon: '🔄', type: 'auto', val: 8, desc: 'Auto-clic : 8 clics par seconde.', lore: 'Un engrenage qui récolte sans râler.' },
+      { name: 'Machine à Clics', icon: '⚙️', type: 'auto', val: 15, desc: 'Auto-clic : 15 clics par seconde.', lore: 'Même le comptable a du mal à suivre.' },
+      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 25, desc: 'Auto-clic : 25 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
     ] },
     { id: 'rente', label: 'Revenu des cartes', angle: 144, nodes: [
       { name: 'Petit Loyer', icon: '🏠', type: 'passive', mult: 1.05, desc: 'Revenu des cartes : +5 %.', lore: 'Un studio au-dessus du bar.' },
-      { name: 'Bail Commercial', icon: '📄', type: 'passive', mult: 1.07, desc: 'Revenu des cartes : +7 % (en plus).', lore: 'Neuf ans fermes, c\'est écrit.' },
-      { name: 'Gérant Fiable', icon: '🧾', type: 'passive', mult: 1.10, desc: 'Revenu des cartes : +10 % (en plus).', lore: 'Il ne pique jamais dans la caisse. Presque.' },
-      { name: 'Toucher de Midas', icon: '🪙', type: 'midas', passiveToClick: 0.02, desc: 'Chaque clic rapporte en plus 2 % de ton revenu par seconde.', lore: 'L\'or coule des doigts.' },
-      { name: 'Empire Immobilier', icon: '🏛️', type: 'passive', mult: 1.15, desc: 'Revenu des cartes : +15 % (en plus).', lore: 'Trois bars, deux PMU, un kiosque.' },
+      { name: 'Bail Commercial', icon: '📄', type: 'passive', mult: 1.1, desc: 'Revenu des cartes : +10 % (en plus).', lore: 'Neuf ans fermes, c\'est écrit.' },
+      { name: 'Gérant Fiable', icon: '🧾', type: 'passive', mult: 1.15, desc: 'Revenu des cartes : +15 % (en plus).', lore: 'Il ne pique jamais dans la caisse. Presque.' },
+      { name: 'Toucher de Midas', icon: '🪙', type: 'midas', passiveToClick: 0.025, desc: 'Chaque clic rapporte en plus 2,5 % de ton revenu par seconde.', lore: 'L\'or coule des doigts.' },
+      { name: 'Empire Immobilier', icon: '🏛️', type: 'passive', mult: 1.2, desc: 'Revenu des cartes : +20 % (en plus).', lore: 'Trois bars, deux PMU, un kiosque.' },
     ] },
     { id: 'paquets', label: 'Paquets', angle: 216, nodes: [
       { name: 'Livreur Matinal', icon: '📦', type: 'pack', cooldown: 0.95, desc: 'Paquet gratuit : arrive 5 % plus vite.', lore: 'Il passe avant le café.' },
@@ -45,8 +45,8 @@ const TalentsEngine = (() => {
     ] },
   ];
   const BRIDGES = [
-    { name: 'Pouce Mécanique', icon: '🤖', type: 'click', mult: 1.15, desc: 'Clics : +15 % d\'argent par clic (en plus).', lore: 'Le pouce et la machine, main dans la main.' },
-    { name: 'Rente Automatique', icon: '💸', type: 'passive', mult: 1.10, desc: 'Revenu des cartes : +10 % (en plus).', lore: 'Le tiroir-caisse se remplit tout seul.' },
+    { name: 'Pouce Mécanique', icon: '🤖', type: 'click', mult: 1.5, desc: 'Clics : +50 % d\'argent par clic (en plus).', lore: 'Le pouce et la machine, main dans la main.' },
+    { name: 'Rente Automatique', icon: '💸', type: 'passive', mult: 1.1, desc: 'Revenu des cartes : +10 % (en plus).', lore: 'Le tiroir-caisse se remplit tout seul.' },
     { name: 'Livraison Rentable', icon: '🚚', type: 'pack', cooldown: 0.90, desc: 'Paquet gratuit : arrive 10 % plus vite (en plus).', lore: 'Un camion entier, garé en double file.' },
     { name: 'Bonne Étoile', icon: '⭐', type: 'drop', pityReduce: 4, desc: 'Paquets : la carte garantie arrive 4 paquets plus tôt (en plus).', lore: 'Même la poisse a une limite.' },
     { name: 'Comptoir Légendaire', icon: '🥇', type: 'xp', mult: 1.10, desc: 'XP : +10 % (en plus).', lore: 'Tout le monde parle de toi.' },
@@ -58,8 +58,8 @@ const TalentsEngine = (() => {
   }));
   BRIDGES.forEach((n, i) => NODES.push({ ...n, id: `pont_${i + 1}`, branch: 'pont', branchLabel: 'Pont entre deux branches', ring: 6, angle: i * 72 + 36, cost: 3, need: 2,
     prereqs: [`${BRANCHES[i].id}_5`, `${BRANCHES[(i + 1) % 5].id}_5`] }));
-  NODES.push({ id: 'roi', name: 'Roi du Cendrier', icon: '👑', branch: 'centre', branchLabel: 'Le sommet', ring: 0, angle: 0, cost: 6, type: 'apex', mult: 1.5, passiveMult: 1.5, critChance: 0.35, critMult: 6, need: 5,
-    prereqs: BRIDGES.map((_, i) => `pont_${i + 1}`), desc: 'Clics ×1,5, revenu des cartes ×1,5 et 35 % de critiques à ×6. Demande les 5 ponts.', lore: 'Stéphane n\'est plus le roi du cendrier. Il est l\'empereur.' });
+  NODES.push({ id: 'roi', name: 'Roi du Cendrier', icon: '👑', branch: 'centre', branchLabel: 'Le sommet', ring: 0, angle: 0, cost: 6, type: 'apex', mult: 2.2, passiveMult: 1.5, critChance: 0.4, critMult: 6, need: 5,
+    prereqs: BRIDGES.map((_, i) => `pont_${i + 1}`), desc: 'Clics ×2,2, revenu des cartes ×1,5 et 40 % de critiques à ×6. Demande les 5 ponts.', lore: 'Stéphane n\'est plus le roi du cendrier. Il est l\'empereur.' });
 
   // Un talent est « atteignable » quand il a assez de prérequis forgés (1 pour une chaîne, les 2 bouts pour un pont, les 5 ponts pour le centre)
   const needOf = n => n.need || 1;

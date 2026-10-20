@@ -14,8 +14,8 @@ const InstantGames = (() => {
 
   // ════════ TICKET À GRATTER ════════
   const PRICES = [5, 25, 100, 500, 2500, 10000];
-  // multiple du prix du ticket et probabilité (retour ≈ 91 %)
-  const PRIZES = [[1, 0.20], [2, 0.10], [5, 0.04], [10, 0.013], [25, 0.004], [100, 0.0006], [1000, 0.00002]];
+  // multiple du prix du ticket et probabilité (retour ≈ 96 %)
+  const PRIZES = [[1, 0.15], [2, 0.11], [5, 0.05], [10, 0.016], [25, 0.004], [100, 0.0006], [1000, 0.00002]];
   const SC = { price: 1, cells: [], opened: [], win: 0, state: 'buy' };
 
   function drawTicket() {
@@ -43,7 +43,7 @@ const InstantGames = (() => {
           <div class="ig-ticket ig-ticket-empty"><div class="ig-ticket-title">TICKET À GRATTER</div><div class="ig-ticket-note">Choisis un ticket</div></div>
           <div class="ig-prices">${PRICES.map((p, i) => `<button class="btn-secondary ${SC.price === i ? 'active' : ''}" data-p="${i}">${fmt(p)} €</button>`).join('')}</div>
           <button class="btn-primary pk-main-btn" id="sc-buy">Acheter un ticket (${fmt(PRICES[SC.price])} €)</button>
-          <p class="ig-small">Jusqu'à ×1 000 le prix du ticket · retour théorique ≈ 91 %</p>
+          <p class="ig-small">Jusqu'à ×1 000 le prix du ticket · retour théorique ≈ 96 %</p>
         </div>`;
       content.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { SC.price = +b.dataset.p; renderScratch(content); }));
       content.querySelector('#sc-buy').addEventListener('click', () => {

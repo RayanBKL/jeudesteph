@@ -17,14 +17,14 @@ const SlotEngine = (() => {
 
   // ── Tables CALIBRÉES : node scripts/sim_slots.js recalcule le retour au joueur (≈ 95 %) et réécrit ce bloc ──
   /*BAKED-START*/
-  const BAKED = {"pay":{"verre":[0.1,0.3,0.75],"cig":[0.1,0.4,0.95],"briquet":[0.2,0.4,1.15],"paquet":[0.2,0.55,1.55],"des":[0.3,0.95,3.05],"cerise":[0.4,1.95,5.75],"cloche":[0.75,3.8,9.55],"sept":[1.95,9.55,38]},"scatterPay":{"4":1.15,"5":1.95,"6":38},"buy":{"bonus":37,"super":170,"ante":2.25}};
+  const BAKED = {"pay":{"verre":[0.15,0.39,0.93],"cig":[0.2,0.44,1.12],"briquet":[0.24,0.54,1.46],"paquet":[0.29,0.73,1.85],"des":[0.39,1.12,2.92],"cerise":[0.54,1.85,5.51],"cloche":[1.12,3.66,11.02],"sept":[2.19,9.17,36.5]},"scatterPay":{"4":1.12,"5":1.85,"6":36.5},"buy":{"bonus":33,"super":225,"ante":1.87}};
   /*BAKED-END*/
 
   const GRAND = {
     id: 'cendrier', name: 'Le Grand Cendrier', cols: 6, rows: 5,
     reg: { verre: 20, cig: 18, briquet: 16, paquet: 14, des: 12, cerise: 9, cloche: 6, sept: 4 },
     pay: BAKED.pay, scatterPay: BAKED.scatterPay, buy: BAKED.buy,
-    fsCount: 10, retrigger: 5, scatterW: 2.4, anteScatter: 1.5, bombW: 1.0, superBombW: 3.0,
+    min: 8, fsCount: 10, retrigger: 5, scatterW: 2.2, anteScatter: 1.5, bombW: 0.6, superBombW: 3.0,
     bombs: { 2: 36, 3: 28, 4: 18, 5: 10, 8: 5, 10: 2, 15: 0.8, 25: 0.3 },
     // prix d'achat des bonus en multiples de la mise de base
     price(kind) { return this.buy[kind] || 0; },
@@ -43,7 +43,7 @@ const SlotEngine = (() => {
       const steps = []; let mult = 0, scatters = countSym(grid, 'etoile'), guard = 0;
       while (guard++ < 40) {
         const counts = {}; grid.forEach(col => col.forEach(s => { counts[s] = (counts[s] || 0) + 1; }));
-        const hit = Object.entries(counts).filter(([s, n]) => this.pay[s] && n >= 8);
+        const hit = Object.entries(counts).filter(([s, n]) => this.pay[s] && n >= this.min);
         if (!hit.length) break;
         let stepMult = 0; const removed = [];
         hit.forEach(([s, n]) => { stepMult += this.pay[s][n >= 12 ? 2 : n >= 10 ? 1 : 0]; removed.push(s); });
