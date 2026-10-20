@@ -243,6 +243,32 @@ const SoundFX = {
     } catch (e) {}
   },
 
+  // Petites notes à la suite (sert aux effets du casino) : notes en Hz, type d'onde, écart entre notes, durée, volume
+  notes(freqs, type = 'triangle', gap = 0.06, dur = 0.25, vol = 0.07, slide = 1) {
+    if (!this.enabled) return;
+    this.resume();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    try {
+      freqs.forEach((freq, i) => {
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), t = now + i * gap;
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        if (slide !== 1) osc.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), t + dur);
+        gain.gain.setValueAtTime(vol, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(t); osc.stop(t + dur);
+      });
+    } catch (e) {}
+  },
+  thud() { this.notes([150], 'sine', 0, 0.12, 0.12, 0.5); },
+  pop() { this.notes([700, 1050], 'triangle', 0.03, 0.12, 0.06, 1.4); },
+  coin() { this.notes([988, 1319], 'square', 0.07, 0.18, 0.04); },
+  boom() { this.notes([120, 90], 'sawtooth', 0.04, 0.35, 0.1, 0.4); },
+  rise() { this.notes([330, 392, 466, 554, 659], 'triangle', 0.1, 0.3, 0.06); },
+  fanfare() { this.notes([523, 659, 784, 1046, 784, 1046, 1318], 'square', 0.09, 0.35, 0.06); },
+
   // Casino / Race Win sound
   win() {
     if (!this.enabled) return;

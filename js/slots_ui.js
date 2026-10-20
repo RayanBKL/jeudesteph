@@ -67,7 +67,8 @@ const Slots = (() => {
     if (q('#sl-buy2p')) q('#sl-buy2p').textContent = `15 tours, bombes en folie · ${fmt(g.price('super') * bet)} € (×${g.price('super')})`;
   }
   // Cellule : en tombant, elle garde une animation de chute
-  function cellHtml(s, cls, val) { return `<div class="sl-cell ${cls || ''}">${symSvg(s)}${val ? `<i class="sl-bv">×${val}</i>` : ''}</div>`; }
+  const SPARKS = [0, 60, 120, 180, 240, 300].map(a => `<b class="sl-sp" style="--a:${a}deg"></b>`).join('');
+  function cellHtml(s, cls, val) { return `<div class="sl-cell ${cls || ''}">${symSvg(s)}${val ? `<i class="sl-bv">×${val}</i>` : ''}${cls && cls.includes('is-pop') ? SPARKS : ''}</div>`; }
   function gridHtml(grid, opt = {}) {
     // opt.win = Set 'c:r' qui clignotent ; opt.pop = Set qui éclatent ; opt.drop = { c: nbDeCellulesNeuves } ; opt.vals = { 'c:r': valeur }
     return grid.map((col, c) => `<div class="sl-col">${col.map((s, r) => {
@@ -98,8 +99,7 @@ const Slots = (() => {
     if (!spendMoney(cost)) return toast('Solde insuffisant pour acheter ce bonus.', 'error');
     if (typeof Casino !== 'undefined') Casino.recordBet();
     st.bought = cost; st.fsLeft = sup ? 15 : g.fsCount; st.sup = sup; st.acc = 0; st.fsWin = 0;
-    toast(`${st.fsLeft} tours gratuits !`, 'gold');
-    updateFs(content); play(content);
+    updateFs(content); await bonusIntro(content, st.fsLeft, sup); if (alive) play(content);
   }
 
   async function play(content) {
@@ -122,7 +122,8 @@ const Slots = (() => {
     st.last = win; st.grid = res.grid;
     if (free || res.fs) st.fsWin += (free ? win : 0);
     const el = content.querySelector('#sl-win');
-    if (el) { el.className = 'sl-win' + (win >= bet * 20 ? ' is-big' : win > 0 ? ' is-ok' : ''); el.textContent = win > 0 ? `Gain : +${fmt(win)} €${res.mult >= 20 ? ' (×' + Math.round(res.mult) + ')' : ''}` : (free ? 'Rien sur ce tour gratuit' : 'Rien. La machine fait semblant de réfléchir.'); }
+    if (el && win > 0) tick(el, win, res.mult, bet, free);
+    else if (el) { el.className = 'sl-win'; el.textContent = free ? 'Rien sur ce tour gratuit' : 'Rien. La machine fait semblant de réfléchir.'; }
     if (win > 0 && window.SoundFX) SoundFX.win();
     if (win >= bet * 20) await bigWin(content, win, win / bet);
     // bilan de la partie (hors bonus)
@@ -131,7 +132,7 @@ const Slots = (() => {
       if (typeof Casino !== 'undefined') Casino.recordResult(net > 0 ? 'win' : 'lose', Math.abs(net), `${g.name} : ${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}`);
     }
     // déclenchement du bonus par 4 étoiles ou plus
-    if (res.fs && !free) { st.fsLeft += res.fs; st.sup = false; st.acc = 0; st.fsWin = win; st.bought = bet; toast(`${res.scatters} étoiles : ${res.fs} tours gratuits !`, 'gold'); }
+    if (res.fs && !free) { st.fsLeft += res.fs; st.sup = false; st.acc = 0; st.fsWin = win; st.bought = bet; await bonusIntro(content, res.fs, false); }
     else if (res.fs && free) { st.fsLeft += res.fs; toast(`+${res.fs} tours gratuits`, 'gold'); }
     updateFs(content);
     if (typeof saveGame === 'function') saveGame();
@@ -147,6 +148,14 @@ const Slots = (() => {
     const sb = content.querySelector('#sl-spin'); if (sb) sb.textContent = 'Tourner';
   }
 
+  // Le gain défile jusqu'à sa valeur
+  function tick(el, win, mult, bet, free) {
+    el.className = 'sl-win' + (win >= bet * 20 ? ' is-big' : ' is-ok');
+    const t0 = performance.now(), dur = st.turbo ? 200 : 600;
+    const f = now => { const p = Math.min(1, (now - t0) / dur); el.textContent = `Gain : +${fmt(Math.round(win * p))} €${mult >= 20 && p === 1 ? ' (×' + Math.round(mult) + ')' : ''}`; if (p < 1 && alive) requestAnimationFrame(f); };
+    requestAnimationFrame(f);
+  }
+
   function updateFs(content) {
     const el = content.querySelector('#sl-fs'); if (!el) return;
     if (st.fsLeft > 0 || st.acc > 0) { el.classList.remove('hidden'); el.innerHTML = `<span>Tours gratuits <b>${st.fsLeft}</b></span><span class="sl-fs-mult">Multiplicateur <b>×${st.acc || 0}</b></span><span>Gain du bonus <b>${fmt(st.fsWin)} €</b></span>`; }
@@ -156,39 +165,71 @@ const Slots = (() => {
   // Animation : les colonnes tombent de gauche à droite ; puis chaque grappe gagnante éclate et le reste retombe
   async function animate(content, res, free) {
     const grid = content.querySelector('#sl-grid'); if (!grid) return;
-    grid.innerHTML = gridHtml(res.steps.length ? res.steps[0].grid : res.grid, { drop: Object.fromEntries([0, 1, 2, 3, 4, 5].map(c => [c, 5])) });
-    grid.classList.add('is-dropping'); await sleep(650); grid.classList.remove('is-dropping');
+    const first = res.steps.length ? res.steps[0].grid : res.grid, stars0 = first.reduce((a, c) => a + c.filter(x => x === 'etoile').length, 0);
+    grid.innerHTML = gridHtml(first, { drop: Object.fromEntries([0, 1, 2, 3, 4, 5].map(c => [c, 5])) });
+    grid.classList.add('is-dropping');
+    if (window.SoundFX) { SoundFX.thud(); setTimeout(() => SoundFX.thud(), 250); }
+    await sleep(650); grid.classList.remove('is-dropping');
     if (!alive) return;
+    // suspense : 3 étoiles ou plus sur la première grille, on les fait briller avant de continuer
+    if (stars0 >= 3 && !free) {
+      const win = new Set(first.flatMap((col, c) => col.map((s, r) => s === 'etoile' ? c + ':' + r : null)).filter(Boolean));
+      grid.innerHTML = gridHtml(first, { win }); grid.classList.add('is-tense');
+      if (window.SoundFX) SoundFX.rise();
+      await sleep(stars0 >= 4 ? 700 : 1100); grid.classList.remove('is-tense'); if (!alive) return;
+    }
     for (let i = 0; i < res.steps.length; i++) {
       const step = res.steps[i];
       const win = new Set(step.grid.flatMap((col, c) => col.map((s, r) => step.removed.includes(s) ? c + ':' + r : null)).filter(Boolean));
       grid.innerHTML = gridHtml(step.grid, { win }); if (window.SoundFX) SoundFX.click();
       await sleep(600); if (!alive) return;
-      grid.innerHTML = gridHtml(step.grid, { pop: win }); await sleep(260); if (!alive) return;
+      grid.innerHTML = gridHtml(step.grid, { pop: win }); if (window.SoundFX) SoundFX.pop();
+      showTumbleGain(content, step.mult, step.cm);
+      await sleep(300); if (!alive) return;
       // nouvelle grille après la chute : colonnes touchées = cellules neuves en haut, les autres glissent
       const next = res.steps[i + 1] ? res.steps[i + 1].grid : res.grid, drop = {};
       step.grid.forEach((col, c) => { const n = col.filter(s => step.removed.includes(s)).length; if (n) drop[c] = n; });
-      grid.innerHTML = gridHtml(next, { drop }); await sleep(520);
+      grid.innerHTML = gridHtml(next, { drop }); if (window.SoundFX) SoundFX.thud();
+      await sleep(520);
     }
     if (!alive) return;
     if (free && res.bombs.length) {
-      // les bombes révèlent leur valeur l'une après l'autre
-      const vals = {}; let k = 0;
-      res.grid.forEach((col, c) => col.forEach((s, r) => { if (s === 'bombe') vals[c + ':' + r] = res.bombs[k++]; }));
-      grid.innerHTML = gridHtml(res.grid, { vals }); if (window.SoundFX) SoundFX.click();
-      await sleep(900);
+      // les bombes explosent l'une après l'autre : chaque valeur s'ajoute au multiplicateur du bonus
+      const pos = []; res.grid.forEach((col, c) => col.forEach((s, r) => { if (s === 'bombe') pos.push(c + ':' + r); }));
+      const vals = {}; let run = st.acc - res.bombs.reduce((a, b) => a + b, 0);
+      for (let k = 0; k < pos.length; k++) {
+        vals[pos[k]] = res.bombs[k]; run += res.bombs[k];
+        grid.innerHTML = gridHtml(res.grid, { vals }); if (window.SoundFX) SoundFX.boom();
+        const fs = content.querySelector('.sl-fs-mult b'); if (fs) { fs.textContent = '×' + run; fs.classList.remove('bump'); void fs.offsetWidth; fs.classList.add('bump'); }
+        await sleep(450); if (!alive) return;
+      }
     } else grid.innerHTML = gridHtml(res.grid);
     if (res.scatters >= 4 && alive) {
       const win = new Set(res.grid.flatMap((col, c) => col.map((s, r) => s === 'etoile' ? c + ':' + r : null)).filter(Boolean));
-      grid.innerHTML = gridHtml(res.grid, { win }); await sleep(900);
+      grid.innerHTML = gridHtml(res.grid, { win }); if (window.SoundFX) SoundFX.fanfare(); await sleep(900);
     }
+  }
+  // Petit gain flottant à chaque chute
+  function showTumbleGain(content, mult, cm) {
+    const board = content.querySelector('.sl-board'); if (!board || !(mult > 0)) return;
+    const bet = BETS[st.bet], el = document.createElement('div'); el.className = 'sl-float'; el.textContent = '+' + fmt(Math.round(mult * bet)) + ' €' + (cm > 1 ? '  ×' + cm : '');
+    board.appendChild(el); setTimeout(() => el.remove(), 1100);
+  }
+  // Annonce du bonus
+  async function bonusIntro(content, n, sup) {
+    const el = content.querySelector('#sl-big'); if (!el) return;
+    el.className = 'sl-big sl-intro'; el.innerHTML = `<div class="sl-rays"></div><small>${sup ? 'Super bonus' : 'Bonus'}</small><b>${n} tours gratuits</b><em>Les bombes s'additionnent !</em>`;
+    if (window.SoundFX) SoundFX.fanfare();
+    await sleep(2000); el.className = 'sl-big hidden';
   }
 
   // Écran de gros gain
   async function bigWin(content, win, x) {
     const el = content.querySelector('#sl-big'); if (!el) return;
     const label = x >= 500 ? 'Jackpot du comptoir' : x >= 150 ? 'Gain monstre' : x >= 60 ? 'Très gros gain' : 'Gros gain';
-    el.className = 'sl-big'; el.innerHTML = `<small>${label}</small><b>0 €</b><em>×${Math.round(x)}</em>`;
+    el.className = 'sl-big'; el.innerHTML = `<div class="sl-rays"></div>${Array.from({ length: 22 }, (_, i) => `<i class="sl-coin" style="left:${Math.random() * 100}%;animation-delay:${Math.random() * 1.2}s;animation-duration:${1 + Math.random() * 0.8}s"></i>`).join('')}<small>${label}</small><b>0 €</b><em>×${Math.round(x)}</em>`;
+    const brd = content.querySelector('.sl-board'); if (brd) { brd.classList.add('is-shake'); setTimeout(() => brd.classList.remove('is-shake'), 700); }
+    if (window.SoundFX) { SoundFX.fanfare(); setTimeout(() => SoundFX.coin(), 400); setTimeout(() => SoundFX.coin(), 700); }
     const b = el.querySelector('b'), t0 = performance.now(), dur = st.turbo ? 500 : 1500;
     await new Promise(res => { const f = now => { if (!alive) return res(); const p = Math.min(1, (now - t0) / dur); b.textContent = fmt(Math.round(win * p)) + ' €'; p < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
     await sleep(900); el.className = 'sl-big hidden';
@@ -203,7 +244,7 @@ const Slots = (() => {
     const g = G(), tbl = g.pay;
     const rows = Object.keys(tbl).reverse().map(sym => { const v = tbl[sym]; return `<div class="sl-pt-row">${symSvg(sym)}<div class="sl-pt-vals"><span>8-9 : ×${v[0]}</span><span>10-11 : ×${v[1]}</span><span>12+ : ×${v[2]}</span></div></div>`; }).join('');
     const sc = g.scatterPay;
-    const extra = `<p>Les gains se paient sur <b>8 symboles identiques ou plus</b>, n'importe où sur la grille. Les gagnants disparaissent, les autres tombent, et ça recommence tant qu'il y a des grappes.</p>
+    const extra = `<p>Les gains se paient sur <b>8 symboles identiques ou plus</b>, n'importe où sur la grille. Les gagnants disparaissent, les autres tombent, et ça recommence tant qu'il y a des grappes. Chaque chute d'affilée paie plus : ×1, puis ×2, ×3, ×4 et ×5 au maximum.</p>
       <p><b>4 étoiles ou plus</b> : gain immédiat (4 : ×${sc[4]}, 5 : ×${sc[5]}, 6 : ×${sc[6]}) et <b>10 tours gratuits</b>. Chaque nouvelle série de 4 étoiles pendant le bonus redonne ${g.retrigger} tours.</p>
       <p>Pendant les tours gratuits, des <b>bombes</b> (×2 à ×25) tombent : leurs valeurs <b>s'additionnent jusqu'à la fin du bonus</b> et multiplient chaque gain.</p>
       <p><b>Acheter le bonus</b> : tu paies ×${g.price('bonus')} ta mise et tu lances directement les 10 tours gratuits. <b>Super bonus</b> : ×${g.price('super')}, 15 tours et beaucoup plus de bombes. Un bonus acheté te rend en moyenne environ 90 % de son prix : plus cher qu'un tour normal, mais le bonus est garanti.</p>`;

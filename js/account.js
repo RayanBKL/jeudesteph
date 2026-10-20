@@ -50,6 +50,7 @@ const Account = (() => {
     return out;
   }
   function snapshot() {
+    try { if (typeof ClickerEngine !== 'undefined' && ClickerEngine.flushSave) ClickerEngine.flushSave(); } catch (e) {}
     const data = {};
     gameKeysPresent().forEach(k => { data[k] = ls.get(k); });
     return data;
