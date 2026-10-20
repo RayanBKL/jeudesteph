@@ -34,6 +34,9 @@ const Account = (() => {
   const TAB_KEY = 'ak_tab_lock', TAB_ID = Math.random().toString(36).slice(2);
   // Appareil principal : chaque onglet / appareil a un identifiant de session (gardé quand la page se recharge, nouveau à chaque nouvelle ouverture).
   // La dernière session ouverte « prend la main » côté serveur (session_claim) ; les autres affichent « déjà connecté ailleurs ».
+  // Version de test (jeu servi depuis un sous-dossier) : la maintenance du site ne la concerne pas
+  const isTestCopy = location.pathname.replace(/index\.html$/, '').replace(/\/+$/, '') !== '';
+  const stampCall = () => client().rpc('cloud_save_stamp', isTestCopy ? { p_test: true } : {});
   let sid = null;
   try { sid = sessionStorage.getItem('ak_sid'); } catch (e) {}
   if (!sid) {
@@ -372,7 +375,7 @@ const Account = (() => {
     checking = true;
     try {
       try { if (typeof ClickerEngine !== 'undefined' && ClickerEngine.flushSave) ClickerEngine.flushSave(); } catch (e) {}   // les derniers clics (écriture différée) comptent comme des modifications locales
-      const { data } = await sb.rpc('cloud_save_stamp');
+      const { data } = await stampCall();
       if (data && data.sid && data.sid !== sid) { await loseControl(data.sid_device); return; }   // un autre appareil est devenu le principal
       if (!data || !data.updated_at || data.updated_at === stamp) return;
       if (busyNow()) return;                                      // en pleine manche / en train de cliquer : on recommencera dans quelques secondes
@@ -490,7 +493,7 @@ const Account = (() => {
     // Dernier appareil ouvert = appareil principal. Une page rechargée garde sa session : si un autre appareil a pris la main entre-temps, elle reste bloquée.
     if (sessionStorage.getItem('ak_sid_claimed') !== '1') await claimSession();
     else {
-      try { const { data: st } = await sb.rpc('cloud_save_stamp'); if (st && st.sid && st.sid !== sid) await loseControl(st.sid_device); } catch (e) {}
+      try { const { data: st } = await stampCall(); if (st && st.sid && st.sid !== sid) await loseControl(st.sid_device); } catch (e) {}
     }
 
     // Photo de profil : celle du serveur, ou on envoie celle de ce navigateur
