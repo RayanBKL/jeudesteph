@@ -82,7 +82,7 @@ const GameUI = (() => {
     container.appendChild(el);
 
     const res = pre !== undefined ? pre : await League.record(game, result);
-    const xp = result === 'win' ? 30 : result === 'draw' ? 15 : 8;
+    const xp = result === 'win' ? 300 : result === 'draw' ? 150 : 80;
     const actions = `
       <div class="mg-result-actions">
         <button class="btn-empire btn-empire-secondary" data-mg-back>Salle de jeux</button>
