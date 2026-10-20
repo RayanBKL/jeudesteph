@@ -414,12 +414,15 @@ const ClickerEngine = (() => {
   // ── Passive Income ─────────────────────────────────────────
   function startPassiveTick() {
     clearInterval(state.passiveTick);
+    // Le revenu passif compte le temps réellement écoulé (pas « 1 seconde par tick ») : un tick en retard ne fait plus perdre d'argent
+    let lastTick = performance.now();
     state.passiveTick = setInterval(() => {
+      const nowTick = performance.now(), secs = Math.min(3, Math.max(0, (nowTick - lastTick) / 1000)); lastTick = nowTick;
       const active = isPlayerActive();
       const pill = document.getElementById('clicker-cps')?.parentElement;
       if (pill) { pill.classList.toggle('is-paused', !active); pill.title = active ? 'Placer mes cartes (Arrière-Boutique)' : 'En pause : le revenu tombe seulement quand tu utilises la fenêtre'; }
       if (active && state.passivePerSec > 0) {
-        const earned = state.passivePerSec;
+        const earned = state.passivePerSec * secs;
         state.cash += earned;
         state.earnedFromPassive = (state.earnedFromPassive || 0) + earned;
         state.totalEarned += earned;

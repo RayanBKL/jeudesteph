@@ -2021,7 +2021,22 @@ const RARITY_ORDER = ['commune','peu-commune','rare','epique','legendaire','myth
 
 let ALL_BASE_ITEMS_MAP = new Map();
 
+// Signature des sources de cartes : si elle n'a pas bougé depuis la dernière construction, il n'y a rien à refaire.
+// (getEmpireItemById appelle buildAllBaseItems à CHAQUE appel : sans ça, chaque recherche de carte reparcourait les 6 000 cartes.)
+let _builtSig = '';
+function _sourcesSig() {
+  const len = a => (Array.isArray(a) ? a.length : 0);
+  const cig = (typeof window !== 'undefined' && window.CIGARETTES_DB) || (typeof CIGARETTES_DB !== 'undefined' ? CIGARETTES_DB : null);
+  const exp = (typeof window !== 'undefined' && window.EMPIRE_EXPANSION_ITEMS) || (typeof EMPIRE_EXPANSION_ITEMS !== 'undefined' ? EMPIRE_EXPANSION_ITEMS : null);
+  const ext = (typeof window !== 'undefined' && window.EMPIRE_EXTRA_ITEMS) || null;
+  return len(typeof EMPIRE_DB !== 'undefined' ? EMPIRE_DB : null) + ':' + len(cig) + ':' + len(exp) + ':' + len(ext);
+}
 function buildAllBaseItems() {
+  if (_builtSig && _builtSig === _sourcesSig()) return;
+  _buildAllBaseItemsNow();
+  _builtSig = _sourcesSig();
+}
+function _buildAllBaseItemsNow() {
   // 1. Ajouter les cartes déjà présentes dans EMPIRE_DB
   if (typeof EMPIRE_DB !== 'undefined' && Array.isArray(EMPIRE_DB)) {
     EMPIRE_DB.forEach(item => {
