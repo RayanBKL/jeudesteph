@@ -820,6 +820,7 @@ const ClickerEngine = (() => {
 
   // ── Format helpers ─────────────────────────────────────────
   // Montant exact jusqu'au million (chaque clic se voit), puis notation courte à 2 décimales
+  const FR_NUM = new Intl.NumberFormat('fr-FR');     // créé une seule fois : toLocaleString() en recrée un à chaque appel (lent sur iPhone)
   function formatCash(n) {
     n = Number(n) || 0;
     const short = (v, unit) => v.toFixed(2).replace('.', ',') + ' ' + unit;
@@ -828,11 +829,11 @@ const ClickerEngine = (() => {
     if (n >= 1e9)  return short(n / 1e9, 'Md');
     if (n >= 1e6)  return short(n / 1e6, 'M');
     if (n > 0 && n < 10 && n % 1 !== 0) return n.toFixed(2).replace('.', ',');
-    return Math.floor(n).toLocaleString('fr-FR');
+    return FR_NUM.format(Math.floor(n));
   }
 
   function formatNumber(n) {
-    return (Number(n) || 0).toLocaleString('fr-FR');
+    return FR_NUM.format(Number(n) || 0);
   }
 
   // ── Toast ──────────────────────────────────────────────────
