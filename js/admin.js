@@ -198,7 +198,7 @@
   function viewEvents() {
     const rows = events || [];
     const soon = new Date(Date.now() + 3600e3 * 24); soon.setMinutes(soon.getMinutes() - soon.getTimezoneOffset());
-    $('app').innerHTML = `<p class="ad-sub">Un évènement = un tournoi de poker de 2 à 6 joueurs. Les joueurs s'inscrivent à l'avance ; à l'heure dite la table s'ouvre toute seule (moins de 2 inscrits : annulé et remboursé). La cagnotte offerte s'ajoute aux droits d'entrée et se partage entre les premiers.</p>
+    $('app').innerHTML = `<p class="ad-sub">Un évènement = un tournoi de poker Space KO (règles de Winamax : 20 000 jetons, blindes 100/200, tokens et primes tirées au sort) de 2 à 6 joueurs. Les joueurs s'inscrivent à l'avance ; à l'heure dite la table s'ouvre toute seule (moins de 2 inscrits : annulé et remboursé). Le droit d'entrée se répartit en 40 % classement, 50 % primes, 10 % commission ; la cagnotte offerte s'ajoute au classement.</p>
       <div class="ad-card"><h3>Créer un évènement</h3>
         <div class="ad-form" style="display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
           <label>Titre<input id="ev-title" maxlength="40" placeholder="Tournoi du week-end"></label>
@@ -206,6 +206,7 @@
           <label>Droit d'entrée (€, 0 = gratuit)<input id="ev-fee" type="number" min="0" value="0"></label>
           <label>Cagnotte offerte (€)<input id="ev-prize" type="number" min="0" value="100000"></label>
           <label>Joueurs max<select id="ev-max"><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option></select></label>
+          <label>Durée d'un niveau<select id="ev-lvl"><option value="2">2 min</option><option value="3">3 min</option><option value="5" selected>5 min</option><option value="7">7 min</option></select></label>
           <label style="grid-column:1/-1">Description (facultatif)<input id="ev-desc" maxlength="240" placeholder="Le gagnant empoche la cagnotte"></label>
         </div>
         <p><button class="ad-btn" id="ev-create">Programmer</button> <span id="ev-msg" class="ad-sub"></span></p>
@@ -214,7 +215,7 @@
     $('ev-create').onclick = async () => {
       const title = $('ev-title').value.trim(), start = $('ev-start').value;
       if (title.length < 2 || !start) { $('ev-msg').textContent = 'Titre et date obligatoires.'; return; }
-      const { error } = await sb.rpc('admin_event_create', { p_title: title, p_desc: $('ev-desc').value, p_starts: new Date(start).toISOString(), p_fee: +$('ev-fee').value || 0, p_max: +$('ev-max').value, p_prize: +$('ev-prize').value || 0 });
+      const { error } = await sb.rpc('admin_event_create', { p_title: title, p_desc: $('ev-desc').value, p_starts: new Date(start).toISOString(), p_fee: +$('ev-fee').value || 0, p_max: +$('ev-max').value, p_prize: +$('ev-prize').value || 0, p_level_min: +$('ev-lvl').value });
       if (error) { $('ev-msg').textContent = error.message; return; }
       events = await load('admin_events'); viewEvents();
     };
