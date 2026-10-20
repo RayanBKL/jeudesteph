@@ -190,8 +190,8 @@ const ClickerEngine = (() => {
   let clickGaps = [];
   let lastClickAt = 0;
   let botStrikes = [];
-  const MAX_CPS = 100;          // limite absolue (clics par seconde)
-  const MIN_GAP_MS = 7;         // écart minimum entre deux clics
+  const MAX_CPS = 1000;         // plus de limite de vitesse : seuls les robots (clics non fiables, cadence de machine) sont refusés
+  const MIN_GAP_MS = 2;         // écart minimum entre deux clics d'un même doigt (évite les doublons d'événements)
   function looksAutomated(gaps) {
     if (!gaps || gaps.length < 40) return false;
     const g = gaps.slice(-40);
@@ -371,17 +371,19 @@ const ClickerEngine = (() => {
     return total;
   }
 
-  function triggerClick(spawnVisual = false) {
+  function triggerClick(spawnVisual = false, count = 1) {
     // 1. Ne rien compter si l'onglet du navigateur est masqué / inactif
     if (!isPlayerActive()) return;   // auto-clic : seulement si le joueur utilise la fenêtre
 
     // L'auto-clic continue sur toutes les pages (casino, mini-jeux, bourse…) : seul compte le fait d'être présent
-    const earned = computeClickEarnings(true);
-    state.cash += earned;
-    state.totalClicks++;
-    state.clicksFromAuto = (state.clicksFromAuto || 0) + 1;
-    state.earnedFromClicks = (state.earnedFromClicks || 0) + earned;
-    state.totalEarned += earned;
+    for (let i = 0; i < count; i++) {
+      const earned = computeClickEarnings(true);
+      state.cash += earned;
+      state.totalClicks++;
+      state.clicksFromAuto = (state.clicksFromAuto || 0) + 1;
+      state.earnedFromClicks = (state.earnedFromClicks || 0) + earned;
+      state.totalEarned += earned;
+    }
 
 
     renderFast();

@@ -20,7 +20,7 @@ const TalentsEngine = (() => {
       { name: 'Tic Nerveux', icon: '⚡', type: 'auto', val: 3, desc: 'Auto-clic : 3 clics par seconde.', lore: 'Le doigt ne s\'arrête plus.' },
       { name: 'Cendrier Rotatif', icon: '🔄', type: 'auto', val: 8, desc: 'Auto-clic : 8 clics par seconde.', lore: 'Un engrenage qui récolte sans râler.' },
       { name: 'Machine à Clics', icon: '⚙️', type: 'auto', val: 15, desc: 'Auto-clic : 15 clics par seconde.', lore: 'Même le comptable a du mal à suivre.' },
-      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 25, desc: 'Auto-clic : 25 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
+      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 40, desc: 'Auto-clic : 40 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
     ] },
     { id: 'rente', label: 'Revenu des cartes', angle: 144, nodes: [
       { name: 'Petit Loyer', icon: '🏠', type: 'passive', mult: 1.05, desc: 'Revenu des cartes : +5 %.', lore: 'Un studio au-dessus du bar.' },
@@ -196,13 +196,16 @@ const TalentsEngine = (() => {
     const cps = getAutoClicksPerSec();
     if (cps <= 0) return;
 
-    const intervalMs = Math.max(35, Math.floor(1000 / cps));
+    // un tick toutes les 50 ms ; au-delà de 20 clics/s, plusieurs clics par tick (plus de plafond technique)
+    const intervalMs = cps >= 20 ? 50 : Math.max(35, Math.floor(1000 / cps)), perTick = cps >= 20 ? cps * 0.05 : 1;
+    let carry = 0;
     autoClickTimer = setInterval(() => {
       // Ne pas compter si le navigateur/onglet est en arrière-plan ou minimisé
       if (document.hidden || document.visibilityState !== 'visible') return;
       // L'auto-clic tourne sur toutes les pages (casino, jeux, bourse…) tant que le joueur utilise la fenêtre (vérifié dans triggerClick)
       if (typeof ClickerEngine !== 'undefined' && ClickerEngine.triggerClick) {
-        ClickerEngine.triggerClick(false);
+        carry += perTick; const n = Math.floor(carry); carry -= n;
+        if (n > 0) ClickerEngine.triggerClick(false, n);
       }
     }, intervalMs);
   }

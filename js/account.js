@@ -169,18 +169,12 @@ const Account = (() => {
     push();
   }
 
-  // Le serveur refuse une sauvegarde incohérente (progression impossible) : on revient à la dernière version valide
+  // Le serveur refuse une sauvegarde absurde (progression impossible, format cassé) : on NE touche PAS à la partie du joueur
+  // (avant, on rechargeait la dernière version en ligne et on perdait de l'XP). Copie de sécurité locale + nouvel essai plus tard.
   async function handleRejected() {
-    ls.del(DIRTY);
-    const n = +(sessionStorage.getItem('ak_rej') || 0) + 1;
-    sessionStorage.setItem('ak_rej', String(n));
     backup('refusee', snapshot());
-    await GameDialog.alert('Les données de cette partie ne sont pas cohérentes (progression impossible). On remet la dernière sauvegarde valide.', { title: 'Sauvegarde refusée' });
-    if (n > 2) return;
-    try {
-      const save = await pull();
-      if (save) { applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); rememberBase(save.data); location.reload(); }
-    } catch (e) {}
+    console.warn('[Account] sauvegarde refusée par le serveur, la partie locale est conservée');
+    if (!timer) timer = setTimeout(() => { timer = null; push(); }, 120000);
   }
 
   async function pull() {
