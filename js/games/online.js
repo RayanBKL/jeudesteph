@@ -120,6 +120,14 @@ const Online = (() => {
       r.prevLast = data.state.last;
     }
     if (data.game === 'des421' && data.state.rolls[data.me] === 0) r.held = [false, false, false];
+    // Défis du 421 : le combo de MES dés à chaque manche terminée (brelan, 421, mac)
+    if (data.game === 'des421' && data.state.last && data.state.last.dice) {
+      const key = JSON.stringify(data.state.last.dice) + JSON.stringify(data.state.scores);
+      if (r.lastDiceKey !== key) {
+        r.lastDiceKey = key;
+        try { const ev = Des421.evaluate(data.state.last.dice[data.me]); if (ev && ev.combo && typeof Prestige !== 'undefined') Prestige.emit('dice_combo', { combo: ev.combo }); } catch (e) {}
+      }
+    }
     const me = data.me, opp = 1 - me;
     const ids = [data.p1, data.p2];
     r.me = await profileOf(ids[me]); r.opp = await profileOf(ids[opp]);
@@ -445,6 +453,8 @@ const Online = (() => {
     if (reason === 'abandon') pre = { error: 'Partie annulée, aucun point en jeu.' };
     else if (!lp) pre = { error: 'Tu as déjà joué 10 fois contre ce joueur aujourd\'hui : pas de points cette fois.' };
     else pre = League.applyResult(d.game, lp, result);
+    // Défis : « sans encaisser de point » (avant, seuls les anciens moteurs locaux envoyaient cet évènement : les parties en ligne ne comptaient jamais)
+    if (result === 'win' && reason !== 'forfait' && reason !== 'abandon' && s.scores && s.scores[opp] === 0 && (d.game === 'bataille' || d.game === 'pbc') && typeof Prestige !== 'undefined') Prestige.emit('perfect', { game: d.game });
     GameUI.showResult(screen, d.game, reason === 'abandon' ? 'draw' : result, detail, again, pre);
     const recap = lastRoundHtml(r);
     if (recap) { const box = screen.querySelector('.mg-result') || screen; box.insertAdjacentHTML('beforeend', recap); }

@@ -32,6 +32,14 @@ const Account = (() => {
   let blocked = false;       // true si un autre onglet a pris la main : cet onglet n'envoie plus rien
   let frozen = false;        // true dès qu'une version reçue d'un autre appareil est écrite : la page va se recharger, le jeu en cours ne doit plus rien écrire (sinon il écrase la version reçue avec ses vieux chiffres)
   const TAB_KEY = 'ak_tab_lock', TAB_ID = Math.random().toString(36).slice(2);
+  // Appareil principal : chaque onglet / appareil a un identifiant de session (gardé quand la page se recharge, nouveau à chaque nouvelle ouverture).
+  // La dernière session ouverte « prend la main » côté serveur (session_claim) ; les autres affichent « déjà connecté ailleurs ».
+  let sid = null;
+  try { sid = sessionStorage.getItem('ak_sid'); } catch (e) {}
+  if (!sid) {
+    sid = 's' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try { sessionStorage.setItem('ak_sid', sid); } catch (e) {}
+  }
   const rawSet = Storage.prototype.setItem;
   const rawRemove = Storage.prototype.removeItem;
 
@@ -128,6 +136,36 @@ const Account = (() => {
     return /iPhone|iPad/.test(ua) ? 'iPhone/iPad' : /Android/.test(ua) ? 'Android' : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : 'Navigateur';
   }
 
+  // ── Appareil principal ─────────────────────────────────────
+  async function claimSession() {
+    const sb = client(); if (!sb) return;
+    try { const { error } = await sb.rpc('session_claim', { p_sid: sid, p_device: deviceName() }); if (!error) sessionStorage.setItem('ak_sid_claimed', '1'); } catch (e) {}
+  }
+  // Un autre appareil a pris la main : on envoie une dernière fois ce qui n'est pas encore parti, puis on bloque cet appareil
+  async function loseControl(otherDevice) {
+    if (blocked) return;
+    try { if (ls.get(DIRTY) === '1') await push(); } catch (e) {}
+    blocked = true; live = false; window.AkBlocked = true;
+    clearTimeout(timer); timer = null;
+    const where = otherDevice ? ` (${otherDevice})` : '';
+    blockScreen('Tu es déjà connecté sur un autre appareil', `Ta partie est ouverte sur un autre appareil${where}. Un seul appareil à la fois, sinon la sauvegarde se mélange.`, 'Jouer sur cet appareil', takeOver);
+  }
+  // « Jouer sur cet appareil » : cet appareil devient le principal ; l'autre envoie sa dernière version et se bloque à son tour
+  async function takeOver() {
+    const btn = document.querySelector('#tab-block button');
+    if (btn) { btn.disabled = true; btn.textContent = 'Synchronisation…'; }
+    try {
+      await claimSession();
+      await new Promise(r => setTimeout(r, 7000));          // l'autre appareil voit le changement (≤ 6 s) et envoie sa dernière version
+      const save = await pull();
+      if (save) {
+        applySnapshot(save.data); ls.set(OWNER, user.id); ls.set(STAMP, save.updated_at); ls.del(DIRTY); rememberBase(save.data);
+        sessionStorage.setItem('ak_reloaded', user.id + save.updated_at);
+      }
+    } catch (e) { /* hors ligne : on recharge quand même, la page se resynchronisera */ }
+    location.reload();
+  }
+
   // ── Envoi ──────────────────────────────────────────────────
   async function push(force = false) {
     const sb = client();
@@ -221,6 +259,37 @@ const Account = (() => {
     return c.xp * 1e6 + c.totalEarned + c.totalClicks * 10 + c.packs * 100 + Object.values(c.inv).reduce((a, v) => a + v, 0);
   }
 
+  // Défis, quêtes et succès : à la fusion on garde le MEILLEUR de chaque appareil (avant, seuls ceux de la partie « la plus avancée » survivaient,
+  // donc des défis avancés sur l'autre appareil repartaient de zéro)
+  const jparse = str => { try { return JSON.parse(str || 'null'); } catch (e) { return null; } };
+  const maxMap = (x, y) => { const o = { ...(x || {}) }; Object.keys(y || {}).forEach(k => { o[k] = Math.max(o[k] || 0, y[k] || 0); }); return o; };
+  const unionMap = (x, y) => { const o = { ...(x || {}) }; Object.keys(y || {}).forEach(k => { o[k] = o[k] ? Math.min(o[k], y[k]) : y[k]; }); return o; };
+  function mergeExtras(local, cloud) {
+    const out = {};
+    try {
+      const a = jparse(local.prestige_v1), b = jparse(cloud.prestige_v1);
+      if (a && b) {
+        const m = a.week === b.week ? { ...a, progress: maxMap(a.progress, b.progress), done: unionMap(a.done, b.done) } : ((a.week || '') > (b.week || '') ? { ...a } : { ...b });
+        const seen = new Set(); m.trophies = [...(a.trophies || []), ...(b.trophies || [])].filter(t => t && !seen.has(t.id) && seen.add(t.id)).sort((x, y) => (x.at || 0) - (y.at || 0));
+        out.prestige_v1 = JSON.stringify(m);
+      }
+    } catch (e) {}
+    try {
+      const a = jparse(local.ak_quests), b = jparse(cloud.ak_quests);
+      if (a && b) {
+        const m = a.day === b.day ? { ...a, progress: maxMap(a.progress, b.progress), claimed: unionMap(a.claimed, b.claimed) } : ((a.day || '') > (b.day || '') ? { ...a } : { ...b });
+        m.streak = Math.max(a.streak || 0, b.streak || 0);
+        if ((a.completedDay || '') > (b.completedDay || '')) m.completedDay = a.completedDay; else if (b.completedDay) m.completedDay = b.completedDay;
+        out.ak_quests = JSON.stringify(m);
+      }
+    } catch (e) {}
+    try {
+      const a = jparse(local.ak_ach), b = jparse(cloud.ak_ach);
+      if (a && b) out.ak_ach = JSON.stringify({ ...a, c: maxMap(a.c, b.c), u: unionMap(a.u, b.u) });
+    } catch (e) {}
+    return out;
+  }
+
   // Fusion à trois (version commune + appareil A + appareil B) : on ADDITIONNE ce que chaque appareil a fait depuis la version commune.
   // Rien ne se perd : argent, XP, clics, paquets et cartes des deux côtés sont conservés.
   function mergeSaves(local, cloud, base) {
@@ -234,7 +303,7 @@ const Account = (() => {
     const ids = new Set([...Object.keys(L.inv), ...Object.keys(C.inv), ...Object.keys(base.inv || {})]), inv = {};
     ids.forEach(id => { const n = Math.max(0, (L.inv[id] || 0) + (C.inv[id] || 0) - ((base.inv || {})[id] || 0)); if (n > 0) inv[id] = n; });
     e.inventory = inv;
-    return { ...tpl, empire_clicker: JSON.stringify(c), empire_state: JSON.stringify(e) };
+    return { ...tpl, ...mergeExtras(local, cloud), empire_clicker: JSON.stringify(c), empire_state: JSON.stringify(e) };
   }
 
   // Deux versions de la partie (autre appareil ou onglet) : on les FUSIONNE (voir mergeSaves) ; sans version commune connue,
@@ -304,6 +373,7 @@ const Account = (() => {
     try {
       try { if (typeof ClickerEngine !== 'undefined' && ClickerEngine.flushSave) ClickerEngine.flushSave(); } catch (e) {}   // les derniers clics (écriture différée) comptent comme des modifications locales
       const { data } = await sb.rpc('cloud_save_stamp');
+      if (data && data.sid && data.sid !== sid) { await loseControl(data.sid_device); return; }   // un autre appareil est devenu le principal
       if (!data || !data.updated_at || data.updated_at === stamp) return;
       if (busyNow()) return;                                      // en pleine manche / en train de cliquer : on recommencera dans quelques secondes
       if (ls.get(DIRTY) === '1') { await push(); if (ls.get(DIRTY) === '1' || data.updated_at === stamp) return; if (stamp !== data.updated_at && document.hidden) return; }   // modifications locales aussi : conflit → fusion ; si rien à envoyer on continue
@@ -417,6 +487,11 @@ const Account = (() => {
     ls.set(OWNER, u.id);
     live = true;
     applying = false;
+    // Dernier appareil ouvert = appareil principal. Une page rechargée garde sa session : si un autre appareil a pris la main entre-temps, elle reste bloquée.
+    if (sessionStorage.getItem('ak_sid_claimed') !== '1') await claimSession();
+    else {
+      try { const { data: st } = await sb.rpc('cloud_save_stamp'); if (st && st.sid && st.sid !== sid) await loseControl(st.sid_device); } catch (e) {}
+    }
 
     // Photo de profil : celle du serveur, ou on envoie celle de ce navigateur
     if (typeof PlayerProfile !== 'undefined') await PlayerProfile.syncWithProfile(profile);

@@ -17,10 +17,10 @@ const TalentsEngine = (() => {
     ] },
     { id: 'auto', label: 'Auto-clic', angle: 72, nodes: [
       { name: 'Clope au Bec', icon: '🚬', type: 'auto', val: 1, desc: 'Auto-clic : 1 clic gratuit par seconde (tant que tu joues).', lore: 'Les mains dans les poches, le jeu tourne.' },
-      { name: 'Tic Nerveux', icon: '⚡', type: 'auto', val: 3, desc: 'Auto-clic : 3 clics par seconde.', lore: 'Le doigt ne s\'arrête plus.' },
-      { name: 'Cendrier Rotatif', icon: '🔄', type: 'auto', val: 8, desc: 'Auto-clic : 8 clics par seconde.', lore: 'Un engrenage qui récolte sans râler.' },
-      { name: 'Machine à Clics', icon: '⚙️', type: 'auto', val: 15, desc: 'Auto-clic : 15 clics par seconde.', lore: 'Même le comptable a du mal à suivre.' },
-      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 25, desc: 'Auto-clic : 25 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
+      { name: 'Tic Nerveux', icon: '⚡', type: 'auto', val: 2, desc: 'Auto-clic : 2 clics par seconde.', lore: 'Le doigt ne s\'arrête plus.' },
+      { name: 'Cendrier Rotatif', icon: '🔄', type: 'auto', val: 3, desc: 'Auto-clic : 3 clics par seconde.', lore: 'Un engrenage qui récolte sans râler.' },
+      { name: 'Machine à Clics', icon: '⚙️', type: 'auto', val: 5, desc: 'Auto-clic : 5 clics par seconde.', lore: 'Même le comptable a du mal à suivre.' },
+      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 10, desc: 'Auto-clic : 10 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
     ] },
     { id: 'rente', label: 'Revenu des cartes', angle: 144, nodes: [
       { name: 'Petit Loyer', icon: '🏠', type: 'passive', mult: 1.05, desc: 'Revenu des cartes : +5 %.', lore: 'Un studio au-dessus du bar.' },
@@ -69,8 +69,12 @@ const TalentsEngine = (() => {
     totalPointsEarned: 0,
     unlocked: {}, // { [nodeId]: true }
     selectedNodeId: 'clic_1',
-    treeV: 2
+    treeV: 2,
+    lastRespec: 0           // dernier retrait de talent / réinitialisation (1 par 24 h : sinon on change de branche à volonté selon ce qu'on fait)
   };
+  const RESPEC_MS = 24 * 3600 * 1000;
+  const respecWait = () => Math.max(0, (state.lastRespec || 0) + RESPEC_MS - Date.now());
+  const waitText = ms => { const h = Math.floor(ms / 3600000), m = Math.ceil((ms % 3600000) / 60000); return (h ? h + ' h ' : '') + m + ' min'; };
 
   let autoClickTimer = null;
   let lastTap = { id: null, t: 0 };
@@ -167,10 +171,12 @@ const TalentsEngine = (() => {
   function lockNode(nodeId) {
     const node = nodeById(nodeId);
     if (!node || !isNodeUnlocked(nodeId)) return;
+    if (respecWait() > 0) return say(`Un seul retrait de talent par jour : encore ${waitText(respecWait())}.`, 'warning');
     const next = { ...state.unlocked }; delete next[nodeId];
     if (!allStillValid(next)) return say('Impossible : d\'autres talents forgés en dépendent.', 'warning');
     state.unlocked = next;
     state.pointsAvailable += node.cost;
+    state.lastRespec = Date.now();
     state.selectedNodeId = nodeId;
     saveState();
     if (window.SoundFX && SoundFX.click) SoundFX.click();
@@ -179,9 +185,11 @@ const TalentsEngine = (() => {
   }
 
   function reset() {
+    if (respecWait() > 0) return say(`Un seul retrait de talent par jour : encore ${waitText(respecWait())}.`, 'warning');
     const refund = Object.keys(state.unlocked).reduce((a, id) => a + (state.unlocked[id] && nodeById(id) ? nodeById(id).cost : 0), 0);
     state.unlocked = {};
     state.pointsAvailable += refund;
+    if (refund > 0) state.lastRespec = Date.now();
     saveState();
     applyEffects();
     say('Talents réinitialisés : tous tes points sont rendus.', 'info');
@@ -274,7 +282,7 @@ const TalentsEngine = (() => {
     const selOn = isNodeUnlocked(sel.id);
     const prereqNames = (sel.prereqs || []).map(p => nodeById(p).name);
     const reqText = !prereqNames.length ? 'Aucun prérequis : tu peux commencer par là.' : sel.need === 2 ? `Demande les deux : ${prereqNames.join(' et ')}.` : sel.need === 5 ? 'Demande les 5 ponts.' : prereqNames.length > 1 ? `Demande l'un de : ${prereqNames.join(' ou ')}.` : `Demande : ${prereqNames[0]}.`;
-    const hint = selOn ? 'Double-clic pour le retirer (points rendus)' : arePrereqsMet(sel) ? (state.pointsAvailable >= sel.cost ? 'Double-clic pour le forger' : `Il te manque ${sel.cost - state.pointsAvailable} point${sel.cost - state.pointsAvailable > 1 ? 's' : ''}`) : 'Verrouillé';
+    const hint = selOn ? (respecWait() > 0 ? `Retrait possible dans ${waitText(respecWait())}` : 'Double-clic pour le retirer (1 retrait par jour)') : arePrereqsMet(sel) ? (state.pointsAvailable >= sel.cost ? 'Double-clic pour le forger' : `Il te manque ${sel.cost - state.pointsAvailable} point${sel.cost - state.pointsAvailable > 1 ? 's' : ''}`) : 'Verrouillé';
 
     container.innerHTML = `
       <div class="gow-tree-wrapper">
