@@ -141,6 +141,7 @@ const Casino = {
 
   recordResult(type, amount, text) {
     if (type === 'win' && typeof Prestige !== 'undefined') Prestige.emit('casino_win', { amount });
+    if (typeof Gains !== 'undefined') Gains.add({ game: 'casino', label: text, type, amount });
     this.lastResult = { type, amount: Math.abs(amount || 0), text: text || '' };
     try {
       localStorage.setItem('casino_last_result', JSON.stringify(this.lastResult));

@@ -46,6 +46,7 @@ const GameHub = (() => {
     const counts = Prestige.counts();
     c.innerHTML = `
       <div class="hub">
+        <button class="btn-secondary pk-mini gn-open hub-gains" data-gains="online">Historique des parties</button>
         <button class="hub-week" data-view="prestiges">
           <div class="hub-week-top">
             <span class="hub-week-title">Défis de la semaine</span>
