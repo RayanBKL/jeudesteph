@@ -83,7 +83,10 @@ const ClickerEngine = (() => {
     if (!els.clickTarget) return;
 
     // Main click / tap
-    els.clickTarget.addEventListener('click', handleClick);
+    // Souris : on réagit dès l'appui (pas au relâchement) = plus réactif, et les clics très rapides ne sont plus perdus.
+    // L'événement « click » ne sert plus qu'au clavier (detail 0) et aux scripts, qui sont refusés par l'anti-robot.
+    els.clickTarget.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch' && e.button === 0) handleClick(e); });
+    els.clickTarget.addEventListener('click', (e) => { if (e.detail === 0) handleClick(e); });
     // Chaque doigt posé compte pour un clic (jusqu'à 5 doigts) ; deux doigts qui touchent « en même temps » ne sont pas un robot
     els.clickTarget.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -190,12 +193,12 @@ const ClickerEngine = (() => {
   const MAX_CPS = 80;           // limite absolue (clics par seconde)
   const MIN_GAP_MS = 7;         // écart minimum entre deux clics
   function looksAutomated(gaps) {
-    if (!gaps || gaps.length < 30) return false;
-    const g = gaps.slice(-30);
+    if (!gaps || gaps.length < 40) return false;
+    const g = gaps.slice(-40);
     const mean = g.reduce((a, b) => a + b, 0) / g.length;
     if (mean > 250) return false;                       // clics lents : rien à détecter
     const sd = Math.sqrt(g.reduce((a, b) => a + (b - mean) * (b - mean), 0) / g.length);
-    return sd < Math.max(1.5, mean * 0.025);            // quasi aucune variation = robot
+    return sd < Math.max(0.8, mean * 0.01);             // aucune variation du tout (< 1 ms) = robot ; un humain varie toujours de plusieurs ms
   }
 
   function triggerBotLockout(reason) {
@@ -253,7 +256,8 @@ const ClickerEngine = (() => {
       return;
     }
     // Trop régulier : cadence de machine
-    if (lastClickAt && now - lastClickAt < 1500) clickGaps.push(now - lastClickAt); else clickGaps = [];
+    // Seuls les clics d'un même doigt/curseur comptent pour la cadence (deux doigts posés ensemble ne sont pas un robot)
+    if (!multi && lastClickAt && now - lastClickAt < 1500 && now - lastClickAt >= 15) clickGaps.push(now - lastClickAt); else if (!multi && !(lastClickAt && now - lastClickAt < 15)) clickGaps = [];
     lastClickAt = now;
     if (clickGaps.length > 60) clickGaps.shift();
     if (looksAutomated(clickGaps)) {
