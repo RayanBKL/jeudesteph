@@ -20,7 +20,7 @@ const TalentsEngine = (() => {
       { name: 'Tic Nerveux', icon: '⚡', type: 'auto', val: 3, desc: 'Auto-clic : 3 clics par seconde.', lore: 'Le doigt ne s\'arrête plus.' },
       { name: 'Cendrier Rotatif', icon: '🔄', type: 'auto', val: 8, desc: 'Auto-clic : 8 clics par seconde.', lore: 'Un engrenage qui récolte sans râler.' },
       { name: 'Machine à Clics', icon: '⚙️', type: 'auto', val: 15, desc: 'Auto-clic : 15 clics par seconde.', lore: 'Même le comptable a du mal à suivre.' },
-      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 40, desc: 'Auto-clic : 40 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
+      { name: 'Usine Stéphane 24/7', icon: '🏭', type: 'auto', val: 25, desc: 'Auto-clic : 25 clics par seconde.', lore: 'Ça tourne même quand il dort.' },
     ] },
     { id: 'rente', label: 'Revenu des cartes', angle: 144, nodes: [
       { name: 'Petit Loyer', icon: '🏠', type: 'passive', mult: 1.05, desc: 'Revenu des cartes : +5 %.', lore: 'Un studio au-dessus du bar.' },

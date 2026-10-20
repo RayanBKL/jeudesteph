@@ -129,13 +129,16 @@
         <p class="ad-sub">Solde enregistré : <b>${fmt(d.cash)} €</b>. Le changement est appliqué dans le jeu du joueur à sa prochaine connexion ou dans la minute s'il est en ligne.</p>
         <div class="ad-row"><input class="ad-search" id="cash-amount" placeholder="Montant (ex. 50000)" style="margin:0;max-width:200px" /><input class="ad-search" id="cash-note" placeholder="Message au joueur (facultatif)" style="margin:0;max-width:260px" />
         <button class="ad-btn" data-cash="add">Ajouter</button><button class="ad-btn" data-cash="sub">Retirer</button><button class="ad-btn" data-cash="set">Fixer le solde à</button></div></div>
+      <div class="ad-card" style="margin-top:14px"><h3>Niveau d'Empire</h3>
+        <p class="ad-sub">Niveau actuel : <b>${esc((d.summary && d.summary.level) || '?')}</b>. Le niveau est fixé dans le jeu du joueur à sa prochaine synchronisation (l'XP du niveau repart de 0, les points de talent suivent).</p>
+        <div class="ad-row"><input class="ad-search" id="lvl-value" type="number" min="1" max="300" placeholder="Niveau (ex. 16)" style="margin:0;max-width:200px" /><button class="ad-btn" id="lvl-set">Fixer le niveau</button></div></div>
       <div class="ad-card ad-scroll" style="margin-top:14px"><h3>Journal des actions admin sur ce joueur</h3><div id="ad-log"><p class="ad-sub">Chargement…</p></div></div>
       <div class="ad-row" style="justify-content:space-between;margin-top:18px"><button class="ad-btn" id="flag">${d.flagged ? 'Retirer le signalement' : 'Signaler ce compte (le retire du classement collectionneurs)'}</button>${d.is_admin ? '' : '<button class="ad-btn" id="del" style="background:#7a1812">Supprimer ce compte</button>'}</div></div>`;
     $('close').onclick = () => { $('modal').hidden = true; };
     const renderLog = async () => {
       const l = await sb.rpc('admin_log_list', { p_target: id, p_limit: 20 });
       const rows = (l.data || []);
-      $('ad-log').innerHTML = rows.length ? `<table><tbody>${rows.map(x => `<tr style="cursor:default"><td>${ago(x.at)}</td><td>${esc(x.action)}</td><td>${esc(x.detail && x.detail.mode ? (x.detail.mode === 'set' ? 'fixé à ' : (x.detail.montant >= 0 ? '+' : '')) + fmt(x.detail.montant) + ' €' : '')} ${esc((x.detail && x.detail.note) || '')}</td></tr>`).join('')}</tbody></table>` : '<p class="ad-sub">Aucune action.</p>';
+      $('ad-log').innerHTML = rows.length ? `<table><tbody>${rows.map(x => `<tr style="cursor:default"><td>${ago(x.at)}</td><td>${esc(x.action)}</td><td>${esc(x.detail && x.detail.niveau ? 'niveau fixé à ' + x.detail.niveau : x.detail && x.detail.mode ? (x.detail.mode === 'set' ? 'fixé à ' : (x.detail.montant >= 0 ? '+' : '')) + fmt(x.detail.montant) + ' €' : '')} ${esc((x.detail && x.detail.note) || '')}</td></tr>`).join('')}</tbody></table>` : '<p class="ad-sub">Aucune action.</p>';
     };
     renderLog();
     document.querySelectorAll('[data-cash]').forEach(b => b.addEventListener('click', async () => {
@@ -148,6 +151,14 @@
       if (r.error) { await ask({ title: 'Erreur', text: r.error.message, ok: 'OK' }); return; }
       $('cash-amount').value = ''; $('cash-note').value = ''; renderLog();
     }));
+    $('lvl-set').addEventListener('click', async () => {
+      const lv = parseInt($('lvl-value').value, 10);
+      if (!(lv >= 1 && lv <= 300)) { await ask({ title: 'Niveau invalide', text: 'Entre un niveau entre 1 et 300.', ok: 'OK' }); return; }
+      if (!(await ask({ title: 'Confirmer', text: `Fixer le niveau de ${d.pseudo} à ${lv} ?`, ok: 'Confirmer' }))) return;
+      const r = await sb.rpc('admin_set_level', { p_id: id, p_level: lv, p_note: null });
+      if (r.error) { await ask({ title: 'Erreur', text: r.error.message, ok: 'OK' }); return; }
+      $('lvl-value').value = ''; renderLog();
+    });
     $('del')?.addEventListener('click', async () => {
       const typed = await ask({ title: 'Supprimer ce compte ?', text: `Définitif : le compte, la partie, les rangs, les amis. Pour confirmer, écris le pseudo « ${d.pseudo} ».`, input: 'Pseudo du joueur', ok: 'Supprimer', danger: true });
       if (typed === null) return;
