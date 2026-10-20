@@ -226,3 +226,12 @@ Si rien ne manque après quelques jours de test, le dossier d'archive peut être
 - **Reste** : poker et machines à sous (reportés), nouvelles cartes (liste à fournir), migration 017 (sécurité) à appliquer, vrais iPhone/Safari à tester.
 
 - **Poker** : Ultimate Poker (contre la banque) + tables multijoueurs avec mise de départ (`023`) ; Course Clandestine retirée de la salle de jeux. Test serveur : 25 mains à 2-5 joueurs, jetons toujours conservés (somme des crédits = 0).
+
+## Session du 20 octobre 2026
+- **Quiz du Comptoir retiré** (salle de jeux, défis, défis entre amis). Le code serveur et `js/games/quiz.js` ont été supprimés côté navigateur ; restes inoffensifs dans `online.js`/`admin.js`.
+- **La Cendre qui monte** réparée (la partie ne démarrait jamais) + cigarette qui se consume, encaissement auto, quitter l'écran = encaissé. Nouveau jeu instantané **Mégots Piégés** (mines 5×5, retour 97 %).
+- **Une seule machine à sous, Le Grand Cendrier** : achat de bonus (×82) et super bonus (×225), bombes cumulées pendant les tours gratuits, turbo, auto, écran de gros gain, retour ≈ 93-94 %.
+- **Vente de cartes** : le bouton « Mettre une carte en vente » de la Bourse ouvre maintenant un choix de carte (recherche) ; fiche d'une carte de la Collection = bouton « Vendre à un joueur ».
+- **Arbre de talents refait** (5 branches, ponts, Roi au centre, double-clic pour forger ET retirer, bouton Bilan), vrais effets sur les paquets ; l'ancien arbre est remis à zéro (points rendus). Explication des synergies ×1,25/×1,5/×1,6 dans l'aide « ? ».
+- **Évènements** (`028`) : tournois de poker programmés par l'admin (panneau admin > Évènements), inscriptions à l'avance, cagnotte offerte ; les joueurs ne créent plus de tournoi (les tables d'argent restent).
+- **Reste** : migration 017 (sécurité) toujours à appliquer, tests sur vrais iPhone/Safari.

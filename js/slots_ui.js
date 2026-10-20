@@ -24,159 +24,192 @@ const Slots = (() => {
   const symSvg = id => `<svg viewBox="0 0 64 64" class="sl-sym sl-sym-${id}" aria-hidden="true">${SYM[id] || ''}</svg>`;
   const REG_ORDER = ['verre', 'cig', 'briquet', 'paquet', 'des', 'fer', 'cerise', 'cloche', 'sept'];
 
-  const META = {
-    classic: { cols: 3, rows: 3, lines: 5, tag: 'Trois rouleaux, cinq lignes. Le classique du bar.', sample: ['sept', 'cloche', 'cerise'], reels: ['verre', 'cig', 'cerise', 'fer', 'cloche', 'sept'] },
-    pmu: { cols: 5, rows: 3, lines: 20, tag: '20 lignes, joker couronne et tours gratuits doublés.', sample: ['couronne', 'sept', 'etoile'], reels: [...REG_ORDER, 'couronne', 'etoile'] },
-    livre: { cols: 5, rows: 3, lines: 10, tag: 'Le livre déclenche 10 tours gratuits avec un symbole qui s\'étend.', sample: ['livre', 'cig', 'sept'], reels: ['des', 'fer', 'cerise', 'cloche', 'verre', 'cig', 'sept', 'livre'] },
-    cascade: { cols: 6, rows: 5, lines: 0, tag: '8 symboles identiques ou plus : ça paie, ça tombe, ça recommence.', sample: ['sept', 'cloche', 'etoile'], reels: [...REG_ORDER.slice(0, 8), 'etoile', 'bombe'] },
-  };
+  const ID = 'cendrier';
+  const REELS = [...REG_ORDER.slice(0, 8), 'etoile'];
+  const META = { cendrier: { cols: 6, rows: 5, sample: ['sept', 'cloche', 'etoile'] } };
   const BETS = [5, 10, 25, 50, 100, 250, 500, 1000, 5000, 25000, 100000];
-  const S = {};     // état par machine : { bet, spinning, fsLeft, fsWin, special, auto }
-  const state = id => (S[id] = S[id] || { bet: 2, spinning: false, fsLeft: 0, fsWin: 0, special: null, auto: 0, last: 0, grid: null });
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const st = { bet: 2, spinning: false, fsLeft: 0, fsWin: 0, acc: 0, sup: false, turbo: false, auto: 0, last: 0, grid: null };
+  const sleep = ms => new Promise(r => setTimeout(r, st.turbo ? Math.max(40, ms / 3.5) : ms));
   const rnd = a => a[Math.floor(Math.random() * a.length)];
-  let alive = null;      // machine affichée (sert à arrêter les animations quand on quitte)
+  let alive = false;     // l'écran est affiché (sert à arrêter les animations quand on quitte)
+  const G = () => SlotEngine.GAMES[ID];
 
-  function tile(id) { const m = META[id]; return `<span class="sl-tile-art">${m.sample.map(symSvg).join('')}</span>`; }
+  function tile() { return `<span class="sl-tile-art">${META[ID].sample.map(symSvg).join('')}</span>`; }
+  const randomGrid = () => Array.from({ length: 6 }, () => Array.from({ length: 5 }, () => rnd(REELS)));
+  const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t); };
+  const cashNow = () => (window.ClickerEngine && ClickerEngine.getCash) ? ClickerEngine.getCash() : 0;
 
-  function randomGrid(id) { const m = META[id]; return Array.from({ length: m.cols }, () => Array.from({ length: m.rows }, () => rnd(m.reels))); }
-
-  function render(content, id) {
-    stop();
-    const g = SlotEngine.GAMES[id], m = META[id], st = state(id);
-    alive = id; st.spinning = false; st.auto = 0;
-    if (!st.grid) st.grid = randomGrid(id);
+  function render(content) {
+    stop(); alive = true; st.spinning = false; st.auto = 0;
+    if (!st.grid) st.grid = randomGrid();
+    const g = G();
     content.innerHTML = `
-      <div class="casino-felt-table sl-machine sl-${id}">
-        <div class="sl-head"><span class="ig-sub">${esc(m.tag)}</span><button class="btn-secondary pk-mini" id="sl-pay">Gains</button></div>
+      <div class="casino-felt-table sl-machine sl-cendrier">
+        <div class="sl-head"><span class="ig-sub">8 symboles identiques ou plus : ça paie, ça tombe, ça recommence.</span><button class="btn-secondary pk-mini" id="sl-pay">Gains</button></div>
         <div class="sl-fs hidden" id="sl-fs"></div>
-        <div class="sl-grid" id="sl-grid" style="--cols:${m.cols};--rows:${m.rows}">${gridHtml(st.grid)}</div>
-        <div class="sl-win" id="sl-win">${st.last ? 'Dernier gain : ' + fmt(st.last) + ' €' : 'Fais tourner les rouleaux'}</div>
+        <div class="sl-board"><div class="sl-grid" id="sl-grid">${gridHtml(st.grid)}</div><div class="sl-big hidden" id="sl-big"></div></div>
+        <div class="sl-win" id="sl-win">${st.last ? 'Dernier gain : ' + fmt(st.last) + ' €' : 'Fais tourner la machine'}</div>
         <div class="sl-controls">
           <div class="sl-bet"><button class="btn-secondary" id="sl-minus" aria-label="Moins">−</button><span id="sl-betv"><small>Mise</small><b>${fmt(BETS[st.bet])} €</b></span><button class="btn-secondary" id="sl-plus" aria-label="Plus">+</button></div>
           <button class="btn-primary sl-spin" id="sl-spin">Tourner</button>
-          <div class="sl-side"><button class="btn-secondary pk-mini" id="sl-max">Max</button><button class="btn-secondary pk-mini" id="sl-auto">Auto ×10</button></div>
+          <div class="sl-side"><button class="btn-secondary pk-mini ${st.turbo ? 'is-on' : ''}" id="sl-turbo">Turbo</button><select class="game-select-empire" id="sl-auto"><option value="0">Auto</option><option value="10">10 tours</option><option value="25">25 tours</option><option value="50">50 tours</option><option value="100">100 tours</option></select></div>
+        </div>
+        <div class="sl-buy">
+          <button class="btn-secondary sl-buy-btn" id="sl-buy1"><b>Acheter le bonus</b><small id="sl-buy1p"></small></button>
+          <button class="btn-secondary sl-buy-btn sl-buy-super" id="sl-buy2"><b>Super bonus</b><small id="sl-buy2p"></small></button>
         </div>
       </div>`;
-    bind(content, id);
+    bind(content); updatePrices(content); updateFs(content);
   }
-  function gridHtml(grid, win) {
-    // grille[colonne][ligne] affichée en colonnes
-    return grid.map((col, c) => `<div class="sl-col" data-c="${c}">${col.map((s, r) => `<div class="sl-cell ${win && win.has(c + ':' + r) ? 'is-win' : ''}">${symSvg(s)}</div>`).join('')}</div>`).join('');
+  function updatePrices(content) {
+    const g = G(), bet = BETS[st.bet], q = s => content.querySelector(s);
+    if (q('#sl-buy1p')) q('#sl-buy1p').textContent = `10 tours · ${fmt(g.price('bonus') * bet)} € (×${g.price('bonus')})`;
+    if (q('#sl-buy2p')) q('#sl-buy2p').textContent = `15 tours, bombes en folie · ${fmt(g.price('super') * bet)} € (×${g.price('super')})`;
   }
-  function stop() { alive = null; }
+  // Cellule : en tombant, elle garde une animation de chute
+  function cellHtml(s, cls, val) { return `<div class="sl-cell ${cls || ''}">${symSvg(s)}${val ? `<i class="sl-bv">×${val}</i>` : ''}</div>`; }
+  function gridHtml(grid, opt = {}) {
+    // opt.win = Set 'c:r' qui clignotent ; opt.pop = Set qui éclatent ; opt.drop = { c: nbDeCellulesNeuves } ; opt.vals = { 'c:r': valeur }
+    return grid.map((col, c) => `<div class="sl-col">${col.map((s, r) => {
+      const k = c + ':' + r, cls = [opt.win && opt.win.has(k) ? 'is-win' : '', opt.pop && opt.pop.has(k) ? 'is-pop' : '', opt.drop && opt.drop[c] !== undefined ? (r < opt.drop[c] ? 'is-fall' : 'is-shift') : '', opt.drop && opt.drop[c] !== undefined ? 'd' + Math.min(r, 4) : ''].join(' ');
+      return cellHtml(s, cls, opt.vals && opt.vals[k]);
+    }).join('')}</div>`).join('');
+  }
+  function stop() { alive = false; }
 
-  function bind(content, id) {
-    const st = state(id), $ = s => content.querySelector(s);
-    const setBet = d => { st.bet = Math.max(0, Math.min(BETS.length - 1, st.bet + d)); $('#sl-betv').innerHTML = `<small>Mise</small><b>${fmt(BETS[st.bet])} €</b>`; if (window.SoundFX) SoundFX.click(); };
+  function bind(content) {
+    const $ = s => content.querySelector(s);
+    const setBet = d => { st.bet = Math.max(0, Math.min(BETS.length - 1, st.bet + d)); $('#sl-betv').innerHTML = `<small>Mise</small><b>${fmt(BETS[st.bet])} €</b>`; updatePrices(content); if (window.SoundFX) SoundFX.click(); };
     $('#sl-minus').addEventListener('click', () => !st.spinning && setBet(-1));
     $('#sl-plus').addEventListener('click', () => !st.spinning && setBet(1));
-    $('#sl-max').addEventListener('click', () => { if (st.spinning) return; const cash = cashNow(); let i = 0; BETS.forEach((b, k) => { if (b <= cash) i = k; }); st.bet = i; setBet(0); });
-    $('#sl-spin').addEventListener('click', () => { if (!st.spinning) play(content, id); });
-    $('#sl-auto').addEventListener('click', () => { if (st.spinning) { st.auto = 0; return; } st.auto = 10; play(content, id); });
-    $('#sl-pay').addEventListener('click', () => showPaytable(id));
+    $('#sl-spin').addEventListener('click', () => { if (st.spinning) { st.auto = 0; return; } play(content); });
+    $('#sl-turbo').addEventListener('click', e => { st.turbo = !st.turbo; e.currentTarget.classList.toggle('is-on', st.turbo); });
+    $('#sl-auto').addEventListener('change', e => { const n = +e.target.value; e.target.value = '0'; if (!n || st.spinning) return; st.auto = n; play(content); });
+    $('#sl-pay').addEventListener('click', showPaytable);
+    $('#sl-buy1').addEventListener('click', () => buyBonus(content, false));
+    $('#sl-buy2').addEventListener('click', () => buyBonus(content, true));
   }
-  const cashNow = () => (window.ClickerEngine && ClickerEngine.getCash) ? ClickerEngine.getCash() : 0;
 
-  async function play(content, id) {
-    const st = state(id), g = SlotEngine.GAMES[id];
+  async function buyBonus(content, sup) {
+    if (st.spinning || st.fsLeft > 0) return;
+    const g = G(), bet = BETS[st.bet], cost = g.price(sup ? 'super' : 'bonus') * bet;
+    const ok = await GameDialog.confirm(`${sup ? 'Super bonus : 15 tours gratuits avec beaucoup plus de bombes' : 'Bonus : 10 tours gratuits'} pour ${fmt(cost)} € ?`, { title: 'Acheter un bonus', ok: 'Acheter', cancel: 'Non' });
+    if (!ok || !alive) return;
+    if (!spendMoney(cost)) return toast('Solde insuffisant pour acheter ce bonus.', 'error');
+    if (typeof Casino !== 'undefined') Casino.recordBet();
+    st.bought = cost; st.fsLeft = sup ? 15 : g.fsCount; st.sup = sup; st.acc = 0; st.fsWin = 0;
+    toast(`${st.fsLeft} tours gratuits !`, 'gold');
+    updateFs(content); play(content);
+  }
+
+  async function play(content) {
     if (st.spinning) return;
-    const free = st.fsLeft > 0;
-    const bet = BETS[st.bet];
+    const g = G(), free = st.fsLeft > 0, bet = BETS[st.bet];
     if (!free) {
-      if (!spendMoney(bet)) { st.auto = 0; return toast('Solde insuffisant pour cette mise. Baisse la mise ou utilise l\'avance bancaire.', 'error'); }
+      if (!spendMoney(bet)) { st.auto = 0; return toast('Solde insuffisant pour cette mise. Baisse la mise.', 'error'); }
       if (typeof Casino !== 'undefined') Casino.recordBet();
-    } else { st.fsLeft--; }
+    } else st.fsLeft--;
     st.spinning = true;
-    const spinBtn = content.querySelector('#sl-spin'); if (spinBtn) { spinBtn.disabled = true; spinBtn.textContent = free ? 'Tour gratuit…' : '…'; }
+    const spinBtn = content.querySelector('#sl-spin'); if (spinBtn) { spinBtn.textContent = st.auto ? 'Stop auto' : free ? 'Tour gratuit…' : '…'; if (!st.auto) spinBtn.disabled = true; }
     if (window.SoundFX) SoundFX.click();
-    const res = id === 'livre' ? g.spin(free ? st.special : undefined) : g.spin(free);
-    await animate(content, id, res);
-    if (alive !== id) { st.spinning = false; return; }
-    let win = Math.round(res.mult * bet);
+    const res = g.spin({ free, sup: st.sup, acc: st.acc });
+    const startAcc = st.acc;
+    await animate(content, res, free);
+    if (!alive) { st.spinning = false; return; }
+    st.acc = res.acc;
+    const win = Math.round(res.mult * bet);
     if (win > 0) earnMoney(win);
-    st.last = win; st.grid = res.grid; if (free) st.fsWin += win;
+    st.last = win; st.grid = res.grid;
+    if (free || res.fs) st.fsWin += (free ? win : 0);
     const el = content.querySelector('#sl-win');
-    if (el) { el.className = 'sl-win' + (win >= bet * 10 ? ' is-big' : win > 0 ? ' is-ok' : ''); el.textContent = win > 0 ? `Gain : +${fmt(win)} €${win >= bet * 10 ? ' · Gros gain !' : ''}` : (free ? 'Rien sur ce tour gratuit' : 'Perdu, la machine se tait'); }
+    if (el) { el.className = 'sl-win' + (win >= bet * 20 ? ' is-big' : win > 0 ? ' is-ok' : ''); el.textContent = win > 0 ? `Gain : +${fmt(win)} €${res.mult >= 20 ? ' (×' + Math.round(res.mult) + ')' : ''}` : (free ? 'Rien sur ce tour gratuit' : 'Rien. La machine fait semblant de réfléchir.'); }
     if (win > 0 && window.SoundFX) SoundFX.win();
-    const net = win - (free ? 0 : bet);
-    if (!free && typeof Casino !== 'undefined') Casino.recordResult(net > 0 ? 'win' : 'lose', Math.abs(net), `${g.name} : ${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}`);
-    // tours gratuits gagnés
-    if (res.fs) {
-      st.fsLeft += res.fs; if (id === 'livre' && res.special) st.special = res.special;
-      toast(`${res.fs} tours gratuits${id === 'livre' && res.special ? ' · symbole spécial : ' + res.special : ''} !`, 'gold');
-      if (id === 'livre' && res.special) showSpecial(content, res.special);
-      st.fsWin = free ? st.fsWin : 0;
+    if (win >= bet * 20) await bigWin(content, win, win / bet);
+    // bilan de la partie (hors bonus)
+    if (!free && !res.fs) {
+      const net = win - bet;
+      if (typeof Casino !== 'undefined') Casino.recordResult(net > 0 ? 'win' : 'lose', Math.abs(net), `${g.name} : ${net > 0 ? '+' : '−'}${fmt(Math.abs(net))}`);
     }
-    updateFs(content, id);
+    // déclenchement du bonus par 4 étoiles ou plus
+    if (res.fs && !free) { st.fsLeft += res.fs; st.sup = false; st.acc = 0; st.fsWin = win; st.bought = bet; toast(`${res.scatters} étoiles : ${res.fs} tours gratuits !`, 'gold'); }
+    else if (res.fs && free) { st.fsLeft += res.fs; toast(`+${res.fs} tours gratuits`, 'gold'); }
+    updateFs(content);
     if (typeof saveGame === 'function') saveGame();
-    st.spinning = false; if (spinBtn) { spinBtn.disabled = false; spinBtn.textContent = 'Tourner'; }
-    if (st.fsLeft > 0) { await sleep(900); if (alive === id) return play(content, id); }
-    else if (free && st.fsWin >= 0 && !res.fs && st.fsLeft === 0 && st.fsWin > 0) { toast(`Tours gratuits terminés : +${fmt(st.fsWin)} € au total`, 'gold'); st.fsWin = 0; updateFs(content, id); }
-    if (st.auto > 1 && !free) { st.auto--; if (win < bet * 20) { await sleep(450); if (alive === id) return play(content, id); } else st.auto = 0; } else st.auto = 0;
+    st.spinning = false; if (spinBtn) { spinBtn.disabled = false; spinBtn.textContent = st.auto ? 'Stop auto' : 'Tourner'; }
+    if (st.fsLeft > 0) { await sleep(900); if (alive) return play(content); return; }
+    if (free) {
+      // fin du bonus
+      const total = st.fsWin, paid = st.bought || 0; st.fsWin = 0; st.acc = 0; st.sup = false; updateFs(content);
+      if (typeof Casino !== 'undefined') Casino.recordResult(total > paid ? 'win' : 'lose', Math.abs(total - paid), `${g.name} bonus : ${total >= paid ? '+' : '−'}${fmt(Math.abs(total - paid))}`);
+      await endBonus(content, total, total / bet);
+    }
+    if (st.auto > 0) { st.auto--; if (st.auto > 0 && !res.fs) { await sleep(450); if (alive) return play(content); } else st.auto = 0; }
+    const sb = content.querySelector('#sl-spin'); if (sb) sb.textContent = 'Tourner';
   }
-  const toast = (m, t) => { if (typeof showToast === 'function') showToast(m, t); };
 
-  function updateFs(content, id) {
-    const st = state(id), el = content.querySelector('#sl-fs'); if (!el) return;
-    if (st.fsLeft > 0) { el.classList.remove('hidden'); el.innerHTML = `Tours gratuits : <b>${st.fsLeft}</b> restants · gains du bonus : <b>${fmt(st.fsWin)} €</b>${id === 'livre' && st.special ? ` · symbole spécial ${symSvg(st.special)}` : ''}${id === 'pmu' ? ' · gains ×2' : ''}`; }
+  function updateFs(content) {
+    const el = content.querySelector('#sl-fs'); if (!el) return;
+    if (st.fsLeft > 0 || st.acc > 0) { el.classList.remove('hidden'); el.innerHTML = `<span>Tours gratuits <b>${st.fsLeft}</b></span><span class="sl-fs-mult">Multiplicateur <b>×${st.acc || 0}</b></span><span>Gain du bonus <b>${fmt(st.fsWin)} €</b></span>`; }
     else el.classList.add('hidden');
   }
-  function showSpecial() { /* l'info est dans le bandeau des tours gratuits */ }
 
-  // Animation : les rouleaux tournent puis s'arrêtent un par un ; puis les lignes gagnantes s'allument
-  async function animate(content, id, res) {
-    const m = META[id], grid = content.querySelector('#sl-grid'); if (!grid) return;
-    const cols = [...grid.querySelectorAll('.sl-col')];
-    cols.forEach(c => c.classList.add('is-spin'));
-    const timer = setInterval(() => { cols.forEach(c => { if (c.classList.contains('is-spin')) c.querySelectorAll('.sl-cell').forEach(cell => { cell.innerHTML = symSvg(rnd(m.reels)); }); }); }, 70);
-    const stopAt = id === 'cascade' ? 500 : 420;
-    for (let c = 0; c < cols.length; c++) {
-      await sleep(c === 0 ? stopAt : (id === 'cascade' ? 70 : 230));
-      if (alive !== id) { clearInterval(timer); return; }
-      const col = cols[c]; col.classList.remove('is-spin');
-      col.querySelectorAll('.sl-cell').forEach((cell, r) => { cell.innerHTML = symSvg(res.grid[c][r]); });
+  // Animation : les colonnes tombent de gauche à droite ; puis chaque grappe gagnante éclate et le reste retombe
+  async function animate(content, res, free) {
+    const grid = content.querySelector('#sl-grid'); if (!grid) return;
+    grid.innerHTML = gridHtml(res.steps.length ? res.steps[0].grid : res.grid, { drop: Object.fromEntries([0, 1, 2, 3, 4, 5].map(c => [c, 5])) });
+    grid.classList.add('is-dropping'); await sleep(650); grid.classList.remove('is-dropping');
+    if (!alive) return;
+    for (let i = 0; i < res.steps.length; i++) {
+      const step = res.steps[i];
+      const win = new Set(step.grid.flatMap((col, c) => col.map((s, r) => step.removed.includes(s) ? c + ':' + r : null)).filter(Boolean));
+      grid.innerHTML = gridHtml(step.grid, { win }); if (window.SoundFX) SoundFX.click();
+      await sleep(600); if (!alive) return;
+      grid.innerHTML = gridHtml(step.grid, { pop: win }); await sleep(260); if (!alive) return;
+      // nouvelle grille après la chute : colonnes touchées = cellules neuves en haut, les autres glissent
+      const next = res.steps[i + 1] ? res.steps[i + 1].grid : res.grid, drop = {};
+      step.grid.forEach((col, c) => { const n = col.filter(s => step.removed.includes(s)).length; if (n) drop[c] = n; });
+      grid.innerHTML = gridHtml(next, { drop }); await sleep(520);
     }
-    clearInterval(timer);
-    if (id === 'cascade' && res.steps && res.steps.length) {
-      // chutes : on montre chaque grille, les gagnants clignotent, puis tout retombe
-      for (const step of res.steps) {
-        if (alive !== id) return;
-        if (!step.removed.length) continue;
-        grid.innerHTML = gridHtml(step.grid, new Set(step.grid.flatMap((col, c) => col.map((s, r) => step.removed.includes(s) ? c + ':' + r : null)).filter(Boolean)));
-        await sleep(650);
-      }
-      if (alive === id) grid.innerHTML = gridHtml(res.grid);
-      return;
-    }
-    if (res.expanded && res.expanded.length) {
-      grid.innerHTML = gridHtml(res.grid, new Set(res.expanded.flatMap(c => [c + ':0', c + ':1', c + ':2'])));
+    if (!alive) return;
+    if (free && res.bombs.length) {
+      // les bombes révèlent leur valeur l'une après l'autre
+      const vals = {}; let k = 0;
+      res.grid.forEach((col, c) => col.forEach((s, r) => { if (s === 'bombe') vals[c + ':' + r] = res.bombs[k++]; }));
+      grid.innerHTML = gridHtml(res.grid, { vals }); if (window.SoundFX) SoundFX.click();
       await sleep(900);
-    }
-    if (res.wins && res.wins.length) {
-      const g = SlotEngine.GAMES[id], hit = new Set();
-      res.wins.forEach(w => { const line = g.lines[w.line]; for (let c = 0; c < w.count; c++) hit.add(c + ':' + line[c]); });
-      grid.innerHTML = gridHtml(res.grid, hit);
-      await sleep(550);
+    } else grid.innerHTML = gridHtml(res.grid);
+    if (res.scatters >= 4 && alive) {
+      const win = new Set(res.grid.flatMap((col, c) => col.map((s, r) => s === 'etoile' ? c + ':' + r : null)).filter(Boolean));
+      grid.innerHTML = gridHtml(res.grid, { win }); await sleep(900);
     }
   }
 
-  function showPaytable(id) {
-    const g = SlotEngine.GAMES[id], m = META[id];
-    const per = m.lines || 1, tbl = g.pay;
-    const rows = Object.keys(tbl).map(sym => {
-      const v = tbl[sym];
-      const cells = Array.isArray(v) ? `<span>8-9 : ×${v[0]}</span><span>10-11 : ×${v[1]}</span><span>12+ : ×${v[2]}</span>`
-        : Object.keys(v).map(n => `<span>${n} : ×${Math.round(v[n] / per * 100) / 100}</span>`).join('');
-      return `<div class="sl-pt-row">${symSvg(sym)}<div class="sl-pt-vals">${cells}</div></div>`;
-    }).join('');
-    const extra = id === 'pmu' ? '<p>La couronne est un joker (sauf bonus). 3 étoiles ou plus : gain et tours gratuits (8, 12 ou 20) à gains doublés.</p>'
-      : id === 'livre' ? '<p>Le livre est joker et bonus : 3 livres ou plus = 10 tours gratuits. Un symbole spécial est tiré : il s\'étend sur tout le rouleau et paie partout.</p>'
-      : id === 'cascade' ? '<p>Les symboles gagnants disparaissent et les autres tombent. 4 étoiles ou plus : 10 tours gratuits, avec des bombes ×2 à ×25 qui multiplient le gain.</p>'
-      : '<p>Cinq lignes : trois horizontales et deux diagonales. Les cerises paient dès la première.</p>';
+  // Écran de gros gain
+  async function bigWin(content, win, x) {
+    const el = content.querySelector('#sl-big'); if (!el) return;
+    const label = x >= 500 ? 'Jackpot du comptoir' : x >= 150 ? 'Gain monstre' : x >= 60 ? 'Très gros gain' : 'Gros gain';
+    el.className = 'sl-big'; el.innerHTML = `<small>${label}</small><b>0 €</b><em>×${Math.round(x)}</em>`;
+    const b = el.querySelector('b'), t0 = performance.now(), dur = st.turbo ? 500 : 1500;
+    await new Promise(res => { const f = now => { if (!alive) return res(); const p = Math.min(1, (now - t0) / dur); b.textContent = fmt(Math.round(win * p)) + ' €'; p < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+    await sleep(900); el.className = 'sl-big hidden';
+  }
+  async function endBonus(content, total, x) {
+    const el = content.querySelector('#sl-big'); if (!el) return;
+    el.className = 'sl-big'; el.innerHTML = `<small>Bonus terminé</small><b>${fmt(total)} €</b><em>×${Math.round(x * 10) / 10} la mise</em>`;
+    await sleep(2200); el.className = 'sl-big hidden';
+  }
+
+  function showPaytable() {
+    const g = G(), tbl = g.pay;
+    const rows = Object.keys(tbl).reverse().map(sym => { const v = tbl[sym]; return `<div class="sl-pt-row">${symSvg(sym)}<div class="sl-pt-vals"><span>8-9 : ×${v[0]}</span><span>10-11 : ×${v[1]}</span><span>12+ : ×${v[2]}</span></div></div>`; }).join('');
+    const sc = g.scatterPay;
+    const extra = `<p>Les gains se paient sur <b>8 symboles identiques ou plus</b>, n'importe où sur la grille. Les gagnants disparaissent, les autres tombent, et ça recommence tant qu'il y a des grappes.</p>
+      <p><b>4 étoiles ou plus</b> : gain immédiat (4 : ×${sc[4]}, 5 : ×${sc[5]}, 6 : ×${sc[6]}) et <b>10 tours gratuits</b>. Chaque nouvelle série de 4 étoiles pendant le bonus redonne ${g.retrigger} tours.</p>
+      <p>Pendant les tours gratuits, des <b>bombes</b> (×2 à ×25) tombent : leurs valeurs <b>s'additionnent jusqu'à la fin du bonus</b> et multiplient chaque gain.</p>
+      <p><b>Acheter le bonus</b> : tu paies ×${g.price('bonus')} ta mise et tu lances directement les 10 tours gratuits. <b>Super bonus</b> : ×${g.price('super')}, 15 tours et beaucoup plus de bombes. Un bonus acheté te rend en moyenne environ 90 % de son prix : plus cher qu'un tour normal, mais le bonus est garanti.</p>`;
     const el = document.createElement('div');
     el.className = 'soc-modal';
-    el.innerHTML = `<div class="soc-modal-card pp-card"><h3>${esc(g.name)}</h3><p class="soc-empty">Gains en multiples de ta mise totale · retour théorique ≈ 95 %</p>${extra}<div class="bj-hist-list">${rows}</div><button class="btn-empire btn-empire-secondary soc-wide" data-x>Fermer</button></div>`;
+    el.innerHTML = `<div class="soc-modal-card pp-card"><h3>${esc(g.name)}</h3><p class="soc-empty">Gains en multiples de ta mise · retour théorique ≈ 93 % · gain max ×${SlotEngine.MAX_WIN}</p>${extra}<div class="bj-hist-list">${rows}</div><button class="btn-empire btn-empire-secondary soc-wide" data-x>Fermer</button></div>`;
     el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-x]')) el.remove(); });
     document.body.appendChild(el);
   }

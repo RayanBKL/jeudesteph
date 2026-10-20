@@ -2184,7 +2184,8 @@ function drawEmpirePack(packId, pityState = {}) {
   let packsOpenedSincePity = pityState[pack.id + '_packs'] || 0;
   packsOpenedSincePity++;
   let triggerPity = false;
-  if (packsOpenedSincePity >= pack.pityThreshold) {
+  const mods = (typeof TalentsEngine !== 'undefined' && TalentsEngine.getDropMods) ? TalentsEngine.getDropMods() : null;
+  if (packsOpenedSincePity >= Math.max(5, pack.pityThreshold - (mods ? mods.pity : 0))) {
     triggerPity = true;
     packsOpenedSincePity = 0;
   }
@@ -2195,7 +2196,7 @@ function drawEmpirePack(packId, pityState = {}) {
     if (i === 0 && triggerPity) {
       rarity = pack.pityRarity;
     } else {
-      rarity = rollRarity(pack.odds);
+      rarity = rollRarity(pack.odds, mods);
     }
 
     let candidates = pool.filter(c => c.rarity === rarity);
@@ -2209,15 +2210,17 @@ function drawEmpirePack(packId, pityState = {}) {
   return results;
 }
 
-function rollRarity(odds) {
+function rollRarity(odds, mods) {
+  // Les talents de paquets augmentent les chances des raretés visées (les autres baissent mécaniquement)
+  const w = (rarity, prob) => !mods ? prob : rarity === 'rare' ? prob * mods.rare : (rarity === 'epique' || rarity === 'legendaire') ? prob * mods.epic : rarity === 'mythique' ? prob * mods.mythic : prob;
   const r = Math.random();
   let acc = 0;
   for (const [rarity, prob] of Object.entries(odds)) {
-    acc += prob;
+    acc += w(rarity, prob);
   }
   let roll = r * acc;
   for (const [rarity, prob] of Object.entries(odds)) {
-    roll -= prob;
+    roll -= w(rarity, prob);
     if (roll <= 0) return rarity;
   }
   return 'commune';

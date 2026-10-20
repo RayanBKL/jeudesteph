@@ -40,3 +40,6 @@ tbody tr:hover { background: var(--panel2); }
 .ad-bar { display: flex; align-items: center; gap: 6px; margin: 3px 0; font-size: 0.8rem; }
 .ad-bar i { display: block; height: 10px; background: linear-gradient(90deg, #ff5a4f, var(--gold)); border-radius: 4px; }
 @media (max-width: 600px) { main { padding: 10px; } }
+
+.ad-form label{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:#b9a888}
+.ad-form input,.ad-form select{padding:7px 8px;border:2px solid #4a3626;border-radius:8px;background:#1b110a;color:#f3e6c8;font:inherit}
