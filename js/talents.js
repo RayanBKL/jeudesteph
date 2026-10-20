@@ -204,18 +204,18 @@ const TalentsEngine = (() => {
     const cps = getAutoClicksPerSec();
     if (cps <= 0) return;
 
-    // un tick toutes les 50 ms ; au-delà de 20 clics/s, plusieurs clics par tick (plus de plafond technique)
-    const intervalMs = cps >= 20 ? 50 : Math.max(35, Math.floor(1000 / cps)), perTick = cps >= 20 ? cps * 0.05 : 1;
-    let carry = 0;
+    // L'auto-clic compte le TEMPS écoulé (cps × secondes) au lieu de « 1 clic par tick » : quand le téléphone est occupé (5 doigts qui spamment),
+    // les ticks arrivent en retard ou sont sautés, et l'auto-clic « s'arrêtait ». Là, il rattrape (jusqu'à 2 s de retard).
+    let last = performance.now(), carry = 0;
     autoClickTimer = setInterval(() => {
+      const now = performance.now(), dt = Math.min(2000, now - last); last = now;
       // Ne pas compter si le navigateur/onglet est en arrière-plan ou minimisé
-      if (document.hidden || document.visibilityState !== 'visible') return;
+      if (document.hidden || document.visibilityState !== 'visible') { carry = 0; return; }
       // L'auto-clic tourne sur toutes les pages (casino, jeux, bourse…) tant que le joueur utilise la fenêtre (vérifié dans triggerClick)
-      if (typeof ClickerEngine !== 'undefined' && ClickerEngine.triggerClick) {
-        carry += perTick; const n = Math.floor(carry); carry -= n;
-        if (n > 0) ClickerEngine.triggerClick(false, n);
-      }
-    }, intervalMs);
+      carry += cps * dt / 1000;
+      const n = Math.floor(carry);
+      if (n > 0 && typeof ClickerEngine !== 'undefined' && ClickerEngine.triggerClick) { carry -= n; ClickerEngine.triggerClick(false, n); }
+    }, 100);
   }
 
   // ── Effets des talents forgés, lus par le reste du jeu ────────
