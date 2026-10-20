@@ -5,6 +5,8 @@ const InstantGames = (() => {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = n => (typeof formatCash === 'function' ? formatCash(n) : Math.round(n).toLocaleString('fr-FR'));
   const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const cashNow = () => (typeof ClickerEngine !== 'undefined' && ClickerEngine.getCash) ? ClickerEngine.getCash() : 0;
+  const allIn = () => Math.max(1, Math.floor(cashNow()));          // « Tapis » : tout le solde
   const rec = (win, bet, text) => {
     if (typeof Casino === 'undefined') return;
     const net = Math.round(win - bet);
@@ -16,7 +18,7 @@ const InstantGames = (() => {
   const PRICES = [5, 25, 100, 500, 2500, 10000];
   // multiple du prix du ticket et probabilité (retour ≈ 96 %)
   const PRIZES = [[1, 0.15], [2, 0.11], [5, 0.05], [10, 0.016], [25, 0.004], [100, 0.0006], [1000, 0.00002]];
-  const SC = { price: 1, cells: [], opened: [], win: 0, state: 'buy' };
+  const SC = { price: 1, all: false, cells: [], opened: [], win: 0, state: 'buy' };
 
   function drawTicket() {
     let r = Math.random(), mult = 0;
@@ -41,13 +43,14 @@ const InstantGames = (() => {
         <div class="casino-felt-table ig-table">
           <div class="sl-head"><span class="ig-sub">Trois montants identiques : tu gagnes ce montant</span></div>
           <div class="ig-ticket ig-ticket-empty"><div class="ig-ticket-title">TICKET À GRATTER</div><div class="ig-ticket-note">Choisis un ticket</div></div>
-          <div class="ig-prices">${PRICES.map((p, i) => `<button class="btn-secondary ${SC.price === i ? 'active' : ''}" data-p="${i}">${fmt(p)} €</button>`).join('')}</div>
-          <button class="btn-primary pk-main-btn" id="sc-buy">Acheter un ticket (${fmt(PRICES[SC.price])} €)</button>
+          <div class="ig-prices">${PRICES.map((p, i) => `<button class="btn-secondary ${!SC.all && SC.price === i ? 'active' : ''}" data-p="${i}">${fmt(p)} €</button>`).join('')}<button class="btn-secondary sl-all ${SC.all ? 'is-on' : ''}" id="sc-all-in">Tapis</button></div>
+          <button class="btn-primary pk-main-btn" id="sc-buy">Acheter un ticket (${fmt(SC.all ? allIn() : PRICES[SC.price])} €)</button>
           <p class="ig-small">Jusqu'à ×1 000 le prix du ticket · retour théorique ≈ 96 %</p>
         </div>`;
-      content.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { SC.price = +b.dataset.p; renderScratch(content); }));
+      content.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { SC.all = false; SC.price = +b.dataset.p; renderScratch(content); }));
+      content.querySelector('#sc-all-in').addEventListener('click', () => { SC.all = !SC.all; renderScratch(content); });
       content.querySelector('#sc-buy').addEventListener('click', () => {
-        const price = PRICES[SC.price];
+        const price = SC.all ? allIn() : PRICES[SC.price];
         if (!spendMoney(price)) return showToast('Solde insuffisant pour ce ticket.', 'error');
         if (typeof Casino !== 'undefined') Casino.recordBet();
         const t = drawTicket(); SC.cells = t.cells; SC.win = Math.round(t.mult * price); SC.opened = Array(9).fill(false); SC.state = 'play'; SC.bought = price;
@@ -84,7 +87,7 @@ const InstantGames = (() => {
   // Le multiplicateur grimpe tant que la cigarette se consume ; la cendre finit toujours par tomber : encaisse avant !
   // Retour théorique 96 % : probabilité d'atteindre ×x = 0,96 / x.
   const CB = [5, 10, 25, 50, 100, 500, 1000, 5000, 25000, 100000];
-  const crash = { bet: 2, phase: 'idle', mult: 1, point: 1, t0: 0, raf: 0, running: false, auto: 0, history: [], gain: 0, staked: 0, ash: [] };
+  const crash = { bet: 2, all: false, phase: 'idle', mult: 1, point: 1, t0: 0, raf: 0, running: false, auto: 0, history: [], gain: 0, staked: 0, ash: [] };
 
   function crashPoint() { const r = Math.random(); return Math.min(1000, Math.max(1, Math.floor((0.96 / Math.max(r, 0.00096)) * 100) / 100)); }
   const multAt = t => Math.exp(0.15 * t);
@@ -103,14 +106,15 @@ const InstantGames = (() => {
           <div class="ig-cig" id="cr-cig"><i class="ig-cig-body"></i><i class="ig-cig-ember"></i></div></div>
         <div class="pk-msg ${c.phase === 'cashed' ? 'win' : c.phase === 'crashed' ? 'lose' : ''}" id="cr-msg">${c.phase === 'cashed' ? `Encaissé à ${c.mult.toFixed(2)}× : +${fmt(c.gain)} € (la cendre serait tombée à ${c.point.toFixed(2)}×)` : c.phase === 'crashed' ? `La cendre est tombée à ${c.point.toFixed(2)}× : mise perdue` : c.phase === 'run' ? `Mise ${fmt(c.staked)} € · encaisse quand tu veux` : 'Choisis ta mise puis lance la cigarette'}</div>
         <div class="sl-controls">
-          <div class="sl-bet"><button class="btn-secondary" id="cr-minus" ${idle ? '' : 'disabled'}>−</button><span id="cr-betv"><small>Mise</small><b>${fmt(CB[c.bet])} €</b></span><button class="btn-secondary" id="cr-plus" ${idle ? '' : 'disabled'}>+</button></div>
+          <div class="sl-bet"><button class="btn-secondary" id="cr-minus" ${idle ? '' : 'disabled'}>−</button><span id="cr-betv"><small>${c.all ? 'Tapis' : 'Mise'}</small><b>${fmt(c.all ? allIn() : CB[c.bet])} €</b></span><button class="btn-secondary" id="cr-plus" ${idle ? '' : 'disabled'}>+</button><button class="btn-secondary pk-mini sl-all ${c.all ? 'is-on' : ''}" id="cr-all" ${idle ? '' : 'disabled'}>Tapis</button></div>
           <button class="btn-primary sl-spin" id="cr-go">${idle ? 'Lancer' : 'Encaisser ' + fmt(Math.round(c.staked * c.mult)) + ' €'}</button>
           <div class="sl-side"><select class="game-select-empire" id="cr-auto" ${idle ? '' : 'disabled'}><option value="0">Sans auto</option>${[1.5, 2, 3, 5, 10, 25, 100].map(v => `<option value="${v}" ${c.auto === v ? 'selected' : ''}>Auto ${v}×</option>`).join('')}</select></div>
         </div>
       </div>`;
     const $ = q => content.querySelector(q);
-    $('#cr-minus')?.addEventListener('click', () => { c.bet = Math.max(0, c.bet - 1); $('#cr-betv').innerHTML = `<small>Mise</small><b>${fmt(CB[c.bet])} €</b>`; });
-    $('#cr-plus')?.addEventListener('click', () => { c.bet = Math.min(CB.length - 1, c.bet + 1); $('#cr-betv').innerHTML = `<small>Mise</small><b>${fmt(CB[c.bet])} €</b>`; });
+    $('#cr-all')?.addEventListener('click', () => { c.all = !c.all; renderCrash(content); });
+    $('#cr-minus')?.addEventListener('click', () => { c.all = false; $('#cr-all')?.classList.remove('is-on'); c.bet = Math.max(0, c.bet - 1); $('#cr-betv').innerHTML = `<small>Mise</small><b>${fmt(CB[c.bet])} €</b>`; });
+    $('#cr-plus')?.addEventListener('click', () => { c.all = false; $('#cr-all')?.classList.remove('is-on'); c.bet = Math.min(CB.length - 1, c.bet + 1); $('#cr-betv').innerHTML = `<small>Mise</small><b>${fmt(CB[c.bet])} €</b>`; });
     $('#cr-auto')?.addEventListener('change', e => { c.auto = +e.target.value; });
     $('#cr-rules')?.addEventListener('click', () => rulesModal('La Cendre qui monte', '<p>Tu mises, la cigarette se consume et le multiplicateur grimpe. Tu touches <b>mise × multiplicateur</b> si tu encaisses avant que la cendre tombe.</p><p>La chute peut arriver très tôt (×1,00 : perdu d\'un coup) ou très tard (jusqu\'à ×1 000). Chaque ×x a 0,96 / x de chances d\'être atteint : retour 96 %.</p><p>« Auto » encaisse tout seul quand le multiplicateur atteint la valeur choisie.</p>'));
     $('#cr-go').addEventListener('click', () => { if (c.phase === 'run') cashOut(content); else startCrash(content); });
@@ -119,7 +123,7 @@ const InstantGames = (() => {
   }
 
   function startCrash(content) {
-    const c = crash, bet = CB[c.bet];
+    const c = crash, bet = c.all ? allIn() : CB[c.bet];
     if (!spendMoney(bet)) return showToast('Solde insuffisant pour cette mise.', 'error');
     if (typeof Casino !== 'undefined') Casino.recordBet();
     c.point = crashPoint(); c.mult = 1; c.staked = bet; c.gain = 0; c.phase = 'run';
@@ -178,7 +182,7 @@ const InstantGames = (() => {
   // 25 paquets, certains cachent un briquet piégé. Chaque paquet sûr fait monter le gain ; tu encaisses quand tu veux.
   const MB = [5, 10, 25, 50, 100, 500, 1000, 5000, 25000];
   const MINES = [1, 3, 5, 8, 12, 18, 24];
-  const mn = { bet: 2, traps: 3, phase: 'idle', open: [], bombs: [], hit: -1, staked: 0, gain: 0 };
+  const mn = { bet: 2, all: false, traps: 3, phase: 'idle', open: [], bombs: [], hit: -1, staked: 0, gain: 0 };
   const mineMult = (k, m) => { let v = 0.97; for (let i = 0; i < k; i++) v *= (25 - i) / (25 - m - i); return v; };
 
   function renderMines(content) {
@@ -195,14 +199,15 @@ const InstantGames = (() => {
         <div class="mn-wrap"><div class="mn-grid">${cells}</div></div>
         <div class="pk-msg ${g.phase === 'cashed' ? 'win' : g.phase === 'lost' ? 'lose' : ''}">${g.phase === 'run' ? `Gain actuel <b>${fmt(Math.round(g.staked * cur))} €</b> (×${cur.toFixed(2)}) · prochain ×${next.toFixed(2)}` : g.phase === 'cashed' ? `Encaissé : +${fmt(g.gain)} € (×${(g.gain / g.staked).toFixed(2)})` : g.phase === 'lost' ? 'Boum ! Un briquet piégé : mise perdue' : 'Choisis ta mise et le nombre de pièges'}</div>
         <div class="sl-controls">
-          <div class="sl-bet"><button class="btn-secondary" id="mn-minus" ${run ? 'disabled' : ''}>−</button><span id="mn-betv"><small>Mise</small><b>${fmt(MB[g.bet])} €</b></span><button class="btn-secondary" id="mn-plus" ${run ? 'disabled' : ''}>+</button></div>
+          <div class="sl-bet"><button class="btn-secondary" id="mn-minus" ${run ? 'disabled' : ''}>−</button><span id="mn-betv"><small>${g.all ? 'Tapis' : 'Mise'}</small><b>${fmt(g.all ? allIn() : MB[g.bet])} €</b></span><button class="btn-secondary" id="mn-plus" ${run ? 'disabled' : ''}>+</button><button class="btn-secondary pk-mini sl-all ${g.all ? 'is-on' : ''}" id="mn-all" ${run ? 'disabled' : ''}>Tapis</button></div>
           <button class="btn-primary sl-spin" id="mn-go">${run ? (safe ? 'Encaisser ' + fmt(Math.round(g.staked * cur)) + ' €' : 'Choisis un paquet') : 'Jouer'}</button>
           <div class="sl-side"><select class="game-select-empire" id="mn-traps" ${run ? 'disabled' : ''}>${MINES.map(m => `<option value="${m}" ${g.traps === m ? 'selected' : ''}>${m} piège${m > 1 ? 's' : ''}</option>`).join('')}</select><button class="btn-secondary pk-mini" id="mn-rand" ${run ? '' : 'disabled'}>Au hasard</button></div>
         </div>
       </div>`;
     const $ = q => content.querySelector(q);
-    $('#mn-minus')?.addEventListener('click', () => { g.bet = Math.max(0, g.bet - 1); $('#mn-betv').innerHTML = `<small>Mise</small><b>${fmt(MB[g.bet])} €</b>`; });
-    $('#mn-plus')?.addEventListener('click', () => { g.bet = Math.min(MB.length - 1, g.bet + 1); $('#mn-betv').innerHTML = `<small>Mise</small><b>${fmt(MB[g.bet])} €</b>`; });
+    $('#mn-all')?.addEventListener('click', () => { g.all = !g.all; renderMines(content); });
+    $('#mn-minus')?.addEventListener('click', () => { g.all = false; $('#mn-all')?.classList.remove('is-on'); g.bet = Math.max(0, g.bet - 1); $('#mn-betv').innerHTML = `<small>Mise</small><b>${fmt(MB[g.bet])} €</b>`; });
+    $('#mn-plus')?.addEventListener('click', () => { g.all = false; $('#mn-all')?.classList.remove('is-on'); g.bet = Math.min(MB.length - 1, g.bet + 1); $('#mn-betv').innerHTML = `<small>Mise</small><b>${fmt(MB[g.bet])} €</b>`; });
     $('#mn-traps')?.addEventListener('change', e => { g.traps = +e.target.value; });
     $('#mn-rules')?.addEventListener('click', () => rulesModal('Les Mégots Piégés', '<p>25 paquets. Tu choisis combien de <b>briquets piégés</b> sont cachés (1 à 24). Chaque paquet sûr que tu ouvres augmente ton gain ; tu peux <b>encaisser à tout moment</b>.</p><p>Si tu tombes sur un piège, tu perds ta mise. Plus il y a de pièges, plus le gain monte vite (mais plus c\'est risqué).</p><p>Le multiplicateur est calculé avec les vraies probabilités, moins 3 % : retour 97 %.</p>'));
     $('#mn-go').addEventListener('click', () => { if (g.phase === 'run') { if (g.open.length) mineCash(content); } else mineStart(content); });
@@ -210,7 +215,7 @@ const InstantGames = (() => {
     content.querySelectorAll('.mn-cell').forEach(b => b.addEventListener('click', () => minePick(content, +b.dataset.i)));
   }
   function mineStart(content) {
-    const g = mn, bet = MB[g.bet];
+    const g = mn, bet = g.all ? allIn() : MB[g.bet];
     if (!spendMoney(bet)) return showToast('Solde insuffisant pour cette mise.', 'error');
     if (typeof Casino !== 'undefined') Casino.recordBet();
     const ids = [...Array(25).keys()]; for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
